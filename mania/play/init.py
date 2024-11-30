@@ -82,9 +82,7 @@ def init_ui():
         background=True,
     )
     ui.primary_metric_value.update(
-        anchor=screen().tr
-        - Vec2(0.05, 0.05)
-        - (Vec2(0.035, 0.035) * ui_configs.primary_metric.scale),
+        anchor=screen().tr - Vec2(0.05, 0.05) - (Vec2(0.035, 0.035) * ui_configs.primary_metric.scale),
         pivot=Vec2(1, 1),
         dimensions=Vec2(0, 0.08) * ui_configs.primary_metric.scale,
         rotation=0,
@@ -93,10 +91,7 @@ def init_ui():
         background=False,
     )
     ui.secondary_metric_bar.update(
-        anchor=screen().tr
-        - Vec2(0.05, 0.05)
-        - (Vec2(0, 0.15) * ui_configs.primary_metric.scale)
-        - Vec2(0, 0.05),
+        anchor=screen().tr - Vec2(0.05, 0.05) - (Vec2(0, 0.15) * ui_configs.primary_metric.scale) - Vec2(0, 0.05),
         pivot=Vec2(1, 1),
         dimensions=Vec2(0.75, 0.15) * ui_configs.secondary_metric.scale,
         rotation=0,

@@ -75,10 +75,7 @@ level = Level(
                 ]
             ],
             TimescaleChange(beat=100 / 4, scale=1),
-            *[
-                Note(beat=i / 4, lane_ref=l4.ref(), timescale_group_ref=ts4.ref())
-                for i in range(8, 100)
-            ],
+            *[Note(beat=i / 4, lane_ref=l4.ref(), timescale_group_ref=ts4.ref()) for i in range(8, 100)],
         ],
     ),
 )

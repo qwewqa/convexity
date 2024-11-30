@@ -1,5 +1,6 @@
 from sonolus.script.bucket import Judgment
 from sonolus.script.particle import Particle, ParticleHandle
+from sonolus.script.record import Record
 from sonolus.script.sprite import Sprite
 
 from mania.common.effect import SFX_DISTANCE, Effects
@@ -12,6 +13,7 @@ from mania.common.layout import (
     note_layout,
     note_particle_layout,
 )
+from mania.common.options import Options
 from mania.common.particle import Particles
 
 
@@ -20,10 +22,10 @@ def draw_note(
     pos: LanePosition,
     y: float,
 ):
-    if not (Layout.min_safe_y <= y <= Layout.lane_height):
+    if not (Layout.min_safe_y <= y <= Layout.lane_length):
         return
     layout = note_layout(pos, y)
-    sprite.draw(layout, z=Layer.NOTE + y)
+    sprite.draw(layout, z=Layer.NOTE + y + pos.mid / 100)
 
 
 def draw_connector(
@@ -35,7 +37,7 @@ def draw_connector(
 ):
     if prev_y < Layout.min_safe_y and y < Layout.min_safe_y:
         return
-    if prev_y > Layout.lane_height and y > Layout.lane_height:
+    if prev_y > Layout.lane_length and y > Layout.lane_length:
         return
     layout = connector_layout(
         pos=pos,
@@ -43,7 +45,7 @@ def draw_connector(
         prev_pos=prev_pos,
         prev_y=prev_y,
     )
-    sprite.draw(layout, z=Layer.CONNECTOR + max(y, prev_y))
+    sprite.draw(layout, z=Layer.CONNECTOR + max(y, prev_y) + pos.mid / 100, a=Options.connector_alpha)
 
 
 def play_hit_effects(
@@ -56,6 +58,8 @@ def play_hit_effects(
 
 
 def play_hit_sfx(judgment: Judgment):
+    if not Options.sfx_enabled or Options.auto_sfx:
+        return
     match judgment:
         case Judgment.PERFECT:
             Effects.perfect.play(SFX_DISTANCE)
@@ -65,33 +69,55 @@ def play_hit_sfx(judgment: Judgment):
             Effects.good.play(SFX_DISTANCE)
 
 
+def schedule_auto_hit_sfx(judgment: Judgment, target_time: float):
+    if not Options.auto_sfx:
+        return
+    schedule_hit_sfx(judgment, target_time)
+
+
+def schedule_hit_sfx(judgment: Judgment, target_time: float):
+    if not Options.sfx_enabled:
+        return
+    match judgment:
+        case Judgment.PERFECT:
+            Effects.perfect.schedule(target_time, SFX_DISTANCE)
+        case Judgment.GREAT:
+            Effects.great.schedule(target_time, SFX_DISTANCE)
+        case Judgment.GOOD:
+            Effects.good.schedule(target_time, SFX_DISTANCE)
+
+
 def play_hit_particle(
     note_particle: Particle,
     pos: LanePosition,
 ):
-    note_particle.spawn(
-        note_particle_layout(pos, scale=0.6),
-        duration=0.5,
-    )
-    Particles.lane.spawn(
-        lane_layout(pos),
-        duration=0.2,
-    )
+    if Options.note_effect_enabled:
+        note_particle.spawn(
+            note_particle_layout(pos, scale=0.6),
+            duration=0.5,
+        )
+    if Options.lane_effect_enabled:
+        Particles.lane.spawn(
+            lane_layout(pos),
+            duration=0.2,
+        )
 
 
-def spawn_hold_particle(
-    hold_particle: Particle,
-    pos: LanePosition,
-) -> ParticleHandle:
-    return hold_particle.spawn(
-        note_particle_layout(pos, scale=0.4),
-        duration=1.0,
-        loop=True,
-    )
+class HoldHandle(Record):
+    handle: ParticleHandle
 
+    def update(self, particle: Particle, pos: LanePosition):
+        if not Options.note_effect_enabled:
+            return
+        if self.handle.id == 0:
+            self.handle @= particle.spawn(
+                note_particle_layout(pos, scale=0.4),
+                duration=1.0,
+                loop=True,
+            )
+        else:
+            self.handle.move(note_particle_layout(pos, scale=0.4))
 
-def move_hold_particle(
-    handle: ParticleHandle,
-    pos: LanePosition,
-):
-    handle.move(note_particle_layout(pos, scale=0.4))
+    def destroy(self):
+        if self.handle.id != 0:
+            self.handle.destroy()

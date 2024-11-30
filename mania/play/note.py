@@ -12,7 +12,6 @@ from sonolus.script.archetype import (
 )
 from sonolus.script.bucket import Judgment, JudgmentWindow
 from sonolus.script.interval import lerp, unlerp
-from sonolus.script.particle import ParticleHandle
 from sonolus.script.runtime import time, touches
 from sonolus.script.timing import beat_to_time
 from sonolus.script.values import copy
@@ -22,11 +21,11 @@ from mania.common.layout import (
     note_y,
 )
 from mania.common.note import (
+    HoldHandle,
     draw_connector,
     draw_note,
-    move_hold_particle,
     play_hit_effects,
-    spawn_hold_particle,
+    schedule_auto_hit_sfx,
 )
 from mania.common.particle import Particles
 from mania.common.skin import Skin
@@ -54,14 +53,13 @@ class Note(PlayArchetype):
     start_time: float = shared_memory()
     target_scaled_time: float = shared_memory()
 
-    hold_particle_handle: ParticleHandle = entity_memory()
+    hold_handle: HoldHandle = entity_memory()
 
     finish_time: float = exported()
 
     def preprocess(self):
-        self.start_time, self.target_scaled_time = self.timescale_group.get_note_times(
-            self.target_time
-        )
+        self.start_time, self.target_scaled_time = self.timescale_group.get_note_times(self.target_time)
+        schedule_auto_hit_sfx(Judgment.PERFECT, self.target_time)
 
     def spawn_time(self) -> float:
         return min(self.start_time, self.prev_start_time)
@@ -126,16 +124,10 @@ class Note(PlayArchetype):
                 pos=prev_pos,
                 y=0,
             )
-            if self.hold_particle_handle.id == 0:
-                self.hold_particle_handle @= spawn_hold_particle(
-                    hold_particle=self.hold_particle,
-                    pos=prev_pos,
-                )
-            else:
-                move_hold_particle(
-                    handle=self.hold_particle_handle,
-                    pos=prev_pos,
-                )
+            self.hold_handle.update(
+                particle=self.hold_particle,
+                pos=prev_pos,
+            )
 
     def touch(self):
         if not (self.input_start_time <= time() <= self.input_end_time):
@@ -164,9 +156,7 @@ class Note(PlayArchetype):
                 continue
             if not touch.ended:
                 return
-            if time() >= self.input_start_time and self.hitbox.contains_point(
-                touch.position
-            ):
+            if time() >= self.input_start_time and self.hitbox.contains_point(touch.position):
                 self.complete(touch.time)
             else:
                 self.fail(touch.time)
@@ -177,9 +167,7 @@ class Note(PlayArchetype):
             self.fail(time())
 
     def complete(self, actual_time: float):
-        self.result.judgment = self.window.judge(
-            actual=actual_time, target=self.target_time
-        )
+        self.result.judgment = self.window.judge(actual=actual_time, target=self.target_time)
         self.result.accuracy = actual_time - self.target_time
         self.result.bucket @= self.bucket
         self.result.bucket_value = self.result.accuracy * 1000
@@ -198,8 +186,7 @@ class Note(PlayArchetype):
         self.despawn = True
 
     def terminate(self):
-        if self.hold_particle_handle.id != 0:
-            self.hold_particle_handle.destroy()
+        self.hold_handle.destroy()
         self.finish_time = time()
 
     @property

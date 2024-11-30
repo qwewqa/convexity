@@ -13,6 +13,7 @@ from sonolus.script.runtime import time
 from sonolus.script.timing import beat_to_time
 
 from mania.common.layout import preempt_time
+from mania.common.options import Options
 
 
 class TimescaleGroup(PlayArchetype):
@@ -36,13 +37,14 @@ class TimescaleGroup(PlayArchetype):
                 change.end_time = TimescaleChange.at(i + 1).start_time
             else:
                 change.end_time = 1e5
-            change.end_scaled_time = scaled_time + change.scale * (
-                change.end_time - change.start_time
-            )
+            change.end_scaled_time = scaled_time + change.scale * (change.end_time - change.start_time)
             scaled_time = change.end_scaled_time
             i += 1
 
     def update_sequential(self):
+        if Options.disable_soflan:
+            self.scaled_time = time()
+            return
         if time() >= self.section().end_time:
             self.offset += 1
         section = self.section()
@@ -58,6 +60,8 @@ class TimescaleGroup(PlayArchetype):
         return TimescaleChange.at(self.index + self.offset)
 
     def time_to_scaled_time(self, real_time: float) -> float:
+        if Options.disable_soflan:
+            return real_time
         i = self.index + 1
         while True:
             section = TimescaleChange.at(i)
@@ -74,6 +78,8 @@ class TimescaleGroup(PlayArchetype):
                 error()
 
     def scaled_time_to_time(self, scaled_time: float) -> float:
+        if Options.disable_soflan:
+            return scaled_time
         i = self.index + 1
         while True:
             section = TimescaleChange.at(i)

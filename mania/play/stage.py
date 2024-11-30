@@ -1,4 +1,3 @@
-
 from sonolus.script.archetype import PlayArchetype, imported
 
 from mania.common.layout import (
@@ -21,11 +20,7 @@ class Stage(PlayArchetype):
         return Init.at(0).is_despawned
 
     def update_parallel(self):
-        left_border_layout = lane_layout(
-            LanePosition(self.pos.left - Layout.stage_border_width, self.pos.left)
-        )
-        right_border_layout = lane_layout(
-            LanePosition(self.pos.right, self.pos.right + Layout.stage_border_width)
-        )
+        left_border_layout = lane_layout(LanePosition(self.pos.left - Layout.stage_border_width, self.pos.left))
+        right_border_layout = lane_layout(LanePosition(self.pos.right, self.pos.right + Layout.stage_border_width))
         Skin.stage_left_border.draw(left_border_layout, z=Layer.STAGE)
         Skin.stage_right_border.draw(right_border_layout, z=Layer.STAGE)

@@ -1,6 +1,6 @@
 from sonolus.script.archetype import PlayArchetype, callback, imported
 
-from mania.common.effect import play_empty_sfx
+from mania.common.lane import play_lane_effects
 from mania.common.layout import (
     LanePosition,
     Layer,
@@ -8,13 +8,18 @@ from mania.common.layout import (
     lane_layout,
     note_layout,
 )
-from mania.common.particle import Particles
+from mania.common.options import Options
 from mania.common.skin import Skin
 from mania.play.input_manager import unused_touches
 
 
 class Lane(PlayArchetype):
     pos: LanePosition = imported()
+
+    @callback(order=-2)
+    def preprocess(self):
+        if Options.mirror:
+            self.pos @= self.pos.mirror()
 
     def update_parallel(self):
         Skin.lane.draw(self.layout, z=Layer.LANE)
@@ -26,8 +31,7 @@ class Lane(PlayArchetype):
             if not touch.started:
                 continue
             if self.hitbox.contains_point(touch.position):
-                play_empty_sfx()
-                Particles.lane.spawn(self.layout, duration=0.2)
+                play_lane_effects(self.pos)
 
     @property
     def hitbox(self):

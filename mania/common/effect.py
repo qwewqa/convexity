@@ -12,7 +12,3 @@ class Effects:
     good: StandardEffect.GOOD
 
     hold: StandardEffect.HOLD
-
-
-def play_empty_sfx():
-    Effects.stage.play(SFX_DISTANCE)

@@ -1,0 +1,40 @@
+{
+    "clips": [
+        {
+            "name": "#PERFECT",
+            "filename": "perfect.mp3"
+        },
+        {
+            "name": "#GREAT",
+            "filename": "great.mp3"
+        },
+        {
+            "name": "#GOOD",
+            "filename": "good.mp3"
+        },
+        {
+            "name": "#HOLD",
+            "filename": "hold.mp3"
+        },
+        {
+            "name": "#PERFECT_ALTERNATIVE",
+            "filename": "alt.mp3"
+        },
+        {
+            "name": "#GREAT_ALTERNATIVE",
+            "filename": "alt.mp3"
+        },
+        {
+            "name": "#GOOD_ALTERNATIVE",
+            "filename": "alt.mp3"
+        },
+        {
+            "name": "#HOLD_ALTERNATIVE",
+            "filename": "hold.mp3"
+        },
+        {
+            "name": "#STAGE",
+            "filename": "stage.mp3"
+        }
+    ]
+}

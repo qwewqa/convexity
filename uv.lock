@@ -1,0 +1,22 @@
+version = 1
+requires-python = ">=3.13"
+
+[[package]]
+name = "mania"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "sonolus-py" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "sonolus-py", specifier = "~=0.1" }]
+
+[[package]]
+name = "sonolus-py"
+version = "0.1.6"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/94/58/3edcd528927bfee1bb6b559aad8f40c82aa4412703d2d380b721b1668913/sonolus_py-0.1.6.tar.gz", hash = "sha256:eceb0a4908bb746805277235fdcbf4384b32c64424b7c4618ec211a52b24d1d5", size = 161891 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ff/33/4e8bbdbba11e1b85835cf1c72e400b31e8a41e0f4df300800b43c061de63/sonolus_py-0.1.6-py3-none-any.whl", hash = "sha256:ec140664d35f89b9208c713e3b0026db2883ce03a64319c33e080075169777f4", size = 127675 },
+]

@@ -13,8 +13,8 @@ from mania.play.init import Init
 class Stage(PlayArchetype):
     pos: LanePosition = imported()
 
-    def spawn_order(self) -> int:
-        return -1
+    def spawn_order(self) -> float:
+        return -1e8
 
     def should_spawn(self) -> bool:
         return Init.at(0).is_despawned

@@ -3,7 +3,7 @@ from sonolus.script.project import Project
 
 from mania.common.options import Options
 from mania.common.ui import ui_config
-from mania.level import level
+from mania.level import levels
 from mania.play.mode import play_mode
 from mania.preview.mode import preview_mode
 from mania.tutorial.mode import tutorial_mode
@@ -27,5 +27,5 @@ engine = Engine(
 
 project = Project(
     engine=engine,
-    levels=[level],
+    levels=levels,
 )

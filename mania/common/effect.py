@@ -1,6 +1,6 @@
 from sonolus.script.effect import StandardEffect, effects
 
-SFX_DISTANCE = 0.2
+SFX_DISTANCE = 0.02
 
 
 @effects

@@ -21,7 +21,7 @@ from mania.play.note import Note
 
 class Init(PlayArchetype):
     def spawn_order(self) -> float:
-        return -2
+        return -1e8
 
     def preprocess(self):
         init_buckets()

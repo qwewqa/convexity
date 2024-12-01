@@ -31,7 +31,7 @@ from mania.common.particle import Particles
 from mania.common.skin import Skin
 from mania.play.input_manager import mark_touch_used, taps_in_hitbox
 from mania.play.lane import Lane
-from mania.play.timescale_group import TimescaleGroup
+from mania.play.timescale import TimescaleGroup
 
 
 class NoteVariant(IntEnum):
@@ -130,8 +130,6 @@ class Note(PlayArchetype):
             )
 
     def touch(self):
-        if not (self.input_start_time <= time() <= self.input_end_time):
-            return
         match self.variant:
             case NoteVariant.SINGLE:
                 self.handle_tap_input()
@@ -141,6 +139,8 @@ class Note(PlayArchetype):
                 self.handle_release_input()
 
     def handle_tap_input(self):
+        if not (self.input_start_time <= time() <= self.input_end_time):
+            return
         for touch in taps_in_hitbox(self.hitbox):
             mark_touch_used(touch)
             self.touch_id = touch.id

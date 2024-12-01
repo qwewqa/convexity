@@ -1,11 +1,14 @@
+from pathlib import Path
+
 from sonolus.script.level import BpmChange, Level, LevelData
 
 from mania.common.layout import LanePosition
+from mania.convert.osu import convert_osz
 from mania.play.init import Init
 from mania.play.lane import Lane
 from mania.play.note import Note, NoteVariant
 from mania.play.stage import Stage
-from mania.play.timescale_group import TimescaleChange, TimescaleGroup
+from mania.play.timescale import TimescaleChange, TimescaleGroup
 
 level = Level(
     name="mania_level",
@@ -79,3 +82,8 @@ level = Level(
         ],
     ),
 )
+
+levels = [level]
+
+for osz_file in Path("resources").glob("*.osz"):
+    levels.extend(convert_osz(osz_file.read_bytes()))

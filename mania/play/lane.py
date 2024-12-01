@@ -16,6 +16,9 @@ from mania.play.input_manager import unused_touches
 class Lane(PlayArchetype):
     pos: LanePosition = imported()
 
+    def spawn_order(self) -> float:
+        return -1e8
+
     @callback(order=-2)
     def preprocess(self):
         if Options.mirror:

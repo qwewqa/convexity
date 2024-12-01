@@ -7,7 +7,7 @@ from mania.common.skin import Skin
 from mania.play.init import Init
 from mania.play.input_manager import InputManager
 from mania.play.lane import Lane
-from mania.play.note import Note
+from mania.play.note import Note, UnscoredNote
 from mania.play.stage import Stage
 from mania.play.timescale import TimescaleChange, TimescaleGroup
 
@@ -18,6 +18,7 @@ play_mode = PlayMode(
         InputManager,
         Lane,
         Note,
+        UnscoredNote,
         TimescaleGroup,
         TimescaleChange,
     ],

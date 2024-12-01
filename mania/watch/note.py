@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from enum import IntEnum
-
 from sonolus.script.archetype import (
     EntityRef,
     StandardImport,
@@ -14,29 +12,28 @@ from sonolus.script.bucket import Judgment, JudgmentWindow
 from sonolus.script.interval import lerp, unlerp
 from sonolus.script.runtime import is_replay, time
 from sonolus.script.timing import beat_to_time
-from sonolus.script.values import copy
 
-from mania.common.buckets import Buckets, note_judgment_window
+from mania.common.buckets import Buckets
 from mania.common.layout import (
     note_y,
 )
 from mania.common.note import (
     HoldHandle,
-    draw_connector,
-    draw_note,
+    NoteVariant,
+    draw_note_body,
+    draw_note_connector,
+    note_body_sprite,
+    note_bucket,
+    note_connector_sprite,
+    note_head_sprite,
+    note_hold_particle,
+    note_particle,
+    note_window,
     play_watch_hit_effects,
     schedule_watch_hit_effects,
 )
-from mania.common.particle import Particles
-from mania.common.skin import Skin
 from mania.watch.lane import Lane
 from mania.watch.timescale import TimescaleGroup
-
-
-class NoteVariant(IntEnum):
-    SINGLE = 0
-    HOLD_START = 1
-    HOLD_END = 2
 
 
 class Note(WatchArchetype):
@@ -85,18 +82,18 @@ class Note(WatchArchetype):
         self.draw_connector()
 
     def draw_body(self):
-        draw_note(
+        draw_note_body(
             sprite=self.body_sprite,
             pos=self.lane.pos,
             y=self.y,
         )
 
     def draw_connector(self):
-        if not self.prev_note_ref.is_valid():
+        if not self.prev_note_ref.archetype_matches():
             return
         prev = self.prev_note_ref.get()
         if time() < prev.despawn_time():
-            draw_connector(
+            draw_note_connector(
                 sprite=self.connector_sprite,
                 pos=self.lane.pos,
                 y=self.y,
@@ -108,14 +105,14 @@ class Note(WatchArchetype):
             target_time = self.target_time
             progress = unlerp(prev_target_time, target_time, time())
             prev_pos = lerp(prev.lane.pos, self.lane.pos, progress)
-            draw_connector(
+            draw_note_connector(
                 sprite=self.connector_sprite,
                 pos=self.lane.pos,
                 y=self.y,
                 prev_pos=prev_pos,
                 prev_y=0,
             )
-            draw_note(
+            draw_note_body(
                 sprite=self.head_sprite,
                 pos=prev_pos,
                 y=0,
@@ -146,67 +143,47 @@ class Note(WatchArchetype):
         return self.timescale_group_ref.get()
 
     @property
-    def window(self) -> JudgmentWindow:
-        return note_judgment_window
+    def target_time(self) -> float:
+        return beat_to_time(self.beat)
 
     @property
     def hitbox(self):
         return self.lane.hitbox
 
     @property
+    def window(self) -> JudgmentWindow:
+        return note_window(self.variant)
+
+    @property
     def bucket(self):
-        result = copy(Buckets.tap_note)
-        match self.variant:
-            case NoteVariant.SINGLE:
-                result @= Buckets.tap_note
-            case NoteVariant.HOLD_START:
-                result @= Buckets.hold_start_note
-            case NoteVariant.HOLD_END:
-                result @= Buckets.hold_end_note
-        return result
+        return note_bucket(self.variant)
 
     @property
     def body_sprite(self):
-        result = copy(Skin.tap_note)
-        match self.variant:
-            case NoteVariant.SINGLE:
-                result @= Skin.tap_note
-            case NoteVariant.HOLD_START:
-                result @= Skin.hold_start_note
-            case NoteVariant.HOLD_END:
-                result @= Skin.hold_end_note
-        return result
+        return note_body_sprite(self.variant)
 
     @property
     def head_sprite(self):
-        return Skin.hold_start_note
+        return note_head_sprite(self.variant)
 
     @property
     def connector_sprite(self):
-        return Skin.connector
+        return note_connector_sprite(self.variant)
 
     @property
     def particle(self):
-        result = copy(Particles.tap_note)
-        match self.variant:
-            case NoteVariant.SINGLE:
-                result @= Particles.tap_note
-            case NoteVariant.HOLD_START:
-                result @= Particles.hold_note
-            case NoteVariant.HOLD_END:
-                result @= Particles.hold_note
-        return result
+        return note_particle(self.variant)
 
     @property
     def hold_particle(self):
-        return Particles.hold
+        return note_hold_particle(self.variant)
 
     @property
     def prev_start_time(self) -> float:
-        if not self.prev_note_ref.is_valid():
+        if not self.prev_note_ref.index > 0:
             return 1e8
         return self.prev_note_ref.get().start_time
 
-    @property
-    def target_time(self) -> float:
-        return beat_to_time(self.beat)
+
+class UnscoredNote(Note):
+    is_scored = False

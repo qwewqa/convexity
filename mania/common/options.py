@@ -110,8 +110,20 @@ class Options:
         scope="mania_v",
         default=False,
     )
+    angled_hitboxes: bool = toggle_option(
+        name="Angled Hitboxes",
+        scope="mania_v",
+        default=False,
+    )
     disable_soflan: bool = toggle_option(
         name="Disable Soflan",
         scope="mania_v",
         default=False,
+        standard=False,
+    )
+    auto_release_holds: bool = toggle_option(
+        name="Auto Release Holds",
+        scope="mania_v",
+        default=False,
+        standard=False,
     )

@@ -7,6 +7,7 @@ from sonolus.script.interval import clamp, lerp, remap, unlerp
 from sonolus.script.quad import Quad, Rect
 from sonolus.script.record import Record
 from sonolus.script.transform import Transform2d
+from sonolus.script.values import zeros
 from sonolus.script.vec import Vec2
 
 from mania.common.options import Options
@@ -148,8 +149,13 @@ def connector_layout(
     return Layout.lane_transform.transform_quad(base)
 
 
-def lane_hitbox(pos: LanePosition) -> Rect:
-    return Rect(l=pos.left * Layout.scale, r=pos.right * Layout.scale, b=-1, t=1)
+def lane_hitbox(pos: LanePosition) -> Quad:
+    result = zeros(Quad)
+    if Options.angled_hitboxes:
+        result @= lane_layout(pos)
+    else:
+        result @= Rect(l=pos.left * Layout.scale, r=pos.right * Layout.scale, b=-1, t=1).as_quad()
+    return result
 
 
 def preempt_time() -> float:

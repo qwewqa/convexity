@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from enum import IntEnum
-
 from sonolus.script.archetype import (
     EntityRef,
     PlayArchetype,
@@ -14,30 +12,29 @@ from sonolus.script.bucket import Judgment, JudgmentWindow
 from sonolus.script.interval import lerp, unlerp
 from sonolus.script.runtime import time, touches
 from sonolus.script.timing import beat_to_time
-from sonolus.script.values import copy
 
-from mania.common.buckets import Buckets, note_judgment_window
 from mania.common.layout import (
     note_y,
 )
 from mania.common.note import (
     HoldHandle,
-    draw_connector,
-    draw_note,
+    NoteVariant,
+    draw_note_body,
+    draw_note_connector,
+    note_body_sprite,
+    note_bucket,
+    note_connector_sprite,
+    note_head_sprite,
+    note_hold_particle,
+    note_particle,
+    note_window,
     play_hit_effects,
     schedule_auto_hit_sfx,
 )
-from mania.common.particle import Particles
-from mania.common.skin import Skin
+from mania.common.options import Options
 from mania.play.input_manager import mark_touch_used, taps_in_hitbox
 from mania.play.lane import Lane
 from mania.play.timescale import TimescaleGroup
-
-
-class NoteVariant(IntEnum):
-    SINGLE = 0
-    HOLD_START = 1
-    HOLD_END = 2
 
 
 class Note(PlayArchetype):
@@ -83,24 +80,24 @@ class Note(PlayArchetype):
         return time() > self.input_end_time
 
     def prev_missed(self) -> bool:
-        if not self.prev_note_ref.is_valid():
+        if not self.prev_note_ref.archetype_matches():
             return False
         prev = self.prev_note_ref.get()
         return prev.is_despawned and prev.touch_id == 0
 
     def draw_body(self):
-        draw_note(
+        draw_note_body(
             sprite=self.body_sprite,
             pos=self.lane.pos,
             y=self.y,
         )
 
     def draw_connector(self):
-        if not self.prev_note_ref.is_valid():
+        if not self.prev_note_ref.archetype_matches():
             return
         prev = self.prev_note_ref.get()
         if not prev.is_despawned:
-            draw_connector(
+            draw_note_connector(
                 sprite=self.connector_sprite,
                 pos=self.lane.pos,
                 y=self.y,
@@ -112,14 +109,14 @@ class Note(PlayArchetype):
             target_time = self.target_time
             progress = unlerp(prev_target_time, target_time, time())
             prev_pos = lerp(prev.lane.pos, self.lane.pos, progress)
-            draw_connector(
+            draw_note_connector(
                 sprite=self.connector_sprite,
                 pos=self.lane.pos,
                 y=self.y,
                 prev_pos=prev_pos,
                 prev_y=0,
             )
-            draw_note(
+            draw_note_body(
                 sprite=self.head_sprite,
                 pos=prev_pos,
                 y=0,
@@ -154,6 +151,9 @@ class Note(PlayArchetype):
         for touch in touches():
             if touch.id != touch_id:
                 continue
+            if Options.auto_release_holds and time() >= self.target_time and self.hitbox.contains_point(touch.position):
+                self.complete(self.target_time)
+                return
             if not touch.ended:
                 return
             if time() >= self.input_start_time and self.hitbox.contains_point(touch.position):
@@ -206,10 +206,6 @@ class Note(PlayArchetype):
         return beat_to_time(self.beat)
 
     @property
-    def window(self) -> JudgmentWindow:
-        return note_judgment_window
-
-    @property
     def input_start_time(self) -> float:
         return self.target_time + self.window.start
 
@@ -222,55 +218,39 @@ class Note(PlayArchetype):
         return self.lane.hitbox
 
     @property
+    def window(self) -> JudgmentWindow:
+        return note_window(self.variant)
+
+    @property
     def bucket(self):
-        result = copy(Buckets.tap_note)
-        match self.variant:
-            case NoteVariant.SINGLE:
-                result @= Buckets.tap_note
-            case NoteVariant.HOLD_START:
-                result @= Buckets.hold_start_note
-            case NoteVariant.HOLD_END:
-                result @= Buckets.hold_end_note
-        return result
+        return note_bucket(self.variant)
 
     @property
     def body_sprite(self):
-        result = copy(Skin.tap_note)
-        match self.variant:
-            case NoteVariant.SINGLE:
-                result @= Skin.tap_note
-            case NoteVariant.HOLD_START:
-                result @= Skin.hold_start_note
-            case NoteVariant.HOLD_END:
-                result @= Skin.hold_end_note
-        return result
+        return note_body_sprite(self.variant)
 
     @property
     def head_sprite(self):
-        return Skin.hold_start_note
+        return note_head_sprite(self.variant)
 
     @property
     def connector_sprite(self):
-        return Skin.connector
+        return note_connector_sprite(self.variant)
 
     @property
     def particle(self):
-        result = copy(Particles.tap_note)
-        match self.variant:
-            case NoteVariant.SINGLE:
-                result @= Particles.tap_note
-            case NoteVariant.HOLD_START:
-                result @= Particles.hold_note
-            case NoteVariant.HOLD_END:
-                result @= Particles.hold_note
-        return result
+        return note_particle(self.variant)
 
     @property
     def hold_particle(self):
-        return Particles.hold
+        return note_hold_particle(self.variant)
 
     @property
     def prev_start_time(self) -> float:
-        if not self.prev_note_ref.is_valid():
+        if not self.prev_note_ref.index > 0:
             return 1e8
         return self.prev_note_ref.get().start_time
+
+
+class UnscoredNote(Note):
+    is_scored = False

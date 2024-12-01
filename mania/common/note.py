@@ -1,8 +1,12 @@
-from sonolus.script.bucket import Judgment
+from enum import IntEnum
+
+from sonolus.script.bucket import Judgment, JudgmentWindow
 from sonolus.script.particle import Particle, ParticleHandle
 from sonolus.script.record import Record
 from sonolus.script.sprite import Sprite
+from sonolus.script.values import copy
 
+from mania.common.buckets import Buckets, note_judgment_window
 from mania.common.effect import SFX_DISTANCE, Effects
 from mania.common.layout import (
     LanePosition,
@@ -15,9 +19,68 @@ from mania.common.layout import (
 )
 from mania.common.options import Options
 from mania.common.particle import Particles
+from mania.common.skin import Skin
 
 
-def draw_note(
+class NoteVariant(IntEnum):
+    SINGLE = 0
+    HOLD_START = 1
+    HOLD_END = 2
+
+
+def note_window(variant: NoteVariant) -> JudgmentWindow:
+    return note_judgment_window
+
+
+def note_bucket(variant: NoteVariant):
+    result = copy(Buckets.tap_note)
+    match variant:
+        case NoteVariant.SINGLE:
+            result @= Buckets.tap_note
+        case NoteVariant.HOLD_START:
+            result @= Buckets.hold_start_note
+        case NoteVariant.HOLD_END:
+            result @= Buckets.hold_end_note
+    return result
+
+
+def note_body_sprite(variant: NoteVariant):
+    result = copy(Skin.tap_note)
+    match variant:
+        case NoteVariant.SINGLE:
+            result @= Skin.tap_note
+        case NoteVariant.HOLD_START:
+            result @= Skin.hold_start_note
+        case NoteVariant.HOLD_END:
+            result @= Skin.hold_end_note
+    return result
+
+
+def note_head_sprite(variant: NoteVariant):
+    return copy(Skin.hold_start_note)
+
+
+def note_connector_sprite(variant: NoteVariant):
+    return copy(Skin.connector)
+
+
+def note_particle(variant: NoteVariant):
+    result = copy(Particles.tap_note)
+    match variant:
+        case NoteVariant.SINGLE:
+            result @= Particles.tap_note
+        case NoteVariant.HOLD_START:
+            result @= Particles.hold_note
+        case NoteVariant.HOLD_END:
+            result @= Particles.hold_note
+    return result
+
+
+def note_hold_particle(variant: NoteVariant):
+    return copy(Particles.hold)
+
+
+def draw_note_body(
     sprite: Sprite,
     pos: LanePosition,
     y: float,
@@ -28,7 +91,7 @@ def draw_note(
     sprite.draw(layout, z=Layer.NOTE + y + pos.mid / 100)
 
 
-def draw_connector(
+def draw_note_connector(
     sprite: Sprite,
     pos: LanePosition,
     y: float,

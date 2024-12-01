@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from sonolus.script.archetype import (
-    PlayArchetype,
+    WatchArchetype,
     callback,
     entity_memory,
     imported,
@@ -9,14 +9,14 @@ from sonolus.script.archetype import (
 )
 from sonolus.script.debug import error
 from sonolus.script.interval import remap
-from sonolus.script.runtime import time
+from sonolus.script.runtime import is_skip, time
 from sonolus.script.timing import beat_to_time
 
 from mania.common.layout import preempt_time
 from mania.common.options import Options
 
 
-class TimescaleGroup(PlayArchetype):
+class TimescaleGroup(WatchArchetype):
     scaled_time: float = shared_memory()
 
     last_note_time: float = shared_memory()
@@ -46,13 +46,18 @@ class TimescaleGroup(PlayArchetype):
             scaled_time = change.end_scaled_time
             i += 1
 
-    def spawn_order(self) -> float:
+    def spawn_time(self) -> float:
         return -1e8
+
+    def despawn_time(self) -> float:
+        return 1e8
 
     def update_sequential(self):
         if Options.disable_soflan:
             self.scaled_time = time()
             return
+        if is_skip():
+            self.offset = 1
         while time() >= self.section().end_time:
             self.offset += 1
         section = self.section()
@@ -119,7 +124,7 @@ class TimescaleGroup(PlayArchetype):
         return start_time, scaled_time
 
 
-class TimescaleChange(PlayArchetype):
+class TimescaleChange(WatchArchetype):
     beat: float = imported()
     scale: float = imported()
 
@@ -130,9 +135,3 @@ class TimescaleChange(PlayArchetype):
     @property
     def start_time(self) -> float:
         return beat_to_time(self.beat) if self.beat > 0 else -10
-
-    def should_spawn(self) -> bool:
-        return True
-
-    def update_parallel(self):
-        self.despawn = True

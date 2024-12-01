@@ -57,6 +57,20 @@ def play_hit_effects(
     play_hit_particle(note_particle, pos)
 
 
+def play_watch_hit_effects(
+    note_particle: Particle,
+    pos: LanePosition,
+):
+    play_hit_particle(note_particle, pos)
+
+
+def schedule_watch_hit_effects(
+    hit_time: float,
+    judgment: Judgment,
+):
+    schedule_hit_sfx(judgment, hit_time)
+
+
 def play_hit_sfx(judgment: Judgment):
     if not Options.sfx_enabled or Options.auto_sfx:
         return
@@ -67,6 +81,8 @@ def play_hit_sfx(judgment: Judgment):
             Effects.great.play(SFX_DISTANCE)
         case Judgment.GOOD:
             Effects.good.play(SFX_DISTANCE)
+        case _:
+            pass
 
 
 def schedule_auto_hit_sfx(judgment: Judgment, target_time: float):
@@ -85,6 +101,8 @@ def schedule_hit_sfx(judgment: Judgment, target_time: float):
             Effects.great.schedule(target_time, SFX_DISTANCE)
         case Judgment.GOOD:
             Effects.good.schedule(target_time, SFX_DISTANCE)
+        case _:
+            pass
 
 
 def play_hit_particle(
@@ -121,3 +139,4 @@ class HoldHandle(Record):
     def destroy(self):
         if self.handle.id != 0:
             self.handle.destroy()
+            self.handle.id = 0

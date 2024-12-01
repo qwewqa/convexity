@@ -15,6 +15,7 @@ class Options:
     )
     note_speed: float = slider_option(
         name=StandardText.NOTE_SPEED,
+        scope="mania_v",
         default=10,
         min=1,
         max=20,
@@ -23,6 +24,7 @@ class Options:
     )
     note_size: float = slider_option(
         name=StandardText.NOTE_SIZE,
+        scope="mania_v",
         default=1,
         min=0.1,
         max=2,
@@ -31,10 +33,12 @@ class Options:
     )
     note_effect_enabled: bool = toggle_option(
         name=StandardText.NOTE_EFFECT,
+        scope="mania_v",
         default=True,
     )
     note_effect_size: float = slider_option(
         name=StandardText.NOTE_EFFECT_SIZE,
+        scope="mania_v",
         default=1,
         min=0.1,
         max=2,
@@ -43,6 +47,7 @@ class Options:
     )
     connector_alpha: float = slider_option(
         name=StandardText.CONNECTOR_ALPHA,
+        scope="mania_v",
         default=1,
         min=0,
         max=1,
@@ -51,10 +56,12 @@ class Options:
     )
     lane_effect_enabled: bool = toggle_option(
         name=StandardText.LANE_EFFECT,
+        scope="mania_v",
         default=True,
     )
     judge_line_position: float = slider_option(
         name=StandardText.JUDGELINE_POSITION,
+        scope="mania_v",
         default=0,
         min=-5,
         max=10,
@@ -63,6 +70,7 @@ class Options:
     )
     stage_size: float = slider_option(
         name=StandardText.STAGE_SIZE,
+        scope="mania_v",
         default=1,
         min=0.1,
         max=2,
@@ -71,6 +79,7 @@ class Options:
     )
     stage_tilt: float = slider_option(
         name=StandardText.STAGE_TILT,
+        scope="mania_v",
         default=0.5,
         min=0,
         max=1,
@@ -79,6 +88,7 @@ class Options:
     )
     lane_length: float = slider_option(
         name=StandardText.LANE_SIZE,
+        scope="mania_v",
         default=1,
         min=0.1,
         max=2,
@@ -87,17 +97,21 @@ class Options:
     )
     sfx_enabled: bool = toggle_option(
         name=StandardText.EFFECT,
+        scope="mania_v",
         default=True,
     )
     auto_sfx: bool = toggle_option(
         name=StandardText.EFFECT_AUTO,
+        scope="mania_v",
         default=False,
     )
     mirror: bool = toggle_option(
         name=StandardText.MIRROR,
+        scope="mania_v",
         default=False,
     )
     disable_soflan: bool = toggle_option(
         name="Disable Soflan",
+        scope="mania_v",
         default=False,
     )

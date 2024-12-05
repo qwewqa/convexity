@@ -64,7 +64,7 @@ class Note(WatchArchetype):
             self.result.bucket_value = self.accuracy * 1000
             schedule_watch_hit_effects(self.finish_time, self.judgment)
         else:
-            self.result.bucket @= Buckets.tap_note
+            self.result.bucket @= self.bucket
             self.result.bucket_value = 0
             schedule_watch_hit_effects(self.target_time, Judgment.PERFECT)
 

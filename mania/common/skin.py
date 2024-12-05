@@ -15,5 +15,6 @@ class Skin:
 
     hold_start_note: StandardSprite.NOTE_HEAD_GREEN
     hold_end_note: StandardSprite.NOTE_TAIL_GREEN
+    hold_tick_note: StandardSprite.NOTE_TICK_GREEN
 
     connector: StandardSprite.NOTE_CONNECTION_GREEN

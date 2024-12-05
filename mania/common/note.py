@@ -26,6 +26,7 @@ class NoteVariant(IntEnum):
     SINGLE = 0
     HOLD_START = 1
     HOLD_END = 2
+    HOLD_TICK = 3
 
 
 def note_window(variant: NoteVariant) -> JudgmentWindow:
@@ -41,6 +42,8 @@ def note_bucket(variant: NoteVariant):
             result @= Buckets.hold_start_note
         case NoteVariant.HOLD_END:
             result @= Buckets.hold_end_note
+        case NoteVariant.HOLD_TICK:
+            result @= Buckets.hold_tick_note
     return result
 
 
@@ -53,6 +56,8 @@ def note_body_sprite(variant: NoteVariant):
             result @= Skin.hold_start_note
         case NoteVariant.HOLD_END:
             result @= Skin.hold_end_note
+        case NoteVariant.HOLD_TICK:
+            result @= Skin.hold_tick_note
     return result
 
 
@@ -72,6 +77,8 @@ def note_particle(variant: NoteVariant):
         case NoteVariant.HOLD_START:
             result @= Particles.hold_note
         case NoteVariant.HOLD_END:
+            result @= Particles.hold_note
+        case NoteVariant.HOLD_TICK:
             result @= Particles.hold_note
     return result
 

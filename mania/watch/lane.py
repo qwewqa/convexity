@@ -16,7 +16,7 @@ class Lane(WatchArchetype):
     def despawn_time(self) -> float:
         return 1e8
 
-    @callback(order=-2)
+    @callback(order=-1)
     def preprocess(self):
         if Options.mirror:
             self.pos @= self.pos.mirror()

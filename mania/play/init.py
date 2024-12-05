@@ -1,8 +1,6 @@
-from sonolus.script.archetype import PlayArchetype, archetype_life_of
+from sonolus.script.archetype import PlayArchetype
 from sonolus.script.runtime import (
     HorizontalAlign,
-    level_life,
-    level_score,
     screen,
 )
 from sonolus.script.runtime import (
@@ -13,7 +11,7 @@ from sonolus.script.runtime import (
 )
 from sonolus.script.vec import Vec2
 
-from mania.common.buckets import Buckets, note_judgment_window
+from mania.common.init import init_buckets, init_life, init_score
 from mania.common.layout import init_layout
 from mania.play.input_manager import InputManager
 from mania.play.note import Note
@@ -26,7 +24,7 @@ class Init(PlayArchetype):
     def preprocess(self):
         init_buckets()
         init_score()
-        init_life()
+        init_life(Note)
         init_ui()
         init_layout()
 
@@ -111,33 +109,4 @@ def init_ui():
         alpha=ui_configs.secondary_metric.alpha,
         horizontal_align=HorizontalAlign.RIGHT,
         background=False,
-    )
-
-
-def init_buckets():
-    Buckets.tap_note.window @= note_judgment_window * 1000
-    Buckets.hold_start_note.window @= note_judgment_window * 1000
-    Buckets.hold_end_note.window @= note_judgment_window * 1000
-
-
-def init_score():
-    level_score().update(
-        perfect_multiplier=1,
-        great_multiplier=0.75,
-        good_multiplier=0.5,
-        consecutive_great_multiplier=0.01,
-        consecutive_great_step=10,
-        consecutive_great_cap=50,
-    )
-
-
-def init_life():
-    level_life().update(
-        consecutive_perfect_increment=50,
-        consecutive_perfect_step=10,
-    )
-
-    archetype_life_of(Note).update(
-        perfect_increment=10,
-        miss_increment=-100,
     )

@@ -4,16 +4,18 @@ from sonolus.script.archetype import (
     EntityRef,
     StandardImport,
     WatchArchetype,
+    entity_data,
     entity_memory,
     imported,
     shared_memory,
 )
-from sonolus.script.bucket import Judgment, JudgmentWindow
+from sonolus.script.bucket import Bucket, Judgment, JudgmentWindow
 from sonolus.script.interval import lerp, unlerp
+from sonolus.script.particle import Particle
 from sonolus.script.runtime import is_replay, time
+from sonolus.script.sprite import Sprite
 from sonolus.script.timing import beat_to_time
 
-from mania.common.buckets import Buckets
 from mania.common.layout import (
     note_y,
 )
@@ -46,9 +48,21 @@ class Note(WatchArchetype):
     prev_note_ref: EntityRef[Note] = imported()
 
     touch_id: int = shared_memory()
-    start_time: float = shared_memory()
-    target_scaled_time: float = shared_memory()
+    y: float = shared_memory()
 
+    target_time: float = entity_data()
+    window: JudgmentWindow = entity_data()
+    bucket: Bucket = entity_data()
+    body_sprite: Sprite = entity_data()
+    head_sprite: Sprite = entity_data()
+    connector_sprite: Sprite = entity_data()
+    particle: Particle = entity_data()
+    hold_particle: Particle = entity_data()
+    has_prev: bool = entity_data()
+    start_time: float = entity_data()
+    target_scaled_time: float = entity_data()
+
+    started: bool = entity_memory()
     hold_handle: HoldHandle = entity_memory()
 
     judgment: StandardImport.JUDGMENT
@@ -56,8 +70,19 @@ class Note(WatchArchetype):
     finish_time: float = imported()
 
     def preprocess(self):
-        self.result.target_time = self.target_time
+        self.target_time = beat_to_time(self.beat)
+        self.window @= note_window(self.variant)
+        self.bucket @= note_bucket(self.variant)
+        self.body_sprite @= note_body_sprite(self.variant)
+        self.head_sprite @= note_head_sprite(self.variant)
+        self.connector_sprite @= note_connector_sprite(self.variant)
+        self.particle @= note_particle(self.variant)
+        self.hold_particle @= note_hold_particle(self.variant)
+        self.has_prev = self.prev_note_ref.index > 0
+
         self.start_time, self.target_scaled_time = self.timescale_group.get_note_times(self.target_time)
+
+        self.result.target_time = self.target_time
 
         if is_replay():
             self.result.bucket @= self.bucket
@@ -77,6 +102,9 @@ class Note(WatchArchetype):
         else:
             return self.target_time
 
+    def update_sequential(self):
+        self.y = note_y(self.timescale_group.scaled_time, self.target_scaled_time)
+
     def update_parallel(self):
         self.draw_body()
         self.draw_connector()
@@ -89,9 +117,9 @@ class Note(WatchArchetype):
         )
 
     def draw_connector(self):
-        if not self.prev_note_ref.archetype_matches():
+        if not self.has_prev:
             return
-        prev = self.prev_note_ref.get()
+        prev = self.prev
         if time() < prev.despawn_time():
             draw_note_connector(
                 sprite=self.connector_sprite,
@@ -131,10 +159,6 @@ class Note(WatchArchetype):
             )
 
     @property
-    def y(self):
-        return note_y(self.timescale_group.scaled_time, self.target_scaled_time)
-
-    @property
     def lane(self) -> Lane:
         return self.lane_ref.get()
 
@@ -143,44 +167,12 @@ class Note(WatchArchetype):
         return self.timescale_group_ref.get()
 
     @property
-    def target_time(self) -> float:
-        return beat_to_time(self.beat)
-
-    @property
-    def hitbox(self):
-        return self.lane.hitbox
-
-    @property
-    def window(self) -> JudgmentWindow:
-        return note_window(self.variant)
-
-    @property
-    def bucket(self):
-        return note_bucket(self.variant)
-
-    @property
-    def body_sprite(self):
-        return note_body_sprite(self.variant)
-
-    @property
-    def head_sprite(self):
-        return note_head_sprite(self.variant)
-
-    @property
-    def connector_sprite(self):
-        return note_connector_sprite(self.variant)
-
-    @property
-    def particle(self):
-        return note_particle(self.variant)
-
-    @property
-    def hold_particle(self):
-        return note_hold_particle(self.variant)
+    def prev(self) -> Note:
+        return self.prev_note_ref.get()
 
     @property
     def prev_start_time(self) -> float:
-        if not self.prev_note_ref.index > 0:
+        if not self.has_prev:
             return 1e8
         return self.prev_note_ref.get().start_time
 

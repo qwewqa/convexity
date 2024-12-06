@@ -1,4 +1,4 @@
-from sonolus.script.archetype import WatchArchetype
+from sonolus.script.archetype import WatchArchetype, callback
 from sonolus.script.runtime import (
     HorizontalAlign,
     screen,
@@ -17,6 +17,7 @@ from mania.watch.note import Note
 
 
 class Init(WatchArchetype):
+    @callback(order=-1)
     def preprocess(self):
         init_buckets()
         init_score()

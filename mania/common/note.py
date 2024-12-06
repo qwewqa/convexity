@@ -1,6 +1,8 @@
 from enum import IntEnum
+from math import floor
 
 from sonolus.script.bucket import Judgment, JudgmentWindow
+from sonolus.script.interval import lerp, unlerp
 from sonolus.script.particle import Particle, ParticleHandle
 from sonolus.script.record import Record
 from sonolus.script.sprite import Sprite
@@ -9,9 +11,11 @@ from sonolus.script.values import copy
 from mania.common.buckets import Buckets, note_judgment_window
 from mania.common.effect import SFX_DISTANCE, Effects
 from mania.common.layout import (
+    EPSILON,
     LanePosition,
     Layer,
     Layout,
+    clamp_y_to_stage,
     connector_layout,
     lane_layout,
     note_layout,
@@ -109,13 +113,36 @@ def draw_note_connector(
         return
     if prev_y > Layout.lane_length and y > Layout.lane_length:
         return
-    layout = connector_layout(
-        pos=pos,
-        y=y,
-        prev_pos=prev_pos,
-        prev_y=prev_y,
-    )
-    sprite.draw(layout, z=Layer.CONNECTOR + max(y, prev_y) + pos.mid / 100, a=Options.connector_alpha)
+
+    if abs(prev_y - y) < EPSILON:
+        y = prev_y - EPSILON
+
+    clamped_prev_y = clamp_y_to_stage(prev_y)
+    clamped_y = clamp_y_to_stage(y)
+    clamped_prev_pos = lerp(
+        prev_pos,
+        pos,
+        unlerp(prev_y, y, clamped_prev_y),
+    ).scale_centered(Options.note_size)
+    clamped_pos = lerp(
+        prev_pos,
+        pos,
+        unlerp(prev_y, y, clamped_y),
+    ).scale_centered(Options.note_size)
+
+    n_segments = floor(abs(clamped_pos.mid - clamped_prev_pos.mid) * 5 * Options.arc) + 1
+    for i in range(n_segments):
+        segment_pos = lerp(clamped_prev_pos, clamped_pos, (i + 1) / n_segments)
+        segment_y = lerp(clamped_prev_y, clamped_y, (i + 1) / n_segments)
+        segment_prev_pos = lerp(clamped_prev_pos, clamped_pos, i / n_segments)
+        segment_prev_y = lerp(clamped_prev_y, clamped_y, i / n_segments)
+        layout = connector_layout(
+            pos=segment_pos,
+            y=segment_y,
+            prev_pos=segment_prev_pos,
+            prev_y=segment_prev_y,
+        )
+        sprite.draw(layout, z=Layer.CONNECTOR + max(y, prev_y) + pos.mid / 100, a=Options.connector_alpha)
 
 
 def play_hit_effects(

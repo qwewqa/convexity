@@ -33,13 +33,13 @@ level = Level(
                     head := Note(
                         variant=NoteVariant.HOLD_START,
                         beat=i,
-                        lane_ref=l1.ref(),
+                        pos=l1.pos,
                         timescale_group_ref=ts1.ref(),
                     ),
                     Note(
                         variant=NoteVariant.HOLD_END,
                         beat=i + 1 - 1 / 2,
-                        lane_ref=l3.ref(),
+                        pos=l3.pos,
                         timescale_group_ref=ts1.ref(),
                         prev_note_ref=head.ref(),
                     ),
@@ -54,13 +54,13 @@ level = Level(
                     head := Note(
                         variant=NoteVariant.HOLD_START,
                         beat=i,
-                        lane_ref=l2.ref(),
+                        pos=l2.pos,
                         timescale_group_ref=ts2.ref(),
                     ),
                     Note(
                         variant=NoteVariant.HOLD_END,
                         beat=i + 1 - 1 / 2,
-                        lane_ref=l2.ref(),
+                        pos=l2.pos,
                         timescale_group_ref=ts2.ref(),
                         prev_note_ref=head.ref(),
                     ),
@@ -78,7 +78,7 @@ level = Level(
                 ]
             ],
             TimescaleChange(beat=100 / 4, scale=1),
-            *[Note(beat=i / 4, lane_ref=l4.ref(), timescale_group_ref=ts4.ref()) for i in range(8, 100)],
+            *[Note(beat=i / 4, pos=l4.pos, timescale_group_ref=ts4.ref()) for i in range(8, 100)],
         ],
     ),
 )

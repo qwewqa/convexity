@@ -48,7 +48,7 @@ class Options:
     connector_alpha: float = slider_option(
         name=StandardText.CONNECTOR_ALPHA,
         scope="mania_v",
-        default=1,
+        default=0.8,
         min=0,
         max=1,
         step=0.05,
@@ -112,6 +112,11 @@ class Options:
     )
     angled_hitboxes: bool = toggle_option(
         name="Angled Hitboxes",
+        scope="mania_v",
+        default=False,
+    )
+    arc: bool = toggle_option(
+        name="Arc",
         scope="mania_v",
         default=False,
     )

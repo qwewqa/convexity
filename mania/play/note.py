@@ -12,11 +12,14 @@ from sonolus.script.archetype import (
 from sonolus.script.bucket import Bucket, Judgment, JudgmentWindow
 from sonolus.script.interval import Interval, lerp, unlerp
 from sonolus.script.particle import Particle
+from sonolus.script.quad import Quad
 from sonolus.script.runtime import input_offset, time, touches
 from sonolus.script.sprite import Sprite
 from sonolus.script.timing import beat_to_time
 
 from mania.common.layout import (
+    LanePosition,
+    lane_hitbox,
     note_y,
 )
 from mania.common.note import (
@@ -36,7 +39,6 @@ from mania.common.note import (
 )
 from mania.common.options import Options
 from mania.play.input_manager import mark_touch_used, taps_in_hitbox
-from mania.play.lane import Lane
 from mania.play.timescale import TimescaleGroup
 
 
@@ -45,7 +47,7 @@ class Note(PlayArchetype):
 
     variant: NoteVariant = imported()
     beat: float = imported()
-    lane_ref: EntityRef[Lane] = imported()
+    pos: LanePosition = imported()
     timescale_group_ref: EntityRef[TimescaleGroup] = imported()
     prev_note_ref: EntityRef[Note] = imported()
 
@@ -66,12 +68,16 @@ class Note(PlayArchetype):
     start_time: float = entity_data()
     target_scaled_time: float = entity_data()
 
+    hitbox: Quad = entity_memory()
     started: bool = entity_memory()
     hold_handle: HoldHandle = entity_memory()
 
     finish_time: float = exported()
 
     def preprocess(self):
+        if Options.mirror:
+            self.pos @= self.pos.mirror()
+
         self.target_time = beat_to_time(self.beat)
         self.input_target_time = self.target_time + input_offset()
         self.input_time = note_window(self.variant).good + self.input_target_time
@@ -85,6 +91,8 @@ class Note(PlayArchetype):
         self.has_prev = self.prev_note_ref.index > 0
 
         self.start_time, self.target_scaled_time = self.timescale_group.get_note_times(self.target_time)
+
+        self.hitbox = lane_hitbox(self.pos)
 
         schedule_auto_hit_sfx(Judgment.PERFECT, self.target_time)
 
@@ -121,7 +129,7 @@ class Note(PlayArchetype):
     def draw_body(self):
         draw_note_body(
             sprite=self.body_sprite,
-            pos=self.lane.pos,
+            pos=self.pos,
             y=self.y,
         )
 
@@ -132,19 +140,19 @@ class Note(PlayArchetype):
         if not prev.is_despawned:
             draw_note_connector(
                 sprite=self.connector_sprite,
-                pos=self.lane.pos,
+                pos=self.pos,
                 y=self.y,
-                prev_pos=prev.lane.pos,
+                prev_pos=prev.pos,
                 prev_y=prev.y,
             )
         elif time() < self.target_time:
             prev_target_time = prev.target_time
             target_time = self.target_time
             progress = unlerp(prev_target_time, target_time, time())
-            prev_pos = lerp(prev.lane.pos, self.lane.pos, progress)
+            prev_pos = lerp(prev.pos, self.pos, progress)
             draw_note_connector(
                 sprite=self.connector_sprite,
-                pos=self.lane.pos,
+                pos=self.pos,
                 y=self.y,
                 prev_pos=prev_pos,
                 prev_y=0,
@@ -253,7 +261,7 @@ class Note(PlayArchetype):
         self.result.bucket_value = self.result.accuracy * 1000
         play_hit_effects(
             note_particle=self.particle,
-            pos=self.lane.pos,
+            pos=self.pos,
             judgment=self.result.judgment,
         )
         self.despawn = True
@@ -270,10 +278,6 @@ class Note(PlayArchetype):
         self.finish_time = time()
 
     @property
-    def lane(self) -> Lane:
-        return self.lane_ref.get()
-
-    @property
     def timescale_group(self) -> TimescaleGroup:
         return self.timescale_group_ref.get()
 
@@ -286,10 +290,6 @@ class Note(PlayArchetype):
         if not self.has_prev:
             return 1e8
         return self.prev_note_ref.get().start_time
-
-    @property
-    def hitbox(self):
-        return self.lane.hitbox
 
 
 class UnscoredNote(Note):

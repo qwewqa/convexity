@@ -1,10 +1,10 @@
 from enum import IntEnum
-from math import atan, pi, tan
+from math import atan, cos, pi, sin, tan
 from typing import Self
 
-from sonolus.script.globals import level_memory
-from sonolus.script.interval import clamp, lerp, remap, unlerp
-from sonolus.script.quad import Quad, Rect
+from sonolus.script.globals import level_data
+from sonolus.script.interval import clamp, remap
+from sonolus.script.quad import Quad, QuadLike, Rect
 from sonolus.script.record import Record
 from sonolus.script.transform import Transform2d
 from sonolus.script.values import zeros
@@ -18,14 +18,14 @@ EPSILON = 1e-4
 class Layer(IntEnum):
     STAGE = 0
     LANE = 1
-    SLOT = 2
-    JUDGE_LINE = 3
+    JUDGE_LINE = 2
+    SLOT = 3
 
     CONNECTOR = 1000
     NOTE = 2000
 
 
-@level_memory
+@level_data
 class Layout:
     vanishing_point: Vec2
 
@@ -37,7 +37,7 @@ class Layout:
 
     stage_border_width: float
 
-    lane_transform: Transform2d
+    transform: Transform2d
     min_safe_y: float
 
 
@@ -57,7 +57,7 @@ def init_layout():
 
     Layout.stage_border_width = 0.125
 
-    Layout.lane_transform @= (
+    Layout.transform @= (
         Transform2d.new()
         .scale(Vec2(Layout.scale, Layout.scale))
         .perspective_y(Layout.judge_line_y, Layout.vanishing_point)
@@ -98,9 +98,31 @@ class LanePosition(Record):
         return LanePosition(left=-self.right, right=-self.left)
 
 
+def transform_quad(quad: QuadLike) -> Quad:
+    return Quad(
+        bl=transform_vec(quad.bl),
+        br=transform_vec(quad.br),
+        tl=transform_vec(quad.tl),
+        tr=transform_vec(quad.tr),
+    )
+
+
+def transform_vec(vec: Vec2) -> Vec2:
+    result = zeros(Vec2)
+    if Options.arc:
+        vanishing_point_h = Layout.vanishing_point.y - Layout.judge_line_y
+        angle = vec.x / vanishing_point_h * Layout.scale
+        vec = Layout.transform.transform_vec(vec)
+        h = Layout.vanishing_point.y - vec.y
+        result @= Layout.vanishing_point + Vec2(h * sin(angle), -h * cos(angle))
+    else:
+        result @= Layout.transform.transform_vec(vec)
+    return result
+
+
 def lane_layout(pos: LanePosition) -> Quad:
-    base = Rect(l=pos.left, r=pos.right, b=Layout.min_safe_y, t=Layout.lane_length)
-    return Layout.lane_transform.transform_quad(base)
+    base = Rect(l=pos.left, r=pos.right, b=Layout.min_safe_y - Layout.note_height / 2, t=Layout.lane_length)
+    return transform_quad(base)
 
 
 def note_layout(pos: LanePosition, y: float) -> Quad:
@@ -110,14 +132,29 @@ def note_layout(pos: LanePosition, y: float) -> Quad:
         b=y - Layout.note_height / 2,
         t=y + Layout.note_height / 2,
     ).scale_centered(Vec2(Options.note_size, Options.note_size))
-    return Layout.lane_transform.transform_quad(base)
+    return transform_quad(base)
 
 
-def note_particle_layout(pos: LanePosition, scale: float) -> Rect:
-    bl = Layout.lane_transform.transform_vec(Vec2(pos.left, 0))
-    br = Layout.lane_transform.transform_vec(Vec2(pos.right, 0))
-    height = Layout.scale * scale * Options.note_effect_size
-    return Rect(l=bl.x, r=br.x, b=bl.y, t=bl.y + height).scale_centered(Vec2(Options.note_size, 1))
+def line_layout(pos: LanePosition, y: float) -> Quad:
+    base = Rect(
+        l=pos.left,
+        r=pos.right,
+        b=y - Layout.note_height / 2 / 5,
+        t=y + Layout.note_height / 2 / 5,
+    )
+    return transform_quad(base)
+
+
+def note_particle_layout(pos: LanePosition, scale: float) -> Quad:
+    bl = transform_vec(Vec2(pos.left, 0))
+    br = transform_vec(Vec2(pos.right, 0))
+    h = (br - bl).rotate(pi / 2) * scale * Options.note_effect_size
+    return Quad(
+        bl=bl,
+        br=br,
+        tl=bl + h,
+        tr=br + h,
+    )
 
 
 def connector_layout(
@@ -126,32 +163,30 @@ def connector_layout(
     prev_pos: LanePosition,
     prev_y: float,
 ) -> Quad:
-    if abs(prev_y - y) < EPSILON:
-        y = prev_y - EPSILON
-    clamped_prev_y = clamp_y_to_stage(prev_y)
-    clamped_y = clamp_y_to_stage(y)
-    clamped_prev_pos = lerp(
-        prev_pos,
-        pos,
-        unlerp(prev_y, y, clamped_prev_y),
-    ).scale_centered(Options.note_size)
-    clamped_pos = lerp(
-        prev_pos,
-        pos,
-        unlerp(prev_y, y, clamped_y),
-    ).scale_centered(Options.note_size)
     base = Quad(
-        bl=Vec2(clamped_prev_pos.left, clamped_prev_y),
-        br=Vec2(clamped_prev_pos.right, clamped_prev_y),
-        tl=Vec2(clamped_pos.left, clamped_y),
-        tr=Vec2(clamped_pos.right, clamped_y),
+        bl=Vec2(prev_pos.left, prev_y),
+        br=Vec2(prev_pos.right, prev_y),
+        tl=Vec2(pos.left, y),
+        tr=Vec2(pos.right, y),
     )
-    return Layout.lane_transform.transform_quad(base)
+    return transform_quad(base)
+
+
+def segments_intersect(a1, a2, b1, b2):
+    def orientation(p, q, r):
+        return (r.y - p.y) * (q.x - p.x) > (q.y - p.y) * (r.x - p.x)
+
+    o1 = orientation(a1, b1, b2)
+    o2 = orientation(a2, b1, b2)
+    o3 = orientation(a1, a2, b1)
+    o4 = orientation(a1, a2, b2)
+
+    return o1 != o2 and o3 != o4
 
 
 def lane_hitbox(pos: LanePosition) -> Quad:
     result = zeros(Quad)
-    if Options.angled_hitboxes:
+    if Options.angled_hitboxes or Options.arc:
         result @= lane_layout(pos)
     else:
         result @= Rect(l=pos.left * Layout.scale, r=pos.right * Layout.scale, b=-1, t=1).as_quad()

@@ -1,4 +1,4 @@
-from sonolus.script.archetype import PlayArchetype
+from sonolus.script.archetype import PlayArchetype, callback
 from sonolus.script.runtime import (
     HorizontalAlign,
     screen,
@@ -21,6 +21,7 @@ class Init(PlayArchetype):
     def spawn_order(self) -> float:
         return -1e8
 
+    @callback(order=-1)
     def preprocess(self):
         init_buckets()
         init_score()

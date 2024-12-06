@@ -49,6 +49,7 @@ class TimescaleGroup(PlayArchetype):
     def spawn_order(self) -> float:
         return -1e8
 
+    @callback(order=-1)
     def update_sequential(self):
         if Options.disable_soflan:
             self.scaled_time = time()

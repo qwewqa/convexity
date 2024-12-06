@@ -17,6 +17,7 @@ from sonolus.script.sprite import Sprite
 from sonolus.script.timing import beat_to_time
 
 from mania.common.layout import (
+    LanePosition,
     note_y,
 )
 from mania.common.note import (
@@ -34,7 +35,7 @@ from mania.common.note import (
     play_watch_hit_effects,
     schedule_watch_hit_effects,
 )
-from mania.watch.lane import Lane
+from mania.common.options import Options
 from mania.watch.timescale import TimescaleGroup
 
 
@@ -43,7 +44,7 @@ class Note(WatchArchetype):
 
     variant: NoteVariant = imported()
     beat: float = imported()
-    lane_ref: EntityRef[Lane] = imported()
+    pos: LanePosition = imported()
     timescale_group_ref: EntityRef[TimescaleGroup] = imported()
     prev_note_ref: EntityRef[Note] = imported()
 
@@ -70,6 +71,9 @@ class Note(WatchArchetype):
     finish_time: float = imported()
 
     def preprocess(self):
+        if Options.mirror:
+            self.pos @= self.pos.mirror()
+
         self.target_time = beat_to_time(self.beat)
         self.window @= note_window(self.variant)
         self.bucket @= note_bucket(self.variant)
@@ -112,7 +116,7 @@ class Note(WatchArchetype):
     def draw_body(self):
         draw_note_body(
             sprite=self.body_sprite,
-            pos=self.lane.pos,
+            pos=self.pos,
             y=self.y,
         )
 
@@ -123,19 +127,19 @@ class Note(WatchArchetype):
         if time() < prev.despawn_time():
             draw_note_connector(
                 sprite=self.connector_sprite,
-                pos=self.lane.pos,
+                pos=self.pos,
                 y=self.y,
-                prev_pos=prev.lane.pos,
+                prev_pos=prev.pos,
                 prev_y=prev.y,
             )
         elif time() < self.target_time:
             prev_target_time = prev.target_time
             target_time = self.target_time
             progress = unlerp(prev_target_time, target_time, time())
-            prev_pos = lerp(prev.lane.pos, self.lane.pos, progress)
+            prev_pos = lerp(prev.pos, self.pos, progress)
             draw_note_connector(
                 sprite=self.connector_sprite,
-                pos=self.lane.pos,
+                pos=self.pos,
                 y=self.y,
                 prev_pos=prev_pos,
                 prev_y=0,
@@ -155,12 +159,8 @@ class Note(WatchArchetype):
         if not is_replay() or self.judgment != Judgment.MISS:
             play_watch_hit_effects(
                 note_particle=self.particle,
-                pos=self.lane.pos,
+                pos=self.pos,
             )
-
-    @property
-    def lane(self) -> Lane:
-        return self.lane_ref.get()
 
     @property
     def timescale_group(self) -> TimescaleGroup:

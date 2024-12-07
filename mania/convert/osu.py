@@ -1,3 +1,4 @@
+import itertools
 import tempfile
 import zipfile
 from collections import deque
@@ -156,6 +157,14 @@ def convert_osu(data: str, assets: Path) -> Level | None:
             notes.append(start)
             notes.append(end)
         notes = sorted(notes, key=lambda note: note.beat)
+
+    notes_by_beat: dict[float, list[Note]] = {}
+    for note in notes:
+        notes_by_beat.setdefault(note.beat, []).append(note)
+    for group in notes_by_beat.values():
+        group.sort(key=lambda note: note.pos.left)
+        for a, b in itertools.pairwise(group):
+            a.sim_note_ref @= b.ref()
 
     return Level(
         name=f"mania_v_{metadata["BeatmapSetID"]}_{metadata["BeatmapID"]}",

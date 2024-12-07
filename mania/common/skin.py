@@ -18,3 +18,5 @@ class Skin:
     hold_tick_note: StandardSprite.NOTE_TICK_GREEN
 
     connector: StandardSprite.GRID_GREEN
+
+    sim_line: StandardSprite.SIMULTANEOUS_CONNECTION_NEUTRAL_SEAMLESS

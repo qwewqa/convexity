@@ -45,6 +45,11 @@ class Options:
         step=0.05,
         unit=StandardText.PERCENTAGE_UNIT,
     )
+    sim_lines_enabled: bool = toggle_option(
+        name=StandardText.SIMLINE,
+        scope="mania_v",
+        default=True,
+    )
     connector_alpha: float = slider_option(
         name=StandardText.CONNECTOR_ALPHA,
         scope="mania_v",

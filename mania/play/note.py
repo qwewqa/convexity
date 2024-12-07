@@ -27,6 +27,7 @@ from mania.common.note import (
     NoteVariant,
     draw_note_body,
     draw_note_connector,
+    draw_note_sim_line,
     note_body_sprite,
     note_bucket,
     note_connector_sprite,
@@ -50,6 +51,7 @@ class Note(PlayArchetype):
     pos: LanePosition = imported()
     timescale_group_ref: EntityRef[TimescaleGroup] = imported()
     prev_note_ref: EntityRef[Note] = imported()
+    sim_note_ref: EntityRef[Note] = imported()
 
     touch_id: int = shared_memory()
     y: float = shared_memory()
@@ -65,6 +67,7 @@ class Note(PlayArchetype):
     particle: Particle = entity_data()
     hold_particle: Particle = entity_data()
     has_prev: bool = entity_data()
+    has_sim: bool = entity_data()
     start_time: float = entity_data()
     target_scaled_time: float = entity_data()
 
@@ -89,6 +92,7 @@ class Note(PlayArchetype):
         self.particle @= note_particle(self.variant)
         self.hold_particle @= note_hold_particle(self.variant)
         self.has_prev = self.prev_note_ref.index > 0
+        self.has_sim = self.sim_note_ref.index > 0
 
         self.start_time, self.target_scaled_time = self.timescale_group.get_note_times(self.target_time)
 
@@ -97,7 +101,7 @@ class Note(PlayArchetype):
         schedule_auto_hit_sfx(Judgment.PERFECT, self.target_time)
 
     def spawn_time(self) -> float:
-        return min(self.start_time, self.prev_start_time)
+        return min(self.start_time, self.prev_start_time, self.sim_start_time)
 
     def spawn_order(self) -> float:
         return self.spawn_time()
@@ -107,6 +111,8 @@ class Note(PlayArchetype):
 
     def update_sequential(self):
         self.y = note_y(self.timescale_group.scaled_time, self.target_scaled_time)
+        if self.has_sim and self.sim_note.is_waiting:
+            self.sim_note.y = note_y(self.sim_note.timescale_group.scaled_time, self.sim_note.target_scaled_time)
 
     def update_parallel(self):
         if self.despawn:
@@ -116,6 +122,7 @@ class Note(PlayArchetype):
             return
         self.draw_body()
         self.draw_connector()
+        self.draw_sim_line()
 
     def missed_timing(self) -> bool:
         return time() > self.input_time.end
@@ -166,6 +173,19 @@ class Note(PlayArchetype):
                 particle=self.hold_particle,
                 pos=prev_pos,
             )
+
+    def draw_sim_line(self):
+        if not self.has_sim:
+            return
+        sim = self.sim_note
+        if sim.is_despawned:
+            return
+        draw_note_sim_line(
+            pos=self.pos,
+            y=self.y,
+            sim_pos=sim.pos,
+            sim_y=sim.y,
+        )
 
     def touch(self):
         if self.has_prev and not self.prev.is_despawned:
@@ -290,6 +310,16 @@ class Note(PlayArchetype):
         if not self.has_prev:
             return 1e8
         return self.prev_note_ref.get().start_time
+
+    @property
+    def sim_note(self) -> Note:
+        return self.sim_note_ref.get()
+
+    @property
+    def sim_start_time(self) -> float:
+        if not self.has_sim:
+            return 1e8
+        return self.sim_note.start_time
 
 
 class UnscoredNote(Note):

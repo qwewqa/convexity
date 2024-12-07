@@ -20,6 +20,7 @@ from mania.common.layout import (
     lane_layout,
     note_layout,
     note_particle_layout,
+    sim_line_layout,
 )
 from mania.common.options import Options
 from mania.common.particle import Particles
@@ -130,7 +131,8 @@ def draw_note_connector(
         unlerp(prev_y, y, clamped_y),
     ).scale_centered(Options.note_size)
 
-    n_segments = floor(abs(clamped_pos.mid - clamped_prev_pos.mid) * 5 * Options.arc) + 1
+    arc_quality = 5
+    n_segments = floor(abs(clamped_pos.mid - clamped_prev_pos.mid) * arc_quality * Options.arc) + 1
     for i in range(n_segments):
         segment_pos = lerp(clamped_prev_pos, clamped_pos, (i + 1) / n_segments)
         segment_y = lerp(clamped_prev_y, clamped_y, (i + 1) / n_segments)
@@ -143,6 +145,49 @@ def draw_note_connector(
             prev_y=segment_prev_y,
         )
         sprite.draw(layout, z=Layer.CONNECTOR + max(y, prev_y) + pos.mid / 100, a=Options.connector_alpha)
+
+
+def draw_note_sim_line(
+    pos: LanePosition,
+    y: float,
+    sim_pos: LanePosition,
+    sim_y: float,
+):
+    if not Options.sim_lines_enabled:
+        return
+
+    if y < Layout.min_safe_y and sim_y < Layout.min_safe_y:
+        return
+    if y > Layout.lane_length and sim_y > Layout.lane_length:
+        return
+
+    clamped_sim_y = clamp_y_to_stage(sim_y)
+    clamped_y = clamp_y_to_stage(y)
+    clamped_sim_pos = lerp(
+        pos,
+        sim_pos,
+        unlerp(y, sim_y, clamped_sim_y) if abs(sim_y - y) > EPSILON else 1,
+    ).scale_centered(Options.note_size)
+    clamped_pos = lerp(
+        pos,
+        sim_pos,
+        unlerp(y, sim_y, clamped_y) if abs(sim_y - y) > EPSILON else 0,
+    ).scale_centered(Options.note_size)
+
+    arc_quality = 5
+    n_segments = floor(abs(clamped_pos.mid - clamped_sim_pos.mid) * arc_quality * Options.arc) + 1
+    for i in range(n_segments):
+        segment_pos = lerp(clamped_pos, clamped_sim_pos, (i + 1) / n_segments)
+        segment_y = lerp(clamped_y, clamped_sim_y, (i + 1) / n_segments)
+        segment_prev_pos = lerp(clamped_pos, clamped_sim_pos, i / n_segments)
+        segment_prev_y = lerp(clamped_y, clamped_sim_y, i / n_segments)
+        layout = sim_line_layout(
+            pos=segment_pos,
+            y=segment_y,
+            sim_pos=segment_prev_pos,
+            sim_y=segment_prev_y,
+        )
+        Skin.sim_line.draw(layout, z=Layer.CONNECTOR + max(y, sim_y) + pos.mid / 100, a=1)
 
 
 def play_hit_effects(

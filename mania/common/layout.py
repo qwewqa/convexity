@@ -7,12 +7,12 @@ from sonolus.script.interval import clamp, remap
 from sonolus.script.quad import Quad, QuadLike, Rect
 from sonolus.script.record import Record
 from sonolus.script.transform import Transform2d
-from sonolus.script.values import zeros
+from sonolus.script.values import swap, zeros
 from sonolus.script.vec import Vec2
 
 from mania.common.options import Options
 
-EPSILON = 1e-4
+EPSILON = 1e-3
 
 
 class Layer(IntEnum):
@@ -34,6 +34,7 @@ class Layout:
     judge_line_y: float
     lane_length: float
     note_height: float
+    sim_line_height: float
 
     stage_border_width: float
 
@@ -47,6 +48,7 @@ def init_layout():
     Layout.judge_line_y = -0.6 + 0.05 * Options.judge_line_position
     Layout.lane_length = 10 * Options.lane_length
     Layout.note_height = 1.0
+    Layout.sim_line_height = 0.16
 
     if Options.stage_tilt > 0:
         max_tilt_angle = atan(1.8)
@@ -65,7 +67,7 @@ def init_layout():
 
     # Below this coordinate, points are "behind" the screen so they shouldn't be displayed.
     # We add half of the note height to make this the safe note center y-coordinate.
-    Layout.min_safe_y = Layout.judge_line_y - Layout.vanishing_point.y + Layout.note_height / 2 + EPSILON
+    Layout.min_safe_y = Layout.judge_line_y - Layout.vanishing_point.y + Layout.scale * Layout.note_height / 2 + EPSILON
 
 
 class LanePosition(Record):
@@ -109,7 +111,7 @@ def transform_quad(quad: QuadLike) -> Quad:
 
 def transform_vec(vec: Vec2) -> Vec2:
     result = zeros(Vec2)
-    if Options.arc:
+    if Options.arc and Options.stage_tilt > 0:
         vanishing_point_h = Layout.vanishing_point.y - Layout.judge_line_y
         angle = vec.x / vanishing_point_h * Layout.scale
         vec = Layout.transform.transform_vec(vec)
@@ -168,6 +170,27 @@ def connector_layout(
         br=Vec2(prev_pos.right, prev_y),
         tl=Vec2(pos.left, y),
         tr=Vec2(pos.right, y),
+    )
+    return transform_quad(base)
+
+
+def sim_line_layout(
+    pos: LanePosition,
+    y: float,
+    sim_pos: LanePosition,
+    sim_y: float,
+):
+    mid_l = Vec2(pos.mid, y)
+    mid_r = Vec2(sim_pos.mid, sim_y)
+    if mid_l.x > mid_r.x:
+        swap(mid_l, mid_r)
+    ort = (mid_r - mid_l).orthogonal().normalize()
+    ort *= Layout.sim_line_height / 2
+    base = Quad(
+        bl=mid_l - ort,
+        br=mid_r - ort,
+        tl=mid_l + ort,
+        tr=mid_r + ort,
     )
     return transform_quad(base)
 

@@ -25,6 +25,7 @@ from mania.common.note import (
     NoteVariant,
     draw_note_body,
     draw_note_connector,
+    draw_note_sim_line,
     note_body_sprite,
     note_bucket,
     note_connector_sprite,
@@ -47,6 +48,7 @@ class Note(WatchArchetype):
     pos: LanePosition = imported()
     timescale_group_ref: EntityRef[TimescaleGroup] = imported()
     prev_note_ref: EntityRef[Note] = imported()
+    sim_note_ref: EntityRef[Note] = imported()
 
     touch_id: int = shared_memory()
     y: float = shared_memory()
@@ -60,6 +62,7 @@ class Note(WatchArchetype):
     particle: Particle = entity_data()
     hold_particle: Particle = entity_data()
     has_prev: bool = entity_data()
+    has_sim: bool = entity_data()
     start_time: float = entity_data()
     target_scaled_time: float = entity_data()
 
@@ -83,6 +86,7 @@ class Note(WatchArchetype):
         self.particle @= note_particle(self.variant)
         self.hold_particle @= note_hold_particle(self.variant)
         self.has_prev = self.prev_note_ref.index > 0
+        self.has_sim = self.sim_note_ref.index > 0
 
         self.start_time, self.target_scaled_time = self.timescale_group.get_note_times(self.target_time)
 
@@ -98,7 +102,7 @@ class Note(WatchArchetype):
             schedule_watch_hit_effects(self.target_time, Judgment.PERFECT)
 
     def spawn_time(self) -> float:
-        return min(self.start_time, self.prev_start_time)
+        return min(self.start_time, self.prev_start_time, self.sim_start_time)
 
     def despawn_time(self) -> float:
         if is_replay():
@@ -108,10 +112,13 @@ class Note(WatchArchetype):
 
     def update_sequential(self):
         self.y = note_y(self.timescale_group.scaled_time, self.target_scaled_time)
+        if self.has_sim and time() < self.sim_note.spawn_time():
+            self.sim_note.y = note_y(self.sim_note.timescale_group.scaled_time, self.sim_note.target_scaled_time)
 
     def update_parallel(self):
         self.draw_body()
         self.draw_connector()
+        self.draw_sim_line()
 
     def draw_body(self):
         draw_note_body(
@@ -154,6 +161,19 @@ class Note(WatchArchetype):
                 pos=prev_pos,
             )
 
+    def draw_sim_line(self):
+        if not self.has_sim:
+            return
+        sim = self.sim_note
+        if time() >= sim.despawn_time():
+            return
+        draw_note_sim_line(
+            pos=self.pos,
+            y=self.y,
+            sim_pos=sim.pos,
+            sim_y=sim.y,
+        )
+
     def terminate(self):
         self.hold_handle.destroy()
         if not is_replay() or self.judgment != Judgment.MISS:
@@ -175,6 +195,16 @@ class Note(WatchArchetype):
         if not self.has_prev:
             return 1e8
         return self.prev_note_ref.get().start_time
+
+    @property
+    def sim_note(self) -> Note:
+        return self.sim_note_ref.get()
+
+    @property
+    def sim_start_time(self) -> float:
+        if not self.has_sim:
+            return 1e8
+        return self.sim_note.start_time
 
 
 class UnscoredNote(Note):

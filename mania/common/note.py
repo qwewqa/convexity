@@ -253,7 +253,7 @@ def play_hit_particle(
 ):
     if Options.note_effect_enabled:
         note_particle.spawn(
-            note_particle_layout(pos, scale=0.6),
+            note_particle_layout(pos),
             duration=0.5,
         )
     if Options.lane_effect_enabled:
@@ -271,12 +271,12 @@ class HoldHandle(Record):
             return
         if self.handle.id == 0:
             self.handle @= particle.spawn(
-                note_particle_layout(pos, scale=0.4),
+                note_particle_layout(pos),
                 duration=1.0,
                 loop=True,
             )
         else:
-            self.handle.move(note_particle_layout(pos, scale=0.4))
+            self.handle.move(note_particle_layout(pos))
 
     def destroy(self):
         if self.handle.id != 0:

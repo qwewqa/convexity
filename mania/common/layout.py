@@ -47,7 +47,7 @@ def init_layout():
 
     Layout.judge_line_y = -0.6 + 0.05 * Options.judge_line_position
     Layout.lane_length = 10 * Options.lane_length
-    Layout.note_height = 1.0
+    Layout.note_height = Options.note_height
     Layout.sim_line_height = 0.16
 
     if Options.stage_tilt > 0:
@@ -147,10 +147,10 @@ def line_layout(pos: LanePosition, y: float) -> Quad:
     return transform_quad(base)
 
 
-def note_particle_layout(pos: LanePosition, scale: float) -> Quad:
+def note_particle_layout(pos: LanePosition) -> Quad:
     bl = transform_vec(Vec2(pos.left, 0))
     br = transform_vec(Vec2(pos.right, 0))
-    h = (br - bl).rotate(pi / 2) * scale * Options.note_effect_size
+    h = (br - bl).rotate(pi / 2) * Options.note_effect_size
     return Quad(
         bl=bl,
         br=br,

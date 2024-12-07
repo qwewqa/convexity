@@ -31,6 +31,15 @@ class Options:
         step=0.05,
         unit=StandardText.PERCENTAGE_UNIT,
     )
+    note_height: float = slider_option(
+        name="Note Height",
+        scope="mania_v",
+        default=1,
+        min=0.1,
+        max=2,
+        step=0.05,
+        unit=StandardText.PERCENTAGE_UNIT,
+    )
     note_effect_enabled: bool = toggle_option(
         name=StandardText.NOTE_EFFECT,
         scope="mania_v",
@@ -123,7 +132,7 @@ class Options:
     arc: bool = toggle_option(
         name="Arc",
         scope="mania_v",
-        default=False,
+        default=True,
     )
     disable_soflan: bool = toggle_option(
         name="Disable Soflan",

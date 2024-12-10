@@ -173,6 +173,12 @@ class Note(WatchArchetype):
                 particle=self.hold_particle,
                 pos=prev_pos,
             )
+        else:
+            draw_note_body(
+                sprite=self.head_sprite,
+                pos=self.pos,
+                y=0,
+            )
 
     def draw_arrow(self):
         if self.variant == NoteVariant.FLICK or self.variant == NoteVariant.DIRECTIONAL_FLICK:

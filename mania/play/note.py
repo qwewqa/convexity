@@ -61,6 +61,7 @@ class Note(PlayArchetype):
 
     touch_id: int = shared_memory()
     y: float = shared_memory()
+    input_finished: bool = shared_memory()
 
     pos: LanePosition = entity_data()
     target_time: float = entity_data()
@@ -124,10 +125,8 @@ class Note(PlayArchetype):
         self.y = note_y(self.timescale_group.scaled_time, self.target_scaled_time)
         if self.has_sim and self.sim_note.is_waiting:
             self.sim_note.y = note_y(self.sim_note.timescale_group.scaled_time, self.sim_note.target_scaled_time)
-        if self.variant == NoteVariant.HOLD_ANCHOR and time() >= self.target_time and self.prev.is_despawned:
-            self.touch_id = self.prev.touch_id
-            self.complete(self.target_time)
-            return
+        if self.variant == NoteVariant.HOLD_ANCHOR:
+            self.input_finished = self.prev.input_finished or self.prev.is_despawned
 
     def update_parallel(self):
         if self.despawn:
@@ -190,6 +189,12 @@ class Note(PlayArchetype):
                 particle=self.hold_particle,
                 pos=prev_pos,
             )
+        else:
+            draw_note_body(
+                sprite=self.head_sprite,
+                pos=self.pos,
+                y=0,
+            )
 
     def draw_arrow(self):
         if self.variant == NoteVariant.FLICK or self.variant == NoteVariant.DIRECTIONAL_FLICK:
@@ -214,7 +219,7 @@ class Note(PlayArchetype):
         )
 
     def touch(self):
-        if self.has_prev and not self.prev.is_despawned:
+        if self.has_prev and not (self.prev.is_despawned or self.prev.input_finished):
             return
         match self.variant:
             case NoteVariant.SINGLE | NoteVariant.HOLD_START:
@@ -224,7 +229,7 @@ class Note(PlayArchetype):
                     self.handle_hold_input()
                 else:
                     self.handle_release_input()
-            case NoteVariant.HOLD_TICK:
+            case NoteVariant.HOLD_TICK | NoteVariant.HOLD_ANCHOR:
                 self.handle_hold_input()
             case NoteVariant.FLICK | NoteVariant.DIRECTIONAL_FLICK:
                 self.handle_flick_input()
@@ -258,9 +263,9 @@ class Note(PlayArchetype):
             self.fail(time() - input_offset())
 
     def handle_flick_input(self):
-        if time() not in self.input_time:
-            return
         if self.touch_id == 0:
+            if time() not in self.input_time:
+                return
             if self.has_prev and self.prev.touch_id != 0:
                 for touch in touches():
                     if touch.id == self.prev.touch_id and self.hitbox.contains_point(touch.position):
@@ -274,6 +279,8 @@ class Note(PlayArchetype):
                     mark_touch_used(touch)
                     self.touch_id = touch.id
                     break
+                else:
+                    return
         target_velocity = flick_velocity_threshold(self.direction)
         for touch in touches():
             if touch.id != self.touch_id:
@@ -297,9 +304,12 @@ class Note(PlayArchetype):
                 if touch.time >= self.input_target_time:
                     # The touch has just met the flick criteria after the target time.
                     self.complete(touch.time)
-                else:
+                elif touch.time >= self.input_time.start:
                     # The touch has just met the flick criteria before the target time.
                     self.started = True
+                else:
+                    # The touch has just met the flick criteria before the input time.
+                    pass
             elif touch.ended:
                 # The touch has ended without ever meeting the flick criteria.
                 self.fail(touch.time)

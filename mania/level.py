@@ -2,6 +2,7 @@ from pathlib import Path
 
 from sonolus.script.level import BpmChange, Level, LevelData
 
+from mania.convert.bestdori import get_bestdori_official
 from mania.convert.osu import convert_osz
 from mania.play.init import Init
 from mania.play.note import Note, NoteVariant, UnscoredNote
@@ -127,3 +128,4 @@ levels = [level]
 
 for osz_file in Path("resources").glob("*.osz"):
     levels.extend(convert_osz(osz_file.read_bytes()))
+    levels.extend(get_bestdori_official(484))

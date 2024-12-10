@@ -22,7 +22,7 @@ def unused_touches() -> Iterable[Touch]:
 
 def taps_in_hitbox(hitbox) -> Iterable[Touch]:
     return filter(
-        lambda touch: hitbox.contains_point(touch.position) and touch.started,
+        lambda touch: hitbox.contains_point(touch.start_position) and touch.started,
         unused_touches(),
     )
 

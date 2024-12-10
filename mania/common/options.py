@@ -62,7 +62,7 @@ class Options:
     connector_alpha: float = slider_option(
         name=StandardText.CONNECTOR_ALPHA,
         scope="mania_v",
-        default=0.8,
+        default=0.5,
         min=0,
         max=1,
         step=0.05,
@@ -94,7 +94,7 @@ class Options:
     stage_tilt: float = slider_option(
         name=StandardText.STAGE_TILT,
         scope="mania_v",
-        default=0.5,
+        default=0.4,
         min=0,
         max=1,
         step=0.05,

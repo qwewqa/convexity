@@ -46,7 +46,7 @@ class Layout:
 
 
 def init_layout():
-    Layout.scale = 0.5 * Options.stage_size
+    Layout.scale = 0.4 * Options.stage_size
 
     Layout.judge_line_y = -0.6 + 0.05 * Options.judge_line_position
     Layout.lane_length = 10 * Options.lane_length

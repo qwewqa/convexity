@@ -302,9 +302,9 @@ def draw_note_arrow(
 
 def flick_velocity_threshold(direction: int = 0):
     if direction == 0:
-        return 8.0 * Layout.reference_length
+        return 6.0 * Layout.reference_length
     else:
-        return 4.0 * abs(direction) * Layout.reference_length
+        return 6.0 * abs(direction) * Layout.reference_length
 
 
 def play_hit_effects(

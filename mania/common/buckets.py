@@ -116,3 +116,8 @@ note_judgment_window = JudgmentWindow(
     great=Interval(-0.1, 0.1),
     good=Interval(-0.15, 0.15),
 )
+tick_judgment_window = JudgmentWindow(
+    perfect=Interval(-0.15, 0.05),
+    great=Interval(-0.15, 0.1),
+    good=Interval(-0.15, 0.15),
+)

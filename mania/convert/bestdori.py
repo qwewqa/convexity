@@ -105,7 +105,7 @@ def convert_bestdori(data: list[dict]) -> LevelData:
                         variant=NoteVariant.SINGLE if not entry.get("flick", False) else NoteVariant.FLICK,
                         beat=entry["beat"],
                         lane=convert_lane(entry["lane"]),
-                        leniency=2,
+                        leniency=2.35,
                         timescale_group_ref=timescale_group.ref(),
                     )
                 )
@@ -115,7 +115,7 @@ def convert_bestdori(data: list[dict]) -> LevelData:
                     variant=NoteVariant.HOLD_START,
                     beat=connections[0]["beat"],
                     lane=convert_lane(connections[0]["lane"]),
-                    leniency=2,
+                    leniency=2.35,
                     timescale_group_ref=timescale_group.ref(),
                 )
                 notes.append(prev_note)
@@ -132,7 +132,7 @@ def convert_bestdori(data: list[dict]) -> LevelData:
                         variant=variant,
                         beat=connection["beat"],
                         lane=convert_lane(connection["lane"]),
-                        leniency=2,
+                        leniency=2.35,
                         timescale_group_ref=timescale_group.ref(),
                         prev_note_ref=prev_note.ref(),
                     )
@@ -145,7 +145,7 @@ def convert_bestdori(data: list[dict]) -> LevelData:
                         beat=entry["beat"],
                         lane=convert_lane(entry["lane"]),
                         direction=entry["width"] * (1 if entry["direction"] == "Right" else -1),
-                        leniency=2,
+                        leniency=2.35,
                         timescale_group_ref=timescale_group.ref(),
                     )
                 )

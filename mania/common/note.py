@@ -12,7 +12,7 @@ from sonolus.script.sprite import Sprite
 from sonolus.script.values import copy, zeros
 from sonolus.script.vec import Vec2
 
-from mania.common.buckets import Buckets, note_judgment_window
+from mania.common.buckets import Buckets, note_judgment_window, tick_judgment_window
 from mania.common.effect import SFX_DISTANCE, Effects
 from mania.common.layout import (
     EPSILON,
@@ -43,7 +43,19 @@ class NoteVariant(IntEnum):
 
 
 def note_window(variant: NoteVariant) -> JudgmentWindow:
-    return note_judgment_window
+    result = copy(note_judgment_window)
+    match variant:
+        case (
+            NoteVariant.SINGLE
+            | NoteVariant.HOLD_START
+            | NoteVariant.HOLD_END
+            | NoteVariant.FLICK
+            | NoteVariant.DIRECTIONAL_FLICK
+        ):
+            result @= note_judgment_window
+        case NoteVariant.HOLD_TICK | NoteVariant.HOLD_ANCHOR:
+            result @= tick_judgment_window
+    return result
 
 
 def note_bucket(variant: NoteVariant):
@@ -55,7 +67,7 @@ def note_bucket(variant: NoteVariant):
             result @= Buckets.hold_start_note
         case NoteVariant.HOLD_END:
             result @= Buckets.hold_end_note
-        case NoteVariant.HOLD_TICK:
+        case NoteVariant.HOLD_TICK | NoteVariant.HOLD_ANCHOR:
             result @= Buckets.hold_tick_note
         case NoteVariant.FLICK:
             result @= Buckets.flick_note

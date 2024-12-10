@@ -312,8 +312,9 @@ class Note(PlayArchetype):
                 if time() >= self.input_target_time:
                     # The touch has continuously met the flick criteria into the target time.
                     self.complete(self.target_time)
-                elif not met or touch.ended:
+                elif (not met and not self.has_prev) or touch.ended:
                     # The touch has stopped meeting the flick criteria or ended before the target time.
+                    # We also make an exception for hold-flicks.
                     self.complete(touch.time)
                 else:
                     # The touch has continuously met the flick criteria, but we haven't reached the target time yet.

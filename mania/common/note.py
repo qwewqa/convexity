@@ -289,7 +289,7 @@ def draw_note_arrow(
 
 
 def flick_velocity_threshold(direction: int = 0):
-    return max(0.5, abs(direction) / 2) * Layout.reference_length
+    return max(8.0, 4.0 * abs(direction)) * Layout.reference_length
 
 
 def play_hit_effects(

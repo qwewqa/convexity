@@ -18,6 +18,7 @@ from sonolus.script.timing import beat_to_time
 
 from mania.common.layout import (
     LanePosition,
+    lane_to_pos,
     note_y,
 )
 from mania.common.note import (
@@ -45,7 +46,8 @@ class Note(WatchArchetype):
 
     variant: NoteVariant = imported()
     beat: float = imported()
-    pos: LanePosition = imported()
+    lane: float = imported()
+    leniency: float = imported()
     timescale_group_ref: EntityRef[TimescaleGroup] = imported()
     prev_note_ref: EntityRef[Note] = imported()
     sim_note_ref: EntityRef[Note] = imported()
@@ -53,6 +55,7 @@ class Note(WatchArchetype):
     touch_id: int = shared_memory()
     y: float = shared_memory()
 
+    pos: LanePosition = imported()
     target_time: float = entity_data()
     window: JudgmentWindow = entity_data()
     bucket: Bucket = entity_data()
@@ -75,8 +78,9 @@ class Note(WatchArchetype):
 
     def preprocess(self):
         if Options.mirror:
-            self.pos @= self.pos.mirror()
+            self.lane = -self.lane
 
+        self.pos @= lane_to_pos(self.lane)
         self.target_time = beat_to_time(self.beat)
         self.window @= note_window(self.variant)
         self.bucket @= note_bucket(self.variant)

@@ -1,14 +1,16 @@
-from sonolus.script.archetype import WatchArchetype, callback, imported
+from sonolus.script.archetype import WatchArchetype, entity_memory, imported
 
 from mania.common.lane import draw_lane
 from mania.common.layout import (
     LanePosition,
+    lane_to_pos,
 )
-from mania.common.options import Options
 
 
 class Lane(WatchArchetype):
-    pos: LanePosition = imported()
+    lane: int = imported()
+
+    pos: LanePosition = entity_memory()
 
     def spawn_time(self) -> float:
         return -1e8
@@ -16,10 +18,8 @@ class Lane(WatchArchetype):
     def despawn_time(self) -> float:
         return 1e8
 
-    @callback(order=-1)
     def preprocess(self):
-        if Options.mirror:
-            self.pos @= self.pos.mirror()
+        self.pos @= lane_to_pos(self.lane)
 
     def update_parallel(self):
         draw_lane(self.pos)

@@ -1,26 +1,26 @@
-from sonolus.script.archetype import PlayArchetype, callback, entity_data, imported
+from sonolus.script.archetype import PlayArchetype, callback, entity_memory, imported
 from sonolus.script.quad import Quad
 
 from mania.common.lane import draw_lane, play_lane_effects
 from mania.common.layout import (
     LanePosition,
     lane_hitbox,
+    lane_to_pos,
 )
-from mania.common.options import Options
 from mania.play.input_manager import unused_touches
 
 
 class Lane(PlayArchetype):
-    pos: LanePosition = imported()
+    lane: int = imported()
 
-    hitbox: Quad = entity_data()
+    pos: LanePosition = entity_memory()
+    hitbox: Quad = entity_memory()
 
     def spawn_order(self) -> float:
         return -1e8
 
     def preprocess(self):
-        if Options.mirror:
-            self.pos @= self.pos.mirror()
+        self.pos @= lane_to_pos(self.lane)
         self.hitbox @= lane_hitbox(self.pos)
 
     def update_parallel(self):

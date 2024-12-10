@@ -119,11 +119,6 @@ class Options:
         scope="mania_v",
         default=False,
     )
-    mirror: bool = toggle_option(
-        name=StandardText.MIRROR,
-        scope="mania_v",
-        default=False,
-    )
     angled_hitboxes: bool = toggle_option(
         name="Angled Hitboxes",
         scope="mania_v",
@@ -133,6 +128,15 @@ class Options:
         name="Arc",
         scope="mania_v",
         default=True,
+    )
+    spread: float = slider_option(
+        name="Spread",
+        scope="mania_v",
+        default=0,
+        min=0,
+        max=1,
+        step=0.05,
+        unit=None,
     )
     disable_soflan: bool = toggle_option(
         name="Disable Soflan",
@@ -145,4 +149,9 @@ class Options:
         scope="mania_v",
         default=False,
         standard=False,
+    )
+    mirror: bool = toggle_option(
+        name=StandardText.MIRROR,
+        scope="mania_v",
+        default=False,
     )

@@ -100,6 +100,12 @@ class LanePosition(Record):
         return LanePosition(left=-self.right, right=-self.left)
 
 
+def lane_to_pos(lane: float, width: float = 1) -> LanePosition:
+    lane *= 1 + Options.spread
+    half_width = width / 2
+    return LanePosition(left=lane - half_width, right=lane + half_width)
+
+
 def transform_quad(quad: QuadLike) -> Quad:
     return Quad(
         bl=transform_vec(quad.bl),

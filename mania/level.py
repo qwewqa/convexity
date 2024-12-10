@@ -2,12 +2,9 @@ from pathlib import Path
 
 from sonolus.script.level import BpmChange, Level, LevelData
 
-from mania.common.layout import LanePosition
 from mania.convert.osu import convert_osz
 from mania.play.init import Init
-from mania.play.lane import Lane
 from mania.play.note import Note, NoteVariant
-from mania.play.stage import Stage
 from mania.play.timescale import TimescaleChange, TimescaleGroup
 
 level = Level(
@@ -19,11 +16,6 @@ level = Level(
         entities=[
             BpmChange(beat=0, bpm=60),
             Init(),
-            Stage(pos=LanePosition(-2, 2)),
-            l1 := Lane(pos=LanePosition(-2, -1)),
-            l2 := Lane(pos=LanePosition(-1, 0)),
-            l3 := Lane(pos=LanePosition(0, 1)),
-            l4 := Lane(pos=LanePosition(1, 2)),
             ts1 := TimescaleGroup(),
             TimescaleChange(beat=0, scale=1),
             TimescaleChange(beat=0.001, scale=999999),
@@ -33,13 +25,13 @@ level = Level(
                     head := Note(
                         variant=NoteVariant.HOLD_START,
                         beat=i,
-                        pos=l1.pos,
+                        lane=-1.5,
                         timescale_group_ref=ts1.ref(),
                     ),
                     Note(
                         variant=NoteVariant.HOLD_END,
                         beat=i + 1 - 1 / 2,
-                        pos=l3.pos,
+                        lane=0.5,
                         timescale_group_ref=ts1.ref(),
                         prev_note_ref=head.ref(),
                     ),
@@ -54,13 +46,13 @@ level = Level(
                     head := Note(
                         variant=NoteVariant.HOLD_START,
                         beat=i,
-                        pos=l2.pos,
+                        lane=-0.5,
                         timescale_group_ref=ts2.ref(),
                     ),
                     Note(
                         variant=NoteVariant.HOLD_END,
                         beat=i + 1 - 1 / 2,
-                        pos=l2.pos,
+                        lane=-0.5,
                         timescale_group_ref=ts2.ref(),
                         prev_note_ref=head.ref(),
                     ),
@@ -78,7 +70,7 @@ level = Level(
                 ]
             ],
             TimescaleChange(beat=100 / 4, scale=1),
-            *[Note(beat=i / 4, pos=l4.pos, timescale_group_ref=ts4.ref()) for i in range(8, 100)],
+            *[Note(beat=i / 4, lane=1.5, timescale_group_ref=ts4.ref()) for i in range(8, 100)],
         ],
     ),
 )

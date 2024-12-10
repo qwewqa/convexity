@@ -13,7 +13,6 @@ from sonolus.script.vec import Vec2
 
 from mania.common.init import init_buckets, init_life, init_score
 from mania.common.layout import init_layout
-from mania.play.input_manager import InputManager
 from mania.play.note import Note
 
 
@@ -30,7 +29,6 @@ class Init(PlayArchetype):
         init_layout()
 
     def update_sequential(self):
-        InputManager.spawn()
         self.despawn = True
 
 

@@ -9,7 +9,6 @@ from typing import NamedTuple
 
 from sonolus.script.level import Level, LevelData
 
-from mania.common.layout import LanePosition
 from mania.play.bpm import BpmChange
 from mania.play.init import Init
 from mania.play.lane import Lane
@@ -80,14 +79,22 @@ def convert_osu(data: str, assets: Path) -> Level | None:
         return None
 
     lane_count = int(difficulty["CircleSize"])
-    lane_start_x = -lane_count / 2
-    lanes = [Lane(pos=LanePosition(left=lane_start_x + i, right=lane_start_x + i + 1)) for i in range(lane_count)]
-    stage = Stage(
-        pos=LanePosition(left=min(lane.pos.left for lane in lanes), right=max(lane.pos.right for lane in lanes))
-    )
 
-    def x_to_lane(x: int) -> int:
-        return max(0, min(lane_count - 1, floor((x / 512) * lane_count)))
+    stages = [
+        Stage(
+            lane=0,
+            width=lane_count,
+        )
+    ]
+    lanes = [
+        Lane(
+            lane=i - (lane_count - 1) / 2,
+        )
+        for i in range(lane_count)
+    ]
+
+    def x_to_lane(x: float) -> float:
+        return max(0, min(lane_count - 1, floor((x / 512) * lane_count))) - (lane_count - 1) / 2
 
     timing_points = parse_timing_points(sections["TimingPoints"])
     hit_objects = parse_hit_objects(sections["HitObjects"])
@@ -136,7 +143,8 @@ def convert_osu(data: str, assets: Path) -> Level | None:
                 Note(
                     variant=NoteVariant.SINGLE,
                     beat=section_beat + (hit_object.time - bpm_time) / 60000 * bpm,
-                    pos=lanes[x_to_lane(hit_object.x)].pos,
+                    lane=x_to_lane(hit_object.x),
+                    leniency=1,
                     timescale_group_ref=timescale_group.ref(),
                 )
             )
@@ -144,13 +152,15 @@ def convert_osu(data: str, assets: Path) -> Level | None:
             start = Note(
                 variant=NoteVariant.HOLD_START,
                 beat=section_beat + (hit_object.time - bpm_time) / 60000 * bpm,
-                pos=lanes[x_to_lane(hit_object.x)].pos,
+                lane=x_to_lane(hit_object.x),
+                leniency=1,
                 timescale_group_ref=timescale_group.ref(),
             )
             end = Note(
                 variant=NoteVariant.HOLD_END,
                 beat=section_beat + (hit_object.slide_end_time - bpm_time) / 60000 * bpm,
-                pos=lanes[x_to_lane(hit_object.x)].pos,
+                lane=x_to_lane(hit_object.x),
+                leniency=1,
                 timescale_group_ref=timescale_group.ref(),
                 prev_note_ref=start.ref(),
             )
@@ -162,7 +172,7 @@ def convert_osu(data: str, assets: Path) -> Level | None:
     for note in notes:
         notes_by_beat.setdefault(note.beat, []).append(note)
     for group in notes_by_beat.values():
-        group.sort(key=lambda note: note.pos.left)
+        group.sort(key=lambda note: note.lane)
         for a, b in itertools.pairwise(group):
             a.sim_note_ref @= b.ref()
 
@@ -177,10 +187,10 @@ def convert_osu(data: str, assets: Path) -> Level | None:
             bgm_offset=0,
             entities=[
                 Init(),
-                stage,
-                *lanes,
                 timescale_group,
                 *timescale_changes,
+                *stages,
+                *lanes,
                 *bpm_changes,
                 *notes,
             ],

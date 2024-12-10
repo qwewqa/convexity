@@ -20,6 +20,7 @@ from sonolus.script.timing import beat_to_time
 from mania.common.layout import (
     LanePosition,
     lane_hitbox,
+    lane_to_pos,
     note_y,
 )
 from mania.common.note import (
@@ -48,7 +49,8 @@ class Note(PlayArchetype):
 
     variant: NoteVariant = imported()
     beat: float = imported()
-    pos: LanePosition = imported()
+    lane: float = imported()
+    leniency: float = imported()
     timescale_group_ref: EntityRef[TimescaleGroup] = imported()
     prev_note_ref: EntityRef[Note] = imported()
     sim_note_ref: EntityRef[Note] = imported()
@@ -56,6 +58,7 @@ class Note(PlayArchetype):
     touch_id: int = shared_memory()
     y: float = shared_memory()
 
+    pos: LanePosition = entity_data()
     target_time: float = entity_data()
     input_target_time: float = entity_data()
     input_time: Interval = entity_data()
@@ -79,8 +82,9 @@ class Note(PlayArchetype):
 
     def preprocess(self):
         if Options.mirror:
-            self.pos @= self.pos.mirror()
+            self.lane = -self.lane
 
+        self.pos @= lane_to_pos(self.lane)
         self.target_time = beat_to_time(self.beat)
         self.input_target_time = self.target_time + input_offset()
         self.input_time = note_window(self.variant).good + self.input_target_time
@@ -96,7 +100,7 @@ class Note(PlayArchetype):
 
         self.start_time, self.target_scaled_time = self.timescale_group.get_note_times(self.target_time)
 
-        self.hitbox = lane_hitbox(self.pos)
+        self.hitbox = lane_hitbox(lane_to_pos(self.lane, self.leniency * (1 + Options.spread)))
 
         schedule_auto_hit_sfx(Judgment.PERFECT, self.target_time)
 

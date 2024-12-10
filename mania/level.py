@@ -129,3 +129,5 @@ levels = [level]
 for osz_file in Path("resources").glob("*.osz"):
     levels.extend(convert_osz(osz_file.read_bytes()))
     levels.extend(get_bestdori_official(484))
+    levels.extend(get_bestdori_official(253))
+    levels.extend(get_bestdori_official(4))

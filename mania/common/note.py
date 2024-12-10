@@ -235,6 +235,9 @@ def draw_note_arrow(
     pos: LanePosition,
     y: float,
 ):
+    if not (Layout.min_safe_y <= y <= Layout.lane_length):
+        return
+
     period = 0.3
     count = max(abs(direction), 1)
     start_lane = pos.mid

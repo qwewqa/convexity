@@ -45,7 +45,7 @@ difficulty_names = {
 
 def get_bestdori_official(chart_id: int):
     song_data = get_json(f"https://bestdori.com/api/songs/{chart_id}.json")
-    bgm = get_bytes(f"https://bestdori.com/assets/jp/sound/bgm{chart_id}_rip/bgm{chart_id}.mp3")
+    bgm = get_bytes(f"https://bestdori.com/assets/jp/sound/bgm{chart_id:>03}_rip/bgm{chart_id:>03}.mp3")
     title = song_data["musicTitle"][1] or song_data["musicTitle"][0]
     artist = song_data["composer"][1] or song_data["composer"][0]
     for difficulty_id in ("3", "4"):
@@ -120,12 +120,12 @@ def convert_bestdori(data: list[dict]) -> LevelData:
                 )
                 notes.append(prev_note)
                 for i, connection in enumerate(connections[1:], 1):
-                    if i == len(connections) - 1:
+                    if connection.get("flick", False):
+                        variant = NoteVariant.FLICK
+                    elif i == len(connections) - 1:
                         variant = NoteVariant.HOLD_END
                     elif connection.get("hidden", False):
                         variant = NoteVariant.HOLD_ANCHOR
-                    elif connection.get("flick", False):
-                        variant = NoteVariant.FLICK
                     else:
                         variant = NoteVariant.HOLD_TICK
                     note = (Note if not connection.get("hidden", False) else UnscoredNote)(

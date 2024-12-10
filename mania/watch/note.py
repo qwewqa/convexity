@@ -15,6 +15,7 @@ from sonolus.script.particle import Particle
 from sonolus.script.runtime import is_replay, time
 from sonolus.script.sprite import Sprite
 from sonolus.script.timing import beat_to_time
+from sonolus.script.values import copy
 
 from mania.common.layout import (
     LanePosition,
@@ -143,8 +144,20 @@ class Note(WatchArchetype):
     def draw_connector(self):
         if not self.has_prev:
             return
-        prev = self.prev
-        if time() < prev.despawn_time():
+        prev_finished = True
+        ref = copy(self.prev_note_ref)
+        for _ in range(20):
+            # Handle a tick finishing before previous anchors by looking further back.
+            prev_finished = prev_finished and time() >= ref.get().despawn_time()
+            if not prev_finished:
+                break
+            if not ref.get().has_prev:
+                break
+            ref @= ref.get().prev_note_ref
+        if prev_finished:
+            ref @= self.prev_note_ref
+        prev = ref.get()
+        if not prev_finished:
             draw_note_connector(
                 sprite=self.connector_sprite,
                 pos=self.pos,
@@ -173,7 +186,7 @@ class Note(WatchArchetype):
                 particle=self.hold_particle,
                 pos=prev_pos,
             )
-        else:
+        elif self.variant != NoteVariant.HOLD_END:
             draw_note_body(
                 sprite=self.head_sprite,
                 pos=self.pos,
@@ -204,7 +217,7 @@ class Note(WatchArchetype):
 
     def terminate(self):
         self.hold_handle.destroy()
-        if not is_replay() or self.judgment != Judgment.MISS:
+        if (not is_replay() or self.judgment != Judgment.MISS) and self.variant != NoteVariant.HOLD_ANCHOR:
             play_watch_hit_effects(
                 note_particle=self.particle,
                 pos=self.pos,

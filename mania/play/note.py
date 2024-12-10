@@ -13,9 +13,10 @@ from sonolus.script.bucket import Bucket, Judgment, JudgmentWindow
 from sonolus.script.interval import Interval, lerp, unlerp
 from sonolus.script.particle import Particle
 from sonolus.script.quad import Quad
-from sonolus.script.runtime import input_offset, time, touches
+from sonolus.script.runtime import input_offset, screen, time, touches
 from sonolus.script.sprite import Sprite
 from sonolus.script.timing import beat_to_time
+from sonolus.script.values import copy
 
 from mania.common.layout import (
     LanePosition,
@@ -62,6 +63,7 @@ class Note(PlayArchetype):
     touch_id: int = shared_memory()
     y: float = shared_memory()
     input_finished: bool = shared_memory()
+    finished: bool = shared_memory()
 
     pos: LanePosition = entity_data()
     target_time: float = entity_data()
@@ -107,7 +109,10 @@ class Note(PlayArchetype):
 
         self.start_time, self.target_scaled_time = self.timescale_group.get_note_times(self.target_time)
 
-        self.hitbox = lane_hitbox(self.lane, self.leniency * (1 + Options.spread))
+        if self.variant == NoteVariant.HOLD_ANCHOR:
+            self.hitbox = screen().as_quad()
+        else:
+            self.hitbox = lane_hitbox(self.lane, self.leniency * (1 + Options.spread), self.direction)
 
         if self.variant != NoteVariant.HOLD_ANCHOR:
             schedule_auto_hit_sfx(Judgment.PERFECT, self.target_time)
@@ -122,6 +127,10 @@ class Note(PlayArchetype):
         return time() >= self.spawn_time()
 
     def update_sequential(self):
+        if self.missed_timing() or self.chain_miss():
+            self.despawn = True
+            self.finished = True
+            self.input_finished = True
         self.y = note_y(self.timescale_group.scaled_time, self.target_scaled_time)
         if self.has_sim and self.sim_note.is_waiting:
             self.sim_note.y = note_y(self.sim_note.timescale_group.scaled_time, self.sim_note.target_scaled_time)
@@ -130,9 +139,6 @@ class Note(PlayArchetype):
 
     def update_parallel(self):
         if self.despawn:
-            return
-        if self.missed_timing() or self.chain_miss():
-            self.despawn = True
             return
         self.draw_body()
         self.draw_connector()
@@ -146,7 +152,7 @@ class Note(PlayArchetype):
         if not self.has_prev:
             return False
         prev = self.prev
-        return prev.is_despawned and prev.touch_id == 0
+        return prev.finished and prev.touch_id == 0
 
     def draw_body(self):
         if self.variant != NoteVariant.HOLD_ANCHOR:
@@ -159,8 +165,20 @@ class Note(PlayArchetype):
     def draw_connector(self):
         if not self.has_prev:
             return
-        prev = self.prev
-        if not prev.is_despawned:
+        prev_finished = True
+        ref = copy(self.prev_note_ref)
+        for _ in range(20):
+            # Handle a tick finishing before previous anchors by looking further back.
+            prev_finished = prev_finished and ref.get().finished
+            if not prev_finished:
+                break
+            if not ref.get().has_prev:
+                break
+            ref @= ref.get().prev_note_ref
+        if prev_finished:
+            ref @= self.prev_note_ref
+        prev = ref.get()
+        if not prev_finished:
             draw_note_connector(
                 sprite=self.connector_sprite,
                 pos=self.pos,
@@ -189,7 +207,7 @@ class Note(PlayArchetype):
                 particle=self.hold_particle,
                 pos=prev_pos,
             )
-        else:
+        elif self.variant != NoteVariant.HOLD_END:
             draw_note_body(
                 sprite=self.head_sprite,
                 pos=self.pos,
@@ -376,6 +394,8 @@ class Note(PlayArchetype):
                 judgment=self.result.judgment,
             )
         self.despawn = True
+        self.finished = True
+        self.input_finished = True
 
     def fail(self, actual_time: float):
         self.result.judgment = Judgment.MISS
@@ -384,6 +404,8 @@ class Note(PlayArchetype):
         self.result.bucket_value = self.result.accuracy * 1000
         self.touch_id = 0
         self.despawn = True
+        self.finished = True
+        self.input_finished = True
 
     def terminate(self):
         self.hold_handle.destroy()

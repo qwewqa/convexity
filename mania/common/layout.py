@@ -23,6 +23,7 @@ class Layer(IntEnum):
 
     CONNECTOR = 1000
     NOTE = 2000
+    ARROW = 3000
 
 
 @level_data
@@ -40,6 +41,8 @@ class Layout:
 
     transform: Transform2d
     min_safe_y: float
+
+    reference_length: float
 
 
 def init_layout():
@@ -68,6 +71,8 @@ def init_layout():
     # Below this coordinate, points are "behind" the screen so they shouldn't be displayed.
     # We add half of the note height to make this the safe note center y-coordinate.
     Layout.min_safe_y = Layout.judge_line_y - Layout.vanishing_point.y + Layout.scale * Layout.note_height / 2 + EPSILON
+
+    Layout.reference_length = (transform_vec(Vec2(0.5, 0)) - transform_vec(Vec2(-0.5, 0))).magnitude
 
 
 class LanePosition(Record):
@@ -213,7 +218,8 @@ def segments_intersect(a1, a2, b1, b2):
     return o1 != o2 and o3 != o4
 
 
-def lane_hitbox(pos: LanePosition) -> Quad:
+def lane_hitbox(lane: float, leniency: float = 1, direction: float = 0) -> Quad:
+    pos = lane_to_pos(lane + direction / 2, leniency + max(0.0, abs(direction) - 1))
     result = zeros(Quad)
     if Options.angled_hitboxes or Options.arc:
         result @= lane_layout(pos)

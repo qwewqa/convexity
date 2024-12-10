@@ -8,4 +8,8 @@ class Particles:
     tap_note: StandardParticle.NOTE_LINEAR_TAP_CYAN
     hold_note: StandardParticle.NOTE_LINEAR_TAP_GREEN
 
+    flick_note: StandardParticle.NOTE_LINEAR_TAP_RED
+    right_flick_note: StandardParticle.NOTE_LINEAR_TAP_YELLOW
+    left_flick_note: StandardParticle.NOTE_LINEAR_TAP_PURPLE
+
     hold: StandardParticle.NOTE_LINEAR_HOLD_GREEN

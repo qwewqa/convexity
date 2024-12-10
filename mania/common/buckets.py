@@ -4,70 +4,6 @@ from sonolus.script.text import StandardText
 
 from mania.common.skin import Skin
 
-"""
-export const createBucketDefinition = (
-    sprites: Record<'tapNote' | 'connector' | 'holdStartNote' | 'holdEndNote', { id: number }>,
-) =>
-    ({
-        tapNote: {
-            sprites: [
-                {
-                    id: sprites.tapNote.id,
-                    x: 0,
-                    y: 0,
-                    w: 2,
-                    h: 2,
-                    rotation: -90,
-                },
-            ],
-            unit: Text.MillisecondUnit,
-        },
-        holdStartNote: {
-            sprites: [
-                {
-                    id: sprites.connector.id,
-                    x: 0.5,
-                    y: 0,
-                    w: 2,
-                    h: 5,
-                    rotation: -90,
-                },
-                {
-                    id: sprites.holdStartNote.id,
-                    x: -2,
-                    y: 0,
-                    w: 2,
-                    h: 2,
-                    rotation: -90,
-                },
-            ],
-            unit: Text.MillisecondUnit,
-        },
-        holdEndNote: {
-            sprites: [
-                {
-                    id: sprites.connector.id,
-                    x: -0.5,
-                    y: 0,
-                    w: 2,
-                    h: 5,
-                    rotation: -90,
-                },
-                {
-                    id: sprites.holdEndNote.id,
-                    x: 2,
-                    y: 0,
-                    w: 2,
-                    h: 2,
-                    rotation: -90,
-                },
-            ],
-            unit: Text.MillisecondUnit,
-        },
-    }) as const satisfies Record<string, EngineDataBucket>
-
-"""
-
 
 @buckets
 class Buckets:
@@ -144,6 +80,32 @@ class Buckets:
                 h=2,
                 rotation=-90,
             ),
+        ],
+        unit=StandardText.MILLISECOND_UNIT,
+    )
+    flick_note: Bucket = bucket(
+        sprites=[
+            bucket_sprite(
+                sprite=Skin.flick_note,
+                x=0,
+                y=0,
+                w=2,
+                h=2,
+                rotation=-90,
+            )
+        ],
+        unit=StandardText.MILLISECOND_UNIT,
+    )
+    directional_flick_note: Bucket = bucket(
+        sprites=[
+            bucket_sprite(
+                sprite=Skin.right_flick_note,
+                x=0,
+                y=0,
+                w=2,
+                h=2,
+                rotation=-90,
+            )
         ],
         unit=StandardText.MILLISECOND_UNIT,
     )

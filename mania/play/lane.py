@@ -21,7 +21,7 @@ class Lane(PlayArchetype):
 
     def preprocess(self):
         self.pos @= lane_to_pos(self.lane)
-        self.hitbox @= lane_hitbox(self.pos)
+        self.hitbox @= lane_hitbox(self.lane)
 
     def update_parallel(self):
         draw_lane(self.pos)

@@ -17,6 +17,15 @@ class Skin:
     hold_end_note: StandardSprite.NOTE_TAIL_GREEN
     hold_tick_note: StandardSprite.NOTE_TICK_GREEN
 
+    flick_note: StandardSprite.NOTE_HEAD_RED
+    flick_arrow: StandardSprite.DIRECTIONAL_MARKER_RED
+
+    right_flick_note: StandardSprite.NOTE_HEAD_YELLOW
+    right_flick_arrow: StandardSprite.DIRECTIONAL_MARKER_YELLOW
+
+    left_flick_note: StandardSprite.NOTE_HEAD_PURPLE
+    left_flick_arrow: StandardSprite.DIRECTIONAL_MARKER_PURPLE
+
     connector: StandardSprite.GRID_GREEN
 
     sim_line: StandardSprite.SIMULTANEOUS_CONNECTION_NEUTRAL_SEAMLESS

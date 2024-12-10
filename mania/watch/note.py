@@ -24,9 +24,11 @@ from mania.common.layout import (
 from mania.common.note import (
     HoldHandle,
     NoteVariant,
+    draw_note_arrow,
     draw_note_body,
     draw_note_connector,
     draw_note_sim_line,
+    note_arrow_sprite,
     note_body_sprite,
     note_bucket,
     note_connector_sprite,
@@ -48,6 +50,7 @@ class Note(WatchArchetype):
     beat: float = imported()
     lane: float = imported()
     leniency: float = imported()
+    direction: int = imported()
     timescale_group_ref: EntityRef[TimescaleGroup] = imported()
     prev_note_ref: EntityRef[Note] = imported()
     sim_note_ref: EntityRef[Note] = imported()
@@ -60,6 +63,7 @@ class Note(WatchArchetype):
     window: JudgmentWindow = entity_data()
     bucket: Bucket = entity_data()
     body_sprite: Sprite = entity_data()
+    arrow_sprite: Sprite = entity_data()
     head_sprite: Sprite = entity_data()
     connector_sprite: Sprite = entity_data()
     particle: Particle = entity_data()
@@ -84,10 +88,11 @@ class Note(WatchArchetype):
         self.target_time = beat_to_time(self.beat)
         self.window @= note_window(self.variant)
         self.bucket @= note_bucket(self.variant)
-        self.body_sprite @= note_body_sprite(self.variant)
+        self.body_sprite @= note_body_sprite(self.variant, self.direction)
+        self.arrow_sprite @= note_arrow_sprite(self.variant, self.direction)
         self.head_sprite @= note_head_sprite(self.variant)
         self.connector_sprite @= note_connector_sprite(self.variant)
-        self.particle @= note_particle(self.variant)
+        self.particle @= note_particle(self.variant, self.direction)
         self.hold_particle @= note_hold_particle(self.variant)
         self.has_prev = self.prev_note_ref.index > 0
         self.has_sim = self.sim_note_ref.index > 0
@@ -99,11 +104,13 @@ class Note(WatchArchetype):
         if is_replay():
             self.result.bucket @= self.bucket
             self.result.bucket_value = self.accuracy * 1000
-            schedule_watch_hit_effects(self.finish_time, self.judgment)
+            if self.variant != NoteVariant.HOLD_ANCHOR:
+                schedule_watch_hit_effects(self.finish_time, self.judgment)
         else:
             self.result.bucket @= self.bucket
             self.result.bucket_value = 0
-            schedule_watch_hit_effects(self.target_time, Judgment.PERFECT)
+            if self.variant != NoteVariant.HOLD_ANCHOR:
+                schedule_watch_hit_effects(self.target_time, Judgment.PERFECT)
 
     def spawn_time(self) -> float:
         return min(self.start_time, self.prev_start_time, self.sim_start_time)
@@ -122,14 +129,16 @@ class Note(WatchArchetype):
     def update_parallel(self):
         self.draw_body()
         self.draw_connector()
+        self.draw_arrow()
         self.draw_sim_line()
 
     def draw_body(self):
-        draw_note_body(
-            sprite=self.body_sprite,
-            pos=self.pos,
-            y=self.y,
-        )
+        if self.variant != NoteVariant.HOLD_ANCHOR:
+            draw_note_body(
+                sprite=self.body_sprite,
+                pos=self.pos,
+                y=self.y,
+            )
 
     def draw_connector(self):
         if not self.has_prev:
@@ -146,7 +155,7 @@ class Note(WatchArchetype):
         elif time() < self.target_time:
             prev_target_time = prev.target_time
             target_time = self.target_time
-            progress = unlerp(prev_target_time, target_time, time())
+            progress = max(0, unlerp(prev_target_time, target_time, time()))
             prev_pos = lerp(prev.pos, self.pos, progress)
             draw_note_connector(
                 sprite=self.connector_sprite,
@@ -163,6 +172,15 @@ class Note(WatchArchetype):
             self.hold_handle.update(
                 particle=self.hold_particle,
                 pos=prev_pos,
+            )
+
+    def draw_arrow(self):
+        if self.variant == NoteVariant.FLICK or self.variant == NoteVariant.DIRECTIONAL_FLICK:
+            draw_note_arrow(
+                sprite=self.arrow_sprite,
+                direction=self.direction,
+                pos=self.pos,
+                y=self.y,
             )
 
     def draw_sim_line(self):
@@ -213,3 +231,6 @@ class Note(WatchArchetype):
 
 class UnscoredNote(Note):
     is_scored = False
+
+
+UnscoredNote(variant=1)

@@ -26,9 +26,12 @@ from mania.common.layout import (
 from mania.common.note import (
     HoldHandle,
     NoteVariant,
+    draw_note_arrow,
     draw_note_body,
     draw_note_connector,
     draw_note_sim_line,
+    flick_velocity_threshold,
+    note_arrow_sprite,
     note_body_sprite,
     note_bucket,
     note_connector_sprite,
@@ -51,6 +54,7 @@ class Note(PlayArchetype):
     beat: float = imported()
     lane: float = imported()
     leniency: float = imported()
+    direction: int = imported()
     timescale_group_ref: EntityRef[TimescaleGroup] = imported()
     prev_note_ref: EntityRef[Note] = imported()
     sim_note_ref: EntityRef[Note] = imported()
@@ -65,6 +69,7 @@ class Note(PlayArchetype):
     window: JudgmentWindow = entity_data()
     bucket: Bucket = entity_data()
     body_sprite: Sprite = entity_data()
+    arrow_sprite: Sprite = entity_data()
     head_sprite: Sprite = entity_data()
     connector_sprite: Sprite = entity_data()
     particle: Particle = entity_data()
@@ -90,19 +95,21 @@ class Note(PlayArchetype):
         self.input_time = note_window(self.variant).good + self.input_target_time
         self.window @= note_window(self.variant)
         self.bucket @= note_bucket(self.variant)
-        self.body_sprite @= note_body_sprite(self.variant)
+        self.body_sprite @= note_body_sprite(self.variant, self.direction)
+        self.arrow_sprite @= note_arrow_sprite(self.variant, self.direction)
         self.head_sprite @= note_head_sprite(self.variant)
         self.connector_sprite @= note_connector_sprite(self.variant)
-        self.particle @= note_particle(self.variant)
+        self.particle @= note_particle(self.variant, self.direction)
         self.hold_particle @= note_hold_particle(self.variant)
         self.has_prev = self.prev_note_ref.index > 0
         self.has_sim = self.sim_note_ref.index > 0
 
         self.start_time, self.target_scaled_time = self.timescale_group.get_note_times(self.target_time)
 
-        self.hitbox = lane_hitbox(lane_to_pos(self.lane, self.leniency * (1 + Options.spread)))
+        self.hitbox = lane_hitbox(self.lane, self.leniency * (1 + Options.spread))
 
-        schedule_auto_hit_sfx(Judgment.PERFECT, self.target_time)
+        if self.variant != NoteVariant.HOLD_ANCHOR:
+            schedule_auto_hit_sfx(Judgment.PERFECT, self.target_time)
 
     def spawn_time(self) -> float:
         return min(self.start_time, self.prev_start_time, self.sim_start_time)
@@ -117,32 +124,38 @@ class Note(PlayArchetype):
         self.y = note_y(self.timescale_group.scaled_time, self.target_scaled_time)
         if self.has_sim and self.sim_note.is_waiting:
             self.sim_note.y = note_y(self.sim_note.timescale_group.scaled_time, self.sim_note.target_scaled_time)
+        if self.variant == NoteVariant.HOLD_ANCHOR and time() >= self.target_time and self.prev.is_despawned:
+            self.touch_id = self.prev.touch_id
+            self.complete(self.target_time)
+            return
 
     def update_parallel(self):
         if self.despawn:
             return
-        if self.missed_timing() or self.prev_missed():
+        if self.missed_timing() or self.chain_miss():
             self.despawn = True
             return
         self.draw_body()
         self.draw_connector()
+        self.draw_arrow()
         self.draw_sim_line()
 
     def missed_timing(self) -> bool:
         return time() > self.input_time.end
 
-    def prev_missed(self) -> bool:
+    def chain_miss(self) -> bool:
         if not self.has_prev:
             return False
         prev = self.prev
         return prev.is_despawned and prev.touch_id == 0
 
     def draw_body(self):
-        draw_note_body(
-            sprite=self.body_sprite,
-            pos=self.pos,
-            y=self.y,
-        )
+        if self.variant != NoteVariant.HOLD_ANCHOR:
+            draw_note_body(
+                sprite=self.body_sprite,
+                pos=self.pos,
+                y=self.y,
+            )
 
     def draw_connector(self):
         if not self.has_prev:
@@ -159,7 +172,7 @@ class Note(PlayArchetype):
         elif time() < self.target_time:
             prev_target_time = prev.target_time
             target_time = self.target_time
-            progress = unlerp(prev_target_time, target_time, time())
+            progress = max(0, unlerp(prev_target_time, target_time, time()))
             prev_pos = lerp(prev.pos, self.pos, progress)
             draw_note_connector(
                 sprite=self.connector_sprite,
@@ -176,6 +189,15 @@ class Note(PlayArchetype):
             self.hold_handle.update(
                 particle=self.hold_particle,
                 pos=prev_pos,
+            )
+
+    def draw_arrow(self):
+        if self.variant == NoteVariant.FLICK or self.variant == NoteVariant.DIRECTIONAL_FLICK:
+            draw_note_arrow(
+                sprite=self.arrow_sprite,
+                direction=self.direction,
+                pos=self.pos,
+                y=self.y,
             )
 
     def draw_sim_line(self):
@@ -204,6 +226,8 @@ class Note(PlayArchetype):
                     self.handle_release_input()
             case NoteVariant.HOLD_TICK:
                 self.handle_hold_input()
+            case NoteVariant.FLICK | NoteVariant.DIRECTIONAL_FLICK:
+                self.handle_flick_input()
 
     def handle_tap_input(self):
         if time() not in self.input_time:
@@ -232,6 +256,58 @@ class Note(PlayArchetype):
             self.complete(time() - input_offset())
         else:
             self.fail(time() - input_offset())
+
+    def handle_flick_input(self):
+        if time() not in self.input_time:
+            return
+        if self.touch_id == 0:
+            if self.has_prev and self.prev.touch_id != 0:
+                for touch in touches():
+                    if touch.id == self.prev.touch_id and self.hitbox.contains_point(touch.position):
+                        mark_touch_used(touch)
+                        self.touch_id = touch.id
+                        break
+                else:
+                    return
+            else:
+                for touch in taps_in_hitbox(self.hitbox):
+                    mark_touch_used(touch)
+                    self.touch_id = touch.id
+                    break
+        target_velocity = flick_velocity_threshold(self.direction)
+        for touch in touches():
+            if touch.id != self.touch_id:
+                continue
+            met_velocity = touch.velocity.magnitude >= target_velocity
+            met_direction = (
+                self.direction == 0 or ((self.hitbox.br - self.hitbox.bl) * self.direction).dot(touch.delta) > 0
+            )
+            met = met_velocity and met_direction
+            if self.started:
+                if time() >= self.input_target_time:
+                    # The touch has continuously met the flick criteria into the target time.
+                    self.complete(self.target_time)
+                elif not met or touch.ended:
+                    # The touch has stopped meeting the flick criteria or ended before the target time.
+                    self.complete(touch.time)
+                else:
+                    # The touch has continuously met the flick criteria, but we haven't reached the target time yet.
+                    pass
+            elif met:
+                if touch.time >= self.input_target_time:
+                    # The touch has just met the flick criteria after the target time.
+                    self.complete(touch.time)
+                else:
+                    # The touch has just met the flick criteria before the target time.
+                    self.started = True
+            elif touch.ended:
+                # The touch has ended without ever meeting the flick criteria.
+                self.fail(touch.time)
+            else:
+                # The touch is ongoing, but it's never met the flick criteria.
+                pass
+            return
+        self.fail(time() - input_offset())
 
     def handle_hold_input(self):
         touch_id = self.prev_note_ref.get().touch_id
@@ -283,11 +359,12 @@ class Note(PlayArchetype):
         self.result.accuracy = actual_time - self.target_time
         self.result.bucket @= self.bucket
         self.result.bucket_value = self.result.accuracy * 1000
-        play_hit_effects(
-            note_particle=self.particle,
-            pos=self.pos,
-            judgment=self.result.judgment,
-        )
+        if self.variant != NoteVariant.HOLD_ANCHOR:
+            play_hit_effects(
+                note_particle=self.particle,
+                pos=self.pos,
+                judgment=self.result.judgment,
+            )
         self.despawn = True
 
     def fail(self, actual_time: float):
@@ -295,6 +372,7 @@ class Note(PlayArchetype):
         self.result.accuracy = actual_time - self.target_time
         self.result.bucket @= self.bucket
         self.result.bucket_value = self.result.accuracy * 1000
+        self.touch_id = 0
         self.despawn = True
 
     def terminate(self):

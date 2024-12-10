@@ -10,6 +10,8 @@ def init_buckets():
     Buckets.hold_start_note.window @= note_window(NoteVariant.HOLD_START) * 1000
     Buckets.hold_end_note.window @= note_window(NoteVariant.HOLD_END) * 1000
     Buckets.hold_tick_note.window @= note_window(NoteVariant.HOLD_TICK) * 1000
+    Buckets.flick_note.window @= note_window(NoteVariant.FLICK) * 1000
+    Buckets.directional_flick_note.window @= note_window(NoteVariant.DIRECTIONAL_FLICK) * 1000
 
 
 def init_score():

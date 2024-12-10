@@ -2,11 +2,15 @@ from enum import IntEnum
 from math import floor
 
 from sonolus.script.bucket import Judgment, JudgmentWindow
+from sonolus.script.easing import ease_out_quad
 from sonolus.script.interval import lerp, unlerp
 from sonolus.script.particle import Particle, ParticleHandle
+from sonolus.script.quad import Quad
 from sonolus.script.record import Record
+from sonolus.script.runtime import time
 from sonolus.script.sprite import Sprite
-from sonolus.script.values import copy
+from sonolus.script.values import copy, zeros
+from sonolus.script.vec import Vec2
 
 from mania.common.buckets import Buckets, note_judgment_window
 from mania.common.effect import SFX_DISTANCE, Effects
@@ -21,6 +25,7 @@ from mania.common.layout import (
     note_layout,
     note_particle_layout,
     sim_line_layout,
+    transform_vec,
 )
 from mania.common.options import Options
 from mania.common.particle import Particles
@@ -32,6 +37,9 @@ class NoteVariant(IntEnum):
     HOLD_START = 1
     HOLD_END = 2
     HOLD_TICK = 3
+    HOLD_ANCHOR = 4
+    FLICK = 5
+    DIRECTIONAL_FLICK = 6
 
 
 def note_window(variant: NoteVariant) -> JudgmentWindow:
@@ -49,10 +57,14 @@ def note_bucket(variant: NoteVariant):
             result @= Buckets.hold_end_note
         case NoteVariant.HOLD_TICK:
             result @= Buckets.hold_tick_note
+        case NoteVariant.FLICK:
+            result @= Buckets.flick_note
+        case NoteVariant.DIRECTIONAL_FLICK:
+            result @= Buckets.directional_flick_note
     return result
 
 
-def note_body_sprite(variant: NoteVariant):
+def note_body_sprite(variant: NoteVariant, direction: int):
     result = copy(Skin.tap_note)
     match variant:
         case NoteVariant.SINGLE:
@@ -63,6 +75,26 @@ def note_body_sprite(variant: NoteVariant):
             result @= Skin.hold_end_note
         case NoteVariant.HOLD_TICK:
             result @= Skin.hold_tick_note
+        case NoteVariant.FLICK:
+            result @= Skin.flick_note
+        case NoteVariant.DIRECTIONAL_FLICK:
+            if direction > 0:
+                result @= Skin.right_flick_note
+            else:
+                result @= Skin.left_flick_note
+    return result
+
+
+def note_arrow_sprite(variant: NoteVariant, direction: int):
+    result = copy(Skin.flick_arrow)
+    match variant:
+        case NoteVariant.FLICK:
+            result @= Skin.flick_arrow
+        case NoteVariant.DIRECTIONAL_FLICK:
+            if direction > 0:
+                result @= Skin.right_flick_arrow
+            else:
+                result @= Skin.left_flick_arrow
     return result
 
 
@@ -74,7 +106,7 @@ def note_connector_sprite(variant: NoteVariant):
     return copy(Skin.connector)
 
 
-def note_particle(variant: NoteVariant):
+def note_particle(variant: NoteVariant, direction: int):
     result = copy(Particles.tap_note)
     match variant:
         case NoteVariant.SINGLE:
@@ -85,6 +117,13 @@ def note_particle(variant: NoteVariant):
             result @= Particles.hold_note
         case NoteVariant.HOLD_TICK:
             result @= Particles.hold_note
+        case NoteVariant.FLICK:
+            result @= Particles.flick_note
+        case NoteVariant.DIRECTIONAL_FLICK:
+            if direction > 0:
+                result @= Particles.right_flick_note
+            else:
+                result @= Particles.left_flick_note
     return result
 
 
@@ -144,7 +183,7 @@ def draw_note_connector(
             prev_pos=segment_prev_pos,
             prev_y=segment_prev_y,
         )
-        sprite.draw(layout, z=Layer.CONNECTOR + max(y, prev_y) + pos.mid / 100, a=Options.connector_alpha)
+        sprite.draw(layout, z=Layer.CONNECTOR - y + pos.mid / 100, a=Options.connector_alpha)
 
 
 def draw_note_sim_line(
@@ -187,7 +226,67 @@ def draw_note_sim_line(
             sim_pos=segment_prev_pos,
             sim_y=segment_prev_y,
         )
-        Skin.sim_line.draw(layout, z=Layer.CONNECTOR + max(y, sim_y) + pos.mid / 100, a=1)
+        Skin.sim_line.draw(layout, z=Layer.CONNECTOR - y + pos.mid / 100, a=1)
+
+
+def draw_note_arrow(
+    sprite: Sprite,
+    direction: int,
+    pos: LanePosition,
+    y: float,
+):
+    period = 0.3
+    count = max(abs(direction), 1)
+    start_lane = pos.mid
+    end_lane = start_lane + direction
+    offset = ((time() + 5) % period) / period
+    fade_progress = 1 / 4 / count
+    for i in range(count):
+        progress = ((i + offset) % count) / count
+        if progress < fade_progress:
+            alpha = ease_out_quad(progress / fade_progress)
+        elif progress > 1 - fade_progress:
+            alpha = ease_out_quad((1 - progress) / fade_progress)
+        else:
+            alpha = 1
+        lane = lerp(start_lane, end_lane, progress)
+        layout = zeros(Quad)
+        if direction == 0:
+            y_offset = lerp(0.0, 0.5, progress)
+            base_bl = transform_vec(Vec2(lane - 0.5, y))
+            base_br = transform_vec(Vec2(lane + 0.5, y))
+            ort = (base_br - base_bl).orthogonal()
+            bl = base_bl + ort * y_offset
+            br = base_br + ort * y_offset
+            tl = bl + ort
+            tr = br + ort
+            layout @= Quad(
+                bl=bl,
+                br=br,
+                tl=tl,
+                tr=tr,
+            )
+        else:
+            up_layout = note_layout(LanePosition(lane - 0.5, lane + 0.5), y)
+            if direction > 0:
+                layout @= Quad(
+                    bl=up_layout.tl,
+                    br=up_layout.bl,
+                    tl=up_layout.tr,
+                    tr=up_layout.br,
+                )
+            else:
+                layout @= Quad(
+                    bl=up_layout.br,
+                    br=up_layout.tr,
+                    tl=up_layout.bl,
+                    tr=up_layout.tl,
+                )
+        sprite.draw(layout, z=Layer.ARROW - y + lane / 100, a=alpha)
+
+
+def flick_velocity_threshold(direction: int = 0):
+    return max(0.5, abs(direction) / 2) * Layout.reference_length
 
 
 def play_hit_effects(

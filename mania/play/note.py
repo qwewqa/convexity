@@ -152,7 +152,7 @@ class Note(PlayArchetype):
         if not self.has_prev:
             return False
         prev = self.prev
-        return prev.finished and prev.touch_id == 0
+        return prev.finished and prev.touch_id == 0 and self.variant != NoteVariant.HOLD_TICK
 
     def draw_body(self):
         if self.variant != NoteVariant.HOLD_ANCHOR:
@@ -339,12 +339,26 @@ class Note(PlayArchetype):
         self.fail(time() - input_offset())
 
     def handle_hold_input(self):
-        touch_id = self.prev_note_ref.get().touch_id
-        if touch_id == 0:
-            return
-        self.touch_id = touch_id
+        if self.touch_id == 0:
+            if time() not in self.input_time:
+                return
+            if self.has_prev and self.prev.touch_id != 0:
+                for touch in touches():
+                    if touch.id == self.prev.touch_id and self.hitbox.contains_point(touch.position):
+                        mark_touch_used(touch)
+                        self.touch_id = touch.id
+                        break
+                else:
+                    return
+            else:
+                for touch in taps_in_hitbox(self.hitbox):
+                    mark_touch_used(touch)
+                    self.touch_id = touch.id
+                    break
+                else:
+                    return
         for touch in touches():
-            if touch.id != touch_id:
+            if touch.id != self.touch_id:
                 continue
             if self.hitbox.contains_point(touch.position):
                 if touch.ended:

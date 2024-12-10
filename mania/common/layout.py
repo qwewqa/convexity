@@ -220,7 +220,7 @@ def segments_intersect(a1, a2, b1, b2):
 
 
 def lane_hitbox(lane: float, leniency: float = 1, direction: float = 0) -> Quad:
-    pos = lane_to_pos(lane + direction / 2, leniency + max(0.0, abs(direction) - 1))
+    pos = lane_to_pos(lane + direction / 2, leniency + abs(direction))
     result = zeros(Quad)
     if Options.angled_hitboxes or Options.arc:
         result @= lane_layout(pos)

@@ -458,16 +458,17 @@ class Note(PlayArchetype):
         for touch in touches():
             if self.touch_id != 0 and touch.id != self.touch_id:
                 continue
-            met = touch.velocity.magnitude >= target_velocity and (
-                self.hitbox_contains(touch.position) or self.hitbox_contains(touch.prev_position)
-            )
+            velocity_met = touch.velocity.magnitude >= target_velocity
+            hitbox_met = self.hitbox_contains(touch.position) or self.hitbox_contains(touch.prev_position)
+            met = velocity_met and hitbox_met
             if self.started:
                 if time() >= self.input_target_time:
                     # The touch has continuously met the swing criteria into the target time.
                     self.touch_id = touch.id
                     self.complete(self.target_time)
-                elif not met or touch.ended:
+                elif not hitbox_met or touch.ended:
                     # The touch has stopped meeting the swing criteria or ended before the target time.
+                    # It's ok if the touch has become too slow though, so we wait until the target time in that case.
                     self.touch_id = touch.id
                     self.complete(touch.time)
                 else:
@@ -513,7 +514,7 @@ class Note(PlayArchetype):
                 if other_index == self.index:
                     continue
                 other = Note.at(other_index)
-                if other.input_finished or other.beat != self.beat or other.touch_id != 0:
+                if other.input_finished or abs(other.target_time - self.target_time) > 0.01 or other.touch_id != 0:
                     continue
                 other_mid = other.base_hitbox_pos.mid
                 if other_mid > own_mid and self.base_hitbox_pos.right > other.base_hitbox_pos.left:

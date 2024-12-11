@@ -155,6 +155,13 @@ levels = [level]
 
 for osz_file in Path("resources").glob("*.osz"):
     levels.extend(convert_osz(osz_file.read_bytes()))
+levels.append(convert_sonolus_llsif_level("milkbun-llsif-1557"))
+levels.append(convert_sonolus_llsif_level("milkbun-llsif-738"))
+levels.append(convert_sonolus_llsif_level("milkbun-llsif-700"))
+levels.append(convert_sonolus_llsif_level("milkbun-llsif-20008"))
+levels.append(convert_sonolus_llsif_level("milkbun-llsif-20004"))
+levels.append(convert_sonolus_llsif_level("milkbun-llsif-1482"))
+levels.append(convert_sonolus_llsif_level("milkbun-llsif-20007"))
 levels.append(convert_sonolus_llsif_level("milkbun-llsif-2001"))
 levels.append(convert_sonolus_llsif_level("milkbun-llsif-1187"))
 levels.append(convert_sonolus_llsif_level("milkbun-llsif-2028"))

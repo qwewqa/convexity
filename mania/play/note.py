@@ -93,6 +93,7 @@ class Note(PlayArchetype):
     hold_handle: HoldHandle = entity_memory()
 
     finish_time: float = exported()
+    judgment: Judgment = exported()
 
     def preprocess(self):
         if Options.mirror:
@@ -214,6 +215,8 @@ class Note(PlayArchetype):
                 prev_y=prev.y,
             )
         elif time() < self.target_time:
+            if prev.touch_id == 0:
+                return
             prev_target_time = prev.target_time
             target_time = self.target_time
             progress = max(0, unlerp(prev_target_time, target_time, time()))
@@ -386,16 +389,10 @@ class Note(PlayArchetype):
 
     def handle_hold_input(self):
         if self.touch_id == 0:
-            if time() not in self.input_time:
-                return
             if self.has_prev and self.prev.touch_id != 0:
-                for touch in touches():
-                    if touch.id == self.prev.touch_id and self.hitbox_contains(touch.position):
-                        mark_touch_used(touch)
-                        self.touch_id = touch.id
-                        break
-                else:
-                    return
+                self.touch_id = self.prev.touch_id
+            elif time() not in self.input_time:
+                return
             else:
                 for touch in taps():
                     if not self.hitbox_contains(touch.position):
@@ -549,7 +546,9 @@ class Note(PlayArchetype):
         return True
 
     def complete(self, actual_time: float):
-        self.result.judgment = self.window.judge(actual=actual_time, target=self.target_time)
+        judgment = self.window.judge(actual=actual_time, target=self.target_time)
+        self.judgment = judgment
+        self.result.judgment = judgment
         self.result.accuracy = actual_time - self.target_time
         self.result.bucket @= self.bucket
         self.result.bucket_value = self.result.accuracy * 1000
@@ -557,14 +556,16 @@ class Note(PlayArchetype):
             play_hit_effects(
                 note_particle=self.particle,
                 pos=self.pos,
-                judgment=self.result.judgment,
+                judgment=judgment,
             )
         self.despawn = True
         self.finished = True
         self.input_finished = True
 
     def fail(self, actual_time: float):
-        self.result.judgment = Judgment.MISS
+        judgment = Judgment.MISS
+        self.judgment = judgment
+        self.result.judgment = judgment
         self.result.accuracy = actual_time - self.target_time
         self.result.bucket @= self.bucket
         self.result.bucket_value = self.result.accuracy * 1000

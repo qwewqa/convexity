@@ -76,7 +76,7 @@ class Note(WatchArchetype):
     started: bool = entity_memory()
     hold_handle: HoldHandle = entity_memory()
 
-    judgment: StandardImport.JUDGMENT
+    judgment: Judgment = imported()
     accuracy: StandardImport.ACCURACY
     finish_time: float = imported()
 
@@ -166,6 +166,8 @@ class Note(WatchArchetype):
                 prev_y=prev.y,
             )
         elif time() < self.target_time:
+            if prev.judgment == Judgment.MISS:
+                return
             prev_target_time = prev.target_time
             target_time = self.target_time
             progress = max(0, unlerp(prev_target_time, target_time, time()))

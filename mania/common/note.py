@@ -1,5 +1,5 @@
 from enum import IntEnum
-from math import floor
+from math import floor, pi
 
 from sonolus.script.bucket import Judgment, JudgmentWindow
 from sonolus.script.easing import ease_out_quad
@@ -40,6 +40,7 @@ class NoteVariant(IntEnum):
     HOLD_ANCHOR = 4
     FLICK = 5
     DIRECTIONAL_FLICK = 6
+    SWING = 7
 
 
 def note_window(variant: NoteVariant) -> JudgmentWindow:
@@ -53,7 +54,7 @@ def note_window(variant: NoteVariant) -> JudgmentWindow:
             | NoteVariant.DIRECTIONAL_FLICK
         ):
             result @= note_judgment_window
-        case NoteVariant.HOLD_TICK | NoteVariant.HOLD_ANCHOR:
+        case NoteVariant.HOLD_TICK | NoteVariant.HOLD_ANCHOR | NoteVariant.SWING:
             result @= tick_judgment_window
     return result
 
@@ -73,6 +74,8 @@ def note_bucket(variant: NoteVariant):
             result @= Buckets.flick_note
         case NoteVariant.DIRECTIONAL_FLICK:
             result @= Buckets.directional_flick_note
+        case NoteVariant.SWING:
+            result @= Buckets.swing_note
     return result
 
 
@@ -94,6 +97,8 @@ def note_body_sprite(variant: NoteVariant, direction: int):
                 result @= Skin.right_flick_note
             else:
                 result @= Skin.left_flick_note
+        case NoteVariant.SWING:
+            result @= Skin.swing_note
     return result
 
 
@@ -107,6 +112,8 @@ def note_arrow_sprite(variant: NoteVariant, direction: int):
                 result @= Skin.right_flick_arrow
             else:
                 result @= Skin.left_flick_arrow
+        case NoteVariant.SWING:
+            result @= Skin.swing_arrow
     return result
 
 
@@ -136,6 +143,8 @@ def note_particle(variant: NoteVariant, direction: int):
                 result @= Particles.right_flick_note
             else:
                 result @= Particles.left_flick_note
+        case NoteVariant.SWING:
+            result @= Particles.swing_note
     return result
 
 
@@ -300,11 +309,43 @@ def draw_note_arrow(
         sprite.draw(layout, z=Layer.ARROW - y + lane / 100, a=alpha)
 
 
+def draw_swing_arrow(
+    sprite: Sprite,
+    direction: int,
+    pos: LanePosition,
+    y: float,
+):
+    y_offset = 0
+    lane = pos.mid
+    base_bl = transform_vec(Vec2(lane - 0.5, y))
+    base_br = transform_vec(Vec2(lane + 0.5, y))
+    ort = (base_br - base_bl).orthogonal()
+    bl = base_bl + ort * y_offset
+    br = base_br + ort * y_offset
+    tl = bl + ort
+    tr = br + ort
+    layout = Quad(
+        bl=bl,
+        br=br,
+        tl=tl,
+        tr=tr,
+    )
+    if direction > 0:
+        layout @= layout.rotate_centered(-pi / 2)
+    elif direction < 0:
+        layout @= layout.rotate_centered(pi / 2)
+    sprite.draw(layout, z=Layer.ARROW - y + lane / 100)
+
+
 def flick_velocity_threshold(direction: int = 0):
     if direction == 0:
         return 6.0 * Layout.reference_length
     else:
-        return 6.0 * abs(direction) * Layout.reference_length
+        return 3.0 * abs(direction) * Layout.reference_length
+
+
+def swing_velocity_threshold():
+    return 3.0 * Layout.reference_length
 
 
 def play_hit_effects(

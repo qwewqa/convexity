@@ -29,6 +29,7 @@ from mania.common.note import (
     draw_note_body,
     draw_note_connector,
     draw_note_sim_line,
+    draw_swing_arrow,
     note_arrow_sprite,
     note_body_sprite,
     note_bucket,
@@ -195,13 +196,23 @@ class Note(WatchArchetype):
             )
 
     def draw_arrow(self):
-        if self.variant == NoteVariant.FLICK or self.variant == NoteVariant.DIRECTIONAL_FLICK:
-            draw_note_arrow(
-                sprite=self.arrow_sprite,
-                direction=self.direction,
-                pos=self.pos,
-                y=self.y,
-            )
+        match self.variant:
+            case NoteVariant.FLICK | NoteVariant.DIRECTIONAL_FLICK:
+                draw_note_arrow(
+                    sprite=self.arrow_sprite,
+                    direction=self.direction,
+                    pos=self.pos,
+                    y=self.y,
+                )
+            case NoteVariant.SWING:
+                draw_swing_arrow(
+                    sprite=self.arrow_sprite,
+                    direction=self.direction,
+                    pos=self.pos,
+                    y=self.y,
+                )
+            case _:
+                pass
 
     def draw_sim_line(self):
         if not self.has_sim:

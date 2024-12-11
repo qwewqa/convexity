@@ -12,4 +12,6 @@ class Particles:
     right_flick_note: StandardParticle.NOTE_LINEAR_TAP_YELLOW
     left_flick_note: StandardParticle.NOTE_LINEAR_TAP_PURPLE
 
+    swing_note: StandardParticle.NOTE_LINEAR_TAP_CYAN
+
     hold: StandardParticle.NOTE_LINEAR_HOLD_GREEN

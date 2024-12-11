@@ -31,6 +31,7 @@ from mania.common.note import (
     draw_note_body,
     draw_note_connector,
     draw_note_sim_line,
+    draw_swing_arrow,
     flick_velocity_threshold,
     note_arrow_sprite,
     note_body_sprite,
@@ -42,6 +43,7 @@ from mania.common.note import (
     note_window,
     play_hit_effects,
     schedule_auto_hit_sfx,
+    swing_velocity_threshold,
 )
 from mania.common.options import Options
 from mania.play.input_manager import mark_touch_used, taps_in_hitbox
@@ -113,7 +115,11 @@ class Note(PlayArchetype):
         if self.variant == NoteVariant.HOLD_ANCHOR:
             self.hitbox = screen().as_quad()
         else:
-            self.hitbox = lane_hitbox(self.lane, self.leniency * (1 + Options.spread), self.direction)
+            self.hitbox = lane_hitbox(
+                self.lane,
+                self.leniency * (1 + Options.spread),
+                self.direction if self.variant == NoteVariant.DIRECTIONAL_FLICK else 0,
+            )
 
         if self.variant != NoteVariant.HOLD_ANCHOR:
             schedule_auto_hit_sfx(Judgment.PERFECT, self.target_time)
@@ -216,13 +222,23 @@ class Note(PlayArchetype):
             )
 
     def draw_arrow(self):
-        if self.variant == NoteVariant.FLICK or self.variant == NoteVariant.DIRECTIONAL_FLICK:
-            draw_note_arrow(
-                sprite=self.arrow_sprite,
-                direction=self.direction,
-                pos=self.pos,
-                y=self.y,
-            )
+        match self.variant:
+            case NoteVariant.FLICK | NoteVariant.DIRECTIONAL_FLICK:
+                draw_note_arrow(
+                    sprite=self.arrow_sprite,
+                    direction=self.direction,
+                    pos=self.pos,
+                    y=self.y,
+                )
+            case NoteVariant.SWING:
+                draw_swing_arrow(
+                    sprite=self.arrow_sprite,
+                    direction=self.direction,
+                    pos=self.pos,
+                    y=self.y,
+                )
+            case _:
+                pass
 
     def draw_sim_line(self):
         if not self.has_sim:
@@ -252,6 +268,8 @@ class Note(PlayArchetype):
                 self.handle_hold_input()
             case NoteVariant.FLICK | NoteVariant.DIRECTIONAL_FLICK:
                 self.handle_flick_input()
+            case NoteVariant.SWING:
+                self.handle_swing_input()
 
     def handle_tap_input(self):
         if time() not in self.input_time:
@@ -396,6 +414,55 @@ class Note(PlayArchetype):
         if time() >= self.input_time.start:
             self.complete(time() - input_offset())
         else:
+            self.fail(time() - input_offset())
+
+    def handle_swing_input(self):
+        if self.has_prev and self.prev.touch_id != 0:
+            self.touch_id = self.prev.touch_id
+        target_velocity = swing_velocity_threshold()
+        for touch in touches():
+            if self.touch_id != 0 and touch.id != self.touch_id:
+                continue
+            met = touch.velocity.magnitude >= target_velocity and self.hitbox.contains_point(touch.position)
+            if self.started:
+                if time() >= self.input_target_time:
+                    # The touch has continuously met the swing criteria into the target time.
+                    self.touch_id = touch.id
+                    self.complete(self.target_time)
+                elif not met or touch.ended:
+                    # The touch has stopped meeting the swing criteria or ended before the target time.
+                    self.touch_id = touch.id
+                    self.complete(touch.time)
+                else:
+                    # The touch has continuously met the swing criteria, but we haven't reached the target time yet.
+                    pass
+            elif met:
+                if touch.time >= self.input_target_time:
+                    # The touch has just met the swing criteria after the target time.
+                    self.touch_id = touch.id
+                    self.complete(touch.time)
+                elif touch.time >= self.input_time.start:
+                    # The touch has just met the swing criteria before the target time.
+                    self.started = True
+                else:
+                    # The touch has just met the swing criteria before the input time.
+                    pass
+            elif touch.ended:
+                if self.touch_id != 0:
+                    # The touch has ended without ever meeting the swing criteria,
+                    # and there is an ongoing previous touch.
+                    self.fail(touch.time)
+                else:
+                    # The touch has ended without ever meeting the swing criteria,
+                    # so we can ignore it.
+                    pass
+            else:
+                # The touch is ongoing, but it's never met the swing criteria.
+                pass
+            if self.touch_id != 0:
+                return
+        if self.touch_id != 0:
+            # We have a touch from a previous note, but it has gone missing.
             self.fail(time() - input_offset())
 
     def complete(self, actual_time: float):

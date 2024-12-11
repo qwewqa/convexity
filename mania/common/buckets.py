@@ -109,6 +109,19 @@ class Buckets:
         ],
         unit=StandardText.MILLISECOND_UNIT,
     )
+    swing_note: Bucket = bucket(
+        sprites=[
+            bucket_sprite(
+                sprite=Skin.swing_note,
+                x=0,
+                y=0,
+                w=2,
+                h=2,
+                rotation=-90,
+            )
+        ],
+        unit=StandardText.MILLISECOND_UNIT,
+    )
 
 
 note_judgment_window = JudgmentWindow(

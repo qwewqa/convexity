@@ -1,38 +1,15 @@
 import itertools
-import json
-from urllib.request import Request, urlopen
 
 from sonolus.script.level import Level, LevelData
 
 from mania.common.note import NoteVariant
+from mania.convert.utils import get_bytes, get_json
 from mania.play.bpm import BpmChange
 from mania.play.init import Init
 from mania.play.lane import Lane
 from mania.play.note import Note, UnscoredNote
 from mania.play.stage import Stage
 from mania.play.timescale import TimescaleChange, TimescaleGroup
-
-
-def get_bytes(url: str) -> bytes:
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "*/*",
-        "Accept-Language": "en-US,en;q=0.9",
-        "Connection": "keep-alive",
-    }
-    request = Request(url, headers=headers)
-    with urlopen(request) as response:
-        return response.read()
-
-
-def get_str(url: str) -> str:
-    return get_bytes(url).decode("utf-8")
-
-
-def get_json(url: str) -> dict | list:
-    return json.loads(get_str(url))
-
 
 difficulty_names = {
     "0": "easy",

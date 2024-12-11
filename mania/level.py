@@ -4,6 +4,7 @@ from sonolus.script.level import BpmChange, Level, LevelData
 
 from mania.convert.bestdori import get_bestdori_official
 from mania.convert.osu import convert_osz
+from mania.convert.sonolus_llsif import convert_sonolus_llsif_level
 from mania.play.init import Init
 from mania.play.note import Note, NoteVariant, UnscoredNote
 from mania.play.timescale import TimescaleChange, TimescaleGroup
@@ -128,6 +129,15 @@ levels = [level]
 
 for osz_file in Path("resources").glob("*.osz"):
     levels.extend(convert_osz(osz_file.read_bytes()))
-    levels.extend(get_bestdori_official(484))
-    levels.extend(get_bestdori_official(253))
-    levels.extend(get_bestdori_official(4))
+levels.append(convert_sonolus_llsif_level("milkbun-llsif-719"))
+levels.append(convert_sonolus_llsif_level("milkbun-llsif-1095"))
+levels.append(convert_sonolus_llsif_level("milkbun-llsif-1018"))
+levels.append(convert_sonolus_llsif_level("milkbun-llsif-1345"))
+levels.extend(get_bestdori_official(484))
+levels.extend(get_bestdori_official(253))
+levels.extend(get_bestdori_official(598))
+levels.extend(get_bestdori_official(597))
+levels.extend(get_bestdori_official(596))
+levels.extend(get_bestdori_official(470))
+levels.extend(get_bestdori_official(406))
+levels.extend(get_bestdori_official(4))

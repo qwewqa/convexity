@@ -26,6 +26,9 @@ class Skin:
     left_flick_note: StandardSprite.NOTE_HEAD_PURPLE
     left_flick_arrow: StandardSprite.DIRECTIONAL_MARKER_PURPLE
 
+    swing_note: StandardSprite.NOTE_HEAD_CYAN
+    swing_arrow: StandardSprite.DIRECTIONAL_MARKER_CYAN
+
     connector: StandardSprite.GRID_GREEN
 
     sim_line: StandardSprite.SIMULTANEOUS_CONNECTION_NEUTRAL_SEAMLESS

@@ -309,15 +309,16 @@ class Note(PlayArchetype):
 
     def handle_release_input(self):
         touch_id = self.prev.touch_id
-        if touch_id == 0:
+        if touch_id != 0:
+            self.touch_id = touch_id
+        if self.touch_id == 0:
             return
-        self.touch_id = touch_id
         for touch in touches():
             if touch.id != touch_id:
                 continue
             if not touch.ended:
                 return
-            if time() >= self.input_time.start and self.hitbox_contains(touch.position):
+            if touch.time >= self.input_time.start and self.hitbox_contains(touch.position):
                 self.complete(touch.time)
             else:
                 self.fail(touch.time)
@@ -333,12 +334,18 @@ class Note(PlayArchetype):
                 return
             if self.has_prev and self.prev.touch_id != 0:
                 for touch in touches():
-                    if touch.id == self.prev.touch_id and self.hitbox_contains(touch.position):
-                        mark_touch_used(touch)
-                        self.touch_id = touch.id
-                        break
+                    if touch.id == self.prev.touch_id:
+                        if self.hitbox_contains(touch.position):
+                            mark_touch_used(touch)
+                            self.touch_id = touch.id
+                            break
+                        elif touch.ended:
+                            self.fail(touch.time)
+                            return
+                        else:
+                            return
                 else:
-                    return
+                    self.fail(time() - input_offset())
             else:
                 for touch in taps():
                     if not self.hitbox_contains(touch.position):

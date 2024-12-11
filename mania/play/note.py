@@ -17,6 +17,7 @@ from sonolus.script.runtime import input_offset, screen, time, touches
 from sonolus.script.sprite import Sprite
 from sonolus.script.timing import beat_to_time
 from sonolus.script.values import copy
+from sonolus.script.vec import Vec2
 
 from mania.common.layout import (
     LanePosition,
@@ -46,7 +47,7 @@ from mania.common.note import (
     swing_velocity_threshold,
 )
 from mania.common.options import Options
-from mania.play.input_manager import mark_touch_used, taps_in_hitbox
+from mania.play.input_manager import input_note_indexes, mark_touch_used, taps
 from mania.play.timescale import TimescaleGroup
 
 
@@ -66,6 +67,7 @@ class Note(PlayArchetype):
     y: float = shared_memory()
     input_finished: bool = shared_memory()
     finished: bool = shared_memory()
+    hitbox: Quad = shared_memory()
 
     pos: LanePosition = entity_data()
     target_time: float = entity_data()
@@ -84,7 +86,6 @@ class Note(PlayArchetype):
     start_time: float = entity_data()
     target_scaled_time: float = entity_data()
 
-    hitbox: Quad = entity_memory()
     started: bool = entity_memory()
     hold_handle: HoldHandle = entity_memory()
 
@@ -114,9 +115,9 @@ class Note(PlayArchetype):
         self.start_time, self.target_scaled_time = self.timescale_group.get_note_times(self.target_time)
 
         if self.variant == NoteVariant.HOLD_ANCHOR:
-            self.hitbox = screen().as_quad()
+            self.hitbox @= screen().as_quad()
         else:
-            self.hitbox = lane_hitbox(
+            self.hitbox @= lane_hitbox(
                 self.lane,
                 self.leniency * (1 + Options.spread),
                 self.direction if self.variant == NoteVariant.DIRECTIONAL_FLICK else 0,
@@ -144,6 +145,17 @@ class Note(PlayArchetype):
             self.sim_note.y = note_y(self.sim_note.timescale_group.scaled_time, self.sim_note.target_scaled_time)
         if self.variant == NoteVariant.HOLD_ANCHOR:
             self.input_finished = self.prev.input_finished or self.prev.is_despawned
+        if (
+            not self.input_finished
+            and self.touch_id == 0
+            and (
+                not self.has_prev or (self.prev.touch_id == 0 and (self.prev.input_finished or self.prev.is_despawned))
+            )
+            and time() >= self.input_time.start
+            and not input_note_indexes.is_full()
+            and self.variant != NoteVariant.HOLD_ANCHOR
+        ):
+            input_note_indexes.append(self.index)
 
     def update_parallel(self):
         if self.despawn:
@@ -275,7 +287,9 @@ class Note(PlayArchetype):
     def handle_tap_input(self):
         if time() not in self.input_time:
             return
-        for touch in taps_in_hitbox(self.hitbox):
+        for touch in taps():
+            if not self.hitbox_contains(touch.position):
+                continue
             mark_touch_used(touch)
             self.touch_id = touch.id
             self.complete(touch.start_time)
@@ -290,7 +304,7 @@ class Note(PlayArchetype):
                 continue
             if not touch.ended:
                 return
-            if time() >= self.input_time.start and self.hitbox.contains_point(touch.position):
+            if time() >= self.input_time.start and self.hitbox_contains(touch.position):
                 self.complete(touch.time)
             else:
                 self.fail(touch.time)
@@ -306,14 +320,16 @@ class Note(PlayArchetype):
                 return
             if self.has_prev and self.prev.touch_id != 0:
                 for touch in touches():
-                    if touch.id == self.prev.touch_id and self.hitbox.contains_point(touch.position):
+                    if touch.id == self.prev.touch_id and self.hitbox_contains(touch.position):
                         mark_touch_used(touch)
                         self.touch_id = touch.id
                         break
                 else:
                     return
             else:
-                for touch in taps_in_hitbox(self.hitbox):
+                for touch in taps():
+                    if not self.hitbox_contains(touch.position):
+                        continue
                     mark_touch_used(touch)
                     self.touch_id = touch.id
                     break
@@ -364,14 +380,16 @@ class Note(PlayArchetype):
                 return
             if self.has_prev and self.prev.touch_id != 0:
                 for touch in touches():
-                    if touch.id == self.prev.touch_id and self.hitbox.contains_point(touch.position):
+                    if touch.id == self.prev.touch_id and self.hitbox_contains(touch.position):
                         mark_touch_used(touch)
                         self.touch_id = touch.id
                         break
                 else:
                     return
             else:
-                for touch in taps_in_hitbox(self.hitbox):
+                for touch in taps():
+                    if not self.hitbox_contains(touch.position):
+                        continue
                     mark_touch_used(touch)
                     self.touch_id = touch.id
                     break
@@ -380,7 +398,7 @@ class Note(PlayArchetype):
         for touch in touches():
             if touch.id != self.touch_id:
                 continue
-            if self.hitbox.contains_point(touch.position):
+            if self.hitbox_contains(touch.position):
                 if touch.ended:
                     # The touch has ended in the hitbox.
                     if time() >= self.input_time.start:
@@ -425,7 +443,7 @@ class Note(PlayArchetype):
             if self.touch_id != 0 and touch.id != self.touch_id:
                 continue
             met = touch.velocity.magnitude >= target_velocity and (
-                self.hitbox.contains_point(touch.position) or self.hitbox.contains_point(touch.prev_position)
+                self.hitbox_contains(touch.position) or self.hitbox_contains(touch.prev_position)
             )
             if self.started:
                 if time() >= self.input_target_time:
@@ -468,6 +486,41 @@ class Note(PlayArchetype):
         if self.touch_id != 0:
             # We have a touch from a previous note, but it has gone missing.
             self.fail(time() - input_offset())
+
+    def hitbox_contains(self, position: Vec2) -> bool:
+        if not self.hitbox.contains_point(position):
+            return False
+        if self.touch_id != 0:
+            return True
+        own_mid = (self.hitbox.bl + self.hitbox.br) / 2
+        for other_index in input_note_indexes:
+            if other_index == self.index:
+                continue
+            other = Note.at(other_index)
+            if (
+                other.input_finished
+                or not other.hitbox.contains_point(position)
+                or other.beat != self.beat
+                or other.touch_id != 0
+            ):
+                continue
+            other_mid = (other.hitbox.bl + other.hitbox.br) / 2
+            baseline = other_mid - own_mid
+            if baseline.magnitude < 1e-3:
+                continue
+            p1 = max(
+                (self.hitbox.bl - own_mid).dot(baseline),
+                (self.hitbox.br - own_mid).dot(baseline),
+            )
+            p2 = min(
+                (other.hitbox.bl - own_mid).dot(baseline),
+                (other.hitbox.br - own_mid).dot(baseline),
+            )
+            cutoff = (p1 + p2) / 2
+            proj = (position - own_mid).dot(baseline)
+            if proj > cutoff:
+                return False
+        return True
 
     def complete(self, actual_time: float):
         self.result.judgment = self.window.judge(actual=actual_time, target=self.target_time)

@@ -5,6 +5,7 @@ from sonolus.script.containers import VarArray
 from sonolus.script.globals import level_memory
 from sonolus.script.runtime import Touch, touches
 
+input_note_indexes = level_memory(VarArray[int, 16])
 used_touch_ids = level_memory(VarArray[int, 16])
 
 
@@ -20,14 +21,15 @@ def unused_touches() -> Iterable[Touch]:
     return filter(lambda touch: not touch_is_used(touch), touches())
 
 
-def taps_in_hitbox(hitbox) -> Iterable[Touch]:
-    return filter(
-        lambda touch: hitbox.contains_point(touch.start_position) and touch.started,
-        unused_touches(),
-    )
+def taps() -> Iterable[Touch]:
+    return filter(lambda touch: touch.started, unused_touches())
 
 
 class InputManager(PlayArchetype):
+    @callback(order=-1)
+    def update_sequential(self):
+        input_note_indexes.clear()
+
     @callback(order=-1)
     def touch(self):
         used_touch_ids.clear()

@@ -56,6 +56,7 @@ def note_window(variant: NoteVariant) -> JudgmentWindow:
             result @= note_judgment_window
         case NoteVariant.HOLD_TICK | NoteVariant.HOLD_ANCHOR | NoteVariant.SWING:
             result @= tick_judgment_window
+    result *= Options.window_size
     return result
 
 

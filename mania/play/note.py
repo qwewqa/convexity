@@ -94,6 +94,7 @@ class Note(PlayArchetype):
         if Options.mirror:
             self.lane = -self.lane
             self.direction = -self.direction
+        self.leniency *= Options.leniency
 
         self.pos @= lane_to_pos(self.lane)
         self.target_time = beat_to_time(self.beat)
@@ -445,6 +446,7 @@ class Note(PlayArchetype):
                     self.complete(touch.time)
                 elif touch.time >= self.input_time.start:
                     # The touch has just met the swing criteria before the target time.
+                    self.touch_id = touch.id
                     self.started = True
                 else:
                     # The touch has just met the swing criteria before the input time.

@@ -51,7 +51,6 @@ class Note(WatchArchetype):
     variant: NoteVariant = imported()
     beat: float = imported()
     lane: float = imported()
-    leniency: float = imported()
     direction: int = imported()
     timescale_group_ref: EntityRef[TimescaleGroup] = imported()
     prev_note_ref: EntityRef[Note] = imported()

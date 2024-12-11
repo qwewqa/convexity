@@ -6,12 +6,12 @@ from sonolus.script.text import StandardText
 class Options:
     speed: float = slider_option(
         name=StandardText.SPEED,
-        standard=True,
         default=1,
         min=0.5,
         max=2,
         step=0.05,
         unit=StandardText.PERCENTAGE_UNIT,
+        standard=True,
     )
     note_speed: float = slider_option(
         name=StandardText.NOTE_SPEED,
@@ -142,13 +142,33 @@ class Options:
         name="Disable Soflan",
         scope="mania_v",
         default=False,
-        standard=False,
+        standard=True,
     )
     auto_release_holds: bool = toggle_option(
         name="Auto Release Holds",
         scope="mania_v",
         default=False,
-        standard=False,
+        standard=True,
+    )
+    leniency: float = slider_option(
+        name="Hitbox Leniency",
+        scope="mania_v",
+        default=1.0,
+        min=0.05,
+        max=3.0,
+        step=0.05,
+        unit=StandardText.PERCENTAGE_UNIT,
+        standard=True,
+    )
+    window_size: float = slider_option(
+        name="Judgment Window Size",
+        scope="mania_v",
+        default=1.0,
+        min=0.2,
+        max=2.0,
+        step=0.05,
+        unit=StandardText.PERCENTAGE_UNIT,
+        standard=True,
     )
     mirror: bool = toggle_option(
         name=StandardText.MIRROR,

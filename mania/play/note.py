@@ -423,7 +423,9 @@ class Note(PlayArchetype):
         for touch in touches():
             if self.touch_id != 0 and touch.id != self.touch_id:
                 continue
-            met = touch.velocity.magnitude >= target_velocity and self.hitbox.contains_point(touch.position)
+            met = touch.velocity.magnitude >= target_velocity and (
+                self.hitbox.contains_point(touch.position) or self.hitbox.contains_point(touch.prev_position)
+            )
             if self.started:
                 if time() >= self.input_target_time:
                     # The touch has continuously met the swing criteria into the target time.

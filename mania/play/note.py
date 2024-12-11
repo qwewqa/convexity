@@ -307,6 +307,7 @@ class Note(PlayArchetype):
         touch_id = self.prev.touch_id
         if touch_id == 0:
             return
+        self.touch_id = touch_id
         for touch in touches():
             if touch.id != touch_id:
                 continue
@@ -498,7 +499,7 @@ class Note(PlayArchetype):
     def hitbox_contains(self, position: Vec2) -> bool:
         if not self.hitbox.contains_point(position):
             return False
-        if self.touch_id != 0:
+        if self.touch_id != 0 or (self.has_prev and self.prev.touch_id != 0):
             return True
         own_mid = self.hitbox_points.mid
         for other_index in input_note_indexes:

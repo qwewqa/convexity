@@ -139,6 +139,14 @@ def lane_layout(pos: LanePosition) -> Quad:
     return transform_quad(base)
 
 
+def lane_hitbox_layout(pos: LanePosition) -> Quad:
+    hitbox = lane_layout(pos)
+    # Extend it down
+    hitbox.bl += (hitbox.bl - hitbox.tl) * 3
+    hitbox.br += (hitbox.br - hitbox.tr) * 3
+    return hitbox
+
+
 def note_layout(pos: LanePosition, y: float) -> Quad:
     base = Rect(
         l=pos.left,
@@ -223,10 +231,25 @@ def lane_hitbox(lane: float, leniency: float = 1, direction: float = 0) -> Quad:
     pos = lane_to_pos(lane + direction / 2, leniency + abs(direction))
     result = zeros(Quad)
     if Options.angled_hitboxes or Options.arc:
-        result @= lane_layout(pos)
+        result @= lane_hitbox_layout(pos)
     else:
         result @= Rect(l=pos.left * Layout.scale, r=pos.right * Layout.scale, b=-1, t=1).as_quad()
     return result
+
+
+class HitboxPoints(Record):
+    left: Vec2
+    mid: Vec2
+    right: Vec2
+
+
+def lane_hitbox_points(lane: float, leniency: float = 1, direction: float = 0) -> HitboxPoints:
+    pos = lane_to_pos(lane + direction / 2, leniency + abs(direction))
+    return HitboxPoints(
+        left=transform_vec(Vec2(pos.left, 0)),
+        mid=transform_vec(Vec2(pos.mid, 0)),
+        right=transform_vec(Vec2(pos.right, 0)),
+    )
 
 
 def preempt_time() -> float:

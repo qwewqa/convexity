@@ -151,13 +151,12 @@ class Options:
         standard=True,
     )
     leniency: float = slider_option(
-        name="Hitbox Leniency",
+        name="Additional Hitbox Leniency",
         scope="mania_v",
-        default=1.0,
-        min=0.05,
-        max=3.0,
+        default=0.0,
+        min=-2.0,
+        max=2.0,
         step=0.05,
-        unit=StandardText.PERCENTAGE_UNIT,
         standard=True,
     )
     window_size: float = slider_option(

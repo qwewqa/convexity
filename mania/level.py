@@ -128,10 +128,11 @@ level = Level(
             # ],
             *[
                 Note(
-                    variant=NoteVariant.SINGLE,
+                    variant=NoteVariant.DIRECTIONAL_FLICK,
                     beat=i / 4,
                     lane=-1.5,
                     leniency=3,
+                    direction=-2,
                     timescale_group_ref=ts1.ref(),
                 )
                 for i in range(8, 100)

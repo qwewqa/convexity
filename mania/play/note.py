@@ -16,12 +16,14 @@ from sonolus.script.quad import Quad
 from sonolus.script.runtime import input_offset, screen, time, touches
 from sonolus.script.sprite import Sprite
 from sonolus.script.timing import beat_to_time
-from sonolus.script.values import copy
+from sonolus.script.values import copy, zeros
 from sonolus.script.vec import Vec2
 
 from mania.common.layout import (
+    HitboxPoints,
     LanePosition,
     lane_hitbox,
+    lane_hitbox_points,
     lane_to_pos,
     note_y,
 )
@@ -68,6 +70,7 @@ class Note(PlayArchetype):
     input_finished: bool = shared_memory()
     finished: bool = shared_memory()
     hitbox: Quad = shared_memory()
+    hitbox_points: HitboxPoints = shared_memory()
 
     pos: LanePosition = entity_data()
     target_time: float = entity_data()
@@ -95,7 +98,7 @@ class Note(PlayArchetype):
         if Options.mirror:
             self.lane = -self.lane
             self.direction = -self.direction
-        self.leniency *= Options.leniency
+        self.leniency = max(self.leniency + Options.leniency, 0.2)
 
         self.pos @= lane_to_pos(self.lane)
         self.target_time = beat_to_time(self.beat)
@@ -118,6 +121,11 @@ class Note(PlayArchetype):
             self.hitbox @= screen().as_quad()
         else:
             self.hitbox @= lane_hitbox(
+                self.lane,
+                self.leniency * (1 + Options.spread),
+                self.direction if self.variant == NoteVariant.DIRECTIONAL_FLICK else 0,
+            )
+            self.hitbox_points @= lane_hitbox_points(
                 self.lane,
                 self.leniency * (1 + Options.spread),
                 self.direction if self.variant == NoteVariant.DIRECTIONAL_FLICK else 0,
@@ -492,7 +500,7 @@ class Note(PlayArchetype):
             return False
         if self.touch_id != 0:
             return True
-        own_mid = (self.hitbox.bl + self.hitbox.br) / 2
+        own_mid = self.hitbox_points.mid
         for other_index in input_note_indexes:
             if other_index == self.index:
                 continue
@@ -504,20 +512,24 @@ class Note(PlayArchetype):
                 or other.touch_id != 0
             ):
                 continue
-            other_mid = (other.hitbox.bl + other.hitbox.br) / 2
-            baseline = other_mid - own_mid
-            if baseline.magnitude < 1e-3:
+            other_mid = other.hitbox_points.mid
+            h_mid = other_mid - own_mid
+            if h_mid.magnitude < 1e-3:
                 continue
-            p1 = max(
-                (self.hitbox.bl - own_mid).dot(baseline),
-                (self.hitbox.br - own_mid).dot(baseline),
-            )
-            p2 = min(
-                (other.hitbox.bl - own_mid).dot(baseline),
-                (other.hitbox.br - own_mid).dot(baseline),
-            )
-            cutoff = (p1 + p2) / 2
-            proj = (position - own_mid).dot(baseline)
+            p1 = zeros(Vec2)
+            p2 = zeros(Vec2)
+            if (self.hitbox_points.left - own_mid).dot(h_mid) > 0:
+                p1 @= other.hitbox_points.right
+                p2 @= self.hitbox_points.left
+            else:
+                p1 @= other.hitbox_points.left
+                p2 @= self.hitbox_points.right
+            h_inner = p2 - p1
+            if h_inner.magnitude < 1e-3:
+                continue
+            cutoff = h_inner.magnitude / 2
+            h_inner @= h_inner.normalize()
+            proj = (position - p1).dot(h_inner)
             if proj > cutoff:
                 return False
         return True

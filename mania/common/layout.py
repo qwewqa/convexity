@@ -227,29 +227,17 @@ def segments_intersect(a1, a2, b1, b2):
     return o1 != o2 and o3 != o4
 
 
-def lane_hitbox(lane: float, leniency: float = 1, direction: float = 0) -> Quad:
-    pos = lane_to_pos(lane + direction / 2, leniency + abs(direction))
+def lane_hitbox_pos(lane: float, leniency: float = 1, direction: float = 0) -> LanePosition:
+    return lane_to_pos(lane + direction / 2, leniency + abs(direction))
+
+
+def lane_hitbox(pos: LanePosition) -> Quad:
     result = zeros(Quad)
     if Options.angled_hitboxes or Options.arc:
         result @= lane_hitbox_layout(pos)
     else:
         result @= Rect(l=pos.left * Layout.scale, r=pos.right * Layout.scale, b=-1, t=1).as_quad()
     return result
-
-
-class HitboxPoints(Record):
-    left: Vec2
-    mid: Vec2
-    right: Vec2
-
-
-def lane_hitbox_points(lane: float, leniency: float = 1, direction: float = 0) -> HitboxPoints:
-    pos = lane_to_pos(lane + direction / 2, leniency + abs(direction))
-    return HitboxPoints(
-        left=transform_vec(Vec2(pos.left, 0)),
-        mid=transform_vec(Vec2(pos.mid, 0)),
-        right=transform_vec(Vec2(pos.right, 0)),
-    )
 
 
 def preempt_time() -> float:

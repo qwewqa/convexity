@@ -12,18 +12,16 @@ from sonolus.script.archetype import (
 from sonolus.script.bucket import Bucket, Judgment, JudgmentWindow
 from sonolus.script.interval import Interval, lerp, unlerp
 from sonolus.script.particle import Particle
-from sonolus.script.quad import Quad
-from sonolus.script.runtime import input_offset, screen, time, touches
+from sonolus.script.runtime import input_offset, time, touches
 from sonolus.script.sprite import Sprite
 from sonolus.script.timing import beat_to_time
-from sonolus.script.values import copy, zeros
+from sonolus.script.values import copy
 from sonolus.script.vec import Vec2
 
 from mania.common.layout import (
-    HitboxPoints,
     LanePosition,
     lane_hitbox,
-    lane_hitbox_points,
+    lane_hitbox_pos,
     lane_to_pos,
     note_y,
 )
@@ -69,8 +67,8 @@ class Note(PlayArchetype):
     y: float = shared_memory()
     input_finished: bool = shared_memory()
     finished: bool = shared_memory()
-    hitbox: Quad = shared_memory()
-    hitbox_points: HitboxPoints = shared_memory()
+    base_hitbox_pos: LanePosition = shared_memory()
+    right_vec: Vec2 = shared_memory()
 
     pos: LanePosition = entity_data()
     target_time: float = entity_data()
@@ -118,19 +116,13 @@ class Note(PlayArchetype):
 
         self.start_time, self.target_scaled_time = self.timescale_group.get_note_times(self.target_time)
 
-        if self.variant == NoteVariant.HOLD_ANCHOR:
-            self.hitbox @= screen().as_quad()
-        else:
-            self.hitbox @= lane_hitbox(
-                self.lane,
-                self.leniency * (1 + Options.spread),
-                self.direction if self.variant == NoteVariant.DIRECTIONAL_FLICK else 0,
-            )
-            self.hitbox_points @= lane_hitbox_points(
-                self.lane,
-                self.leniency * (1 + Options.spread),
-                self.direction if self.variant == NoteVariant.DIRECTIONAL_FLICK else 0,
-            )
+        self.base_hitbox_pos @= lane_hitbox_pos(
+            self.lane,
+            self.leniency * (1 + Options.spread),
+            self.direction if self.variant == NoteVariant.DIRECTIONAL_FLICK else 0,
+        )
+        base_hitbox = lane_hitbox(self.base_hitbox_pos)
+        self.right_vec = (base_hitbox.br - base_hitbox.bl).normalize()
 
         if self.variant != NoteVariant.HOLD_ANCHOR:
             schedule_auto_hit_sfx(Judgment.PERFECT, self.target_time)
@@ -360,9 +352,7 @@ class Note(PlayArchetype):
             if touch.id != self.touch_id:
                 continue
             met_velocity = touch.velocity.magnitude >= target_velocity
-            met_direction = (
-                self.direction == 0 or ((self.hitbox.br - self.hitbox.bl) * self.direction).dot(touch.delta) > 0
-            )
+            met_direction = self.direction == 0 or (self.right_vec * self.direction).dot(touch.delta) >= 0
             met = met_velocity and met_direction
             if self.started:
                 if time() >= self.input_target_time:
@@ -514,43 +504,34 @@ class Note(PlayArchetype):
             self.fail(time() - input_offset())
 
     def hitbox_contains(self, position: Vec2) -> bool:
-        if not self.hitbox.contains_point(position):
-            return False
+        hitbox_pos = copy(self.base_hitbox_pos)
         if self.touch_id != 0 or (self.has_prev and self.prev.touch_id != 0):
-            return True
-        own_mid = self.hitbox_points.mid
-        for other_index in input_note_indexes:
-            if other_index == self.index:
-                continue
-            other = Note.at(other_index)
-            if (
-                other.input_finished
-                or not other.hitbox.contains_point(position)
-                or other.beat != self.beat
-                or other.touch_id != 0
-            ):
-                continue
-            other_mid = other.hitbox_points.mid
-            h_mid = other_mid - own_mid
-            if h_mid.magnitude < 1e-3:
-                continue
-            p1 = zeros(Vec2)
-            p2 = zeros(Vec2)
-            if (self.hitbox_points.left - own_mid).dot(h_mid) > 0:
-                p1 @= other.hitbox_points.right
-                p2 @= self.hitbox_points.left
-            else:
-                p1 @= other.hitbox_points.left
-                p2 @= self.hitbox_points.right
-            h_inner = p2 - p1
-            if h_inner.magnitude < 1e-3:
-                continue
-            cutoff = h_inner.magnitude / 2
-            h_inner @= h_inner.normalize()
-            proj = (position - p1).dot(h_inner)
-            if proj > cutoff:
-                return False
-        return True
+            pass
+        else:
+            own_mid = self.base_hitbox_pos.mid
+            for other_index in input_note_indexes:
+                if other_index == self.index:
+                    continue
+                other = Note.at(other_index)
+                if other.input_finished or other.beat != self.beat or other.touch_id != 0:
+                    continue
+                other_mid = other.base_hitbox_pos.mid
+                if other_mid > own_mid and self.base_hitbox_pos.right > other.base_hitbox_pos.left:
+                    hitbox_pos.right = min(
+                        hitbox_pos.right,
+                        (self.base_hitbox_pos.right + other.base_hitbox_pos.left) / 2,
+                    )
+                elif other_mid < own_mid and self.base_hitbox_pos.left < other.base_hitbox_pos.right:
+                    hitbox_pos.left = max(
+                        hitbox_pos.left,
+                        (self.base_hitbox_pos.left + other.base_hitbox_pos.right) / 2,
+                    )
+                else:
+                    pass
+        # Splitting up the hitbox to prevent issues with it wrapping around with arc and high tilt
+        left_hitbox = lane_hitbox(LanePosition(left=hitbox_pos.left, right=hitbox_pos.mid + 1e-3))
+        right_hitbox = lane_hitbox(LanePosition(left=hitbox_pos.mid, right=hitbox_pos.right))
+        return left_hitbox.contains_point(position) or right_hitbox.contains_point(position)
 
     def complete(self, actual_time: float):
         judgment = self.window.judge(actual=actual_time, target=self.target_time)

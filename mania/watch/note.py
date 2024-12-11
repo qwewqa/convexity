@@ -84,6 +84,7 @@ class Note(WatchArchetype):
     def preprocess(self):
         if Options.mirror:
             self.lane = -self.lane
+            self.direction = -self.direction
 
         self.pos @= lane_to_pos(self.lane)
         self.target_time = beat_to_time(self.beat)

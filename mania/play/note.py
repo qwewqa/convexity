@@ -179,8 +179,7 @@ class Note(PlayArchetype):
     def chain_miss(self) -> bool:
         if not self.has_prev:
             return False
-        prev = self.prev
-        return prev.finished and prev.touch_id == 0 and self.variant != NoteVariant.HOLD_TICK
+        return self.prev.finished and self.prev.touch_id == 0 and self.variant != NoteVariant.HOLD_TICK
 
     def draw_body(self):
         if self.variant != NoteVariant.HOLD_ANCHOR:
@@ -285,8 +284,10 @@ class Note(PlayArchetype):
                     self.handle_hold_input()
                 else:
                     self.handle_release_input()
-            case NoteVariant.HOLD_TICK | NoteVariant.HOLD_ANCHOR:
+            case NoteVariant.HOLD_TICK:
                 self.handle_hold_input()
+            case NoteVariant.HOLD_ANCHOR:
+                self.handle_anchor_input()
             case NoteVariant.FLICK | NoteVariant.DIRECTIONAL_FLICK:
                 self.handle_flick_input()
             case NoteVariant.SWING:
@@ -443,6 +444,18 @@ class Note(PlayArchetype):
             self.complete(time() - input_offset())
         else:
             self.fail(time() - input_offset())
+
+    def handle_anchor_input(self):
+        if self.prev.touch_id == 0:
+            self.fail(time() - input_offset())
+        self.touch_id = self.prev.touch_id
+        for touch in touches():
+            if touch.id == self.touch_id and not touch.ended:
+                break
+        else:
+            self.fail(time() - input_offset())
+        if time() >= self.target_time:
+            self.complete(time() - input_offset())
 
     def handle_swing_input(self):
         if self.has_prev and self.prev.touch_id != 0:

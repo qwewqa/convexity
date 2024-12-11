@@ -56,7 +56,6 @@ class Note(WatchArchetype):
     prev_note_ref: EntityRef[Note] = imported()
     sim_note_ref: EntityRef[Note] = imported()
 
-    touch_id: int = shared_memory()
     y: float = shared_memory()
 
     pos: LanePosition = imported()

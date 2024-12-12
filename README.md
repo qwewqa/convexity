@@ -1,1 +1,2 @@
-# Mania
+# Convexity
+A Sonolus engine

@@ -6,6 +6,7 @@ from sonolus.script.text import StandardText
 class Options:
     speed: float = slider_option(
         name=StandardText.SPEED,
+        scope=None,
         default=1,
         min=0.5,
         max=2,
@@ -131,7 +132,7 @@ class Options:
     )
     spread: float = slider_option(
         name="Spread",
-        scope="mania_v",
+        scope=None,
         default=0,
         min=0,
         max=1,
@@ -140,19 +141,19 @@ class Options:
     )
     disable_soflan: bool = toggle_option(
         name="Disable Soflan",
-        scope="mania_v",
+        scope=None,
         default=False,
         standard=True,
     )
     auto_release_holds: bool = toggle_option(
         name="Auto Release Holds",
-        scope="mania_v",
+        scope=None,
         default=False,
         standard=True,
     )
     leniency: float = slider_option(
         name="Additional Hitbox Leniency",
-        scope="mania_v",
+        scope=None,
         default=0.0,
         min=-2.0,
         max=2.0,
@@ -161,7 +162,7 @@ class Options:
     )
     window_size: float = slider_option(
         name="Judgment Window Size",
-        scope="mania_v",
+        scope=None,
         default=1.0,
         min=0.2,
         max=2.0,
@@ -171,6 +172,6 @@ class Options:
     )
     mirror: bool = toggle_option(
         name=StandardText.MIRROR,
-        scope="mania_v",
+        scope=None,
         default=False,
     )

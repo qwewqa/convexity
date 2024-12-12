@@ -120,7 +120,7 @@ class Note(PlayArchetype):
 
         self.base_hitbox_pos @= lane_hitbox_pos(
             self.lane,
-            self.leniency * (1 + Options.spread),
+            self.leniency,
             self.direction if self.variant == NoteVariant.DIRECTIONAL_FLICK else 0,
         )
         reference_hitbox = lane_hitbox(LanePosition(self.base_hitbox_pos.mid - 0.5, self.base_hitbox_pos.mid + 0.5))

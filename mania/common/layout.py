@@ -228,7 +228,7 @@ def segments_intersect(a1, a2, b1, b2):
 
 
 def lane_hitbox_pos(lane: float, leniency: float = 1, direction: float = 0) -> LanePosition:
-    return lane_to_pos(lane + direction / 2, leniency + abs(direction))
+    return lane_to_pos(lane + direction / 2, (leniency + abs(direction)) * (1 + Options.spread))
 
 
 def lane_hitbox(pos: LanePosition) -> Quad:

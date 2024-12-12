@@ -17,6 +17,10 @@ def mark_touch_used(touch: Touch):
     used_touch_ids.set_add(touch.id)
 
 
+def mark_touch_id_used(touch_id: int):
+    used_touch_ids.set_add(touch_id)
+
+
 def unused_touches() -> Iterable[Touch]:
     return filter(lambda touch: not touch_is_used(touch), touches())
 
@@ -29,7 +33,4 @@ class InputManager(PlayArchetype):
     @callback(order=-1)
     def update_sequential(self):
         input_note_indexes.clear()
-
-    @callback(order=-1)
-    def touch(self):
         used_touch_ids.clear()

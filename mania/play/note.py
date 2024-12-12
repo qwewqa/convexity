@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Callable
+
 from sonolus.script.archetype import (
     EntityRef,
     PlayArchetype,
@@ -47,7 +49,7 @@ from mania.common.note import (
     swing_velocity_threshold,
 )
 from mania.common.options import Options
-from mania.play.input_manager import input_note_indexes, mark_touch_used, taps
+from mania.play.input_manager import input_note_indexes, mark_touch_id_used, mark_touch_used, taps, touch_is_used
 from mania.play.timescale import TimescaleGroup
 
 
@@ -121,8 +123,8 @@ class Note(PlayArchetype):
             self.leniency * (1 + Options.spread),
             self.direction if self.variant == NoteVariant.DIRECTIONAL_FLICK else 0,
         )
-        base_hitbox = lane_hitbox(self.base_hitbox_pos)
-        self.right_vec = (base_hitbox.br - base_hitbox.bl).normalize()
+        reference_hitbox = lane_hitbox(LanePosition(self.base_hitbox_pos.mid - 0.5, self.base_hitbox_pos.mid + 0.5))
+        self.right_vec = (reference_hitbox.br - reference_hitbox.bl).normalize()
 
         if self.variant != NoteVariant.HOLD_ANCHOR:
             schedule_auto_hit_sfx(Judgment.PERFECT, self.target_time)
@@ -146,6 +148,10 @@ class Note(PlayArchetype):
             self.sim_note.y = note_y(self.sim_note.timescale_group.scaled_time, self.sim_note.target_scaled_time)
         if self.variant == NoteVariant.HOLD_ANCHOR:
             self.input_finished = self.prev.input_finished or self.prev.is_despawned
+        if self.has_prev and self.prev.touch_id != 0:
+            mark_touch_id_used(self.prev.touch_id)
+        if self.touch_id != 0:
+            mark_touch_id_used(self.touch_id)
         if (
             not self.input_finished
             and self.touch_id == 0
@@ -291,8 +297,9 @@ class Note(PlayArchetype):
     def handle_tap_input(self):
         if time() not in self.input_time:
             return
+        hitbox = self.get_hitbox()
         for touch in taps():
-            if not self.hitbox_contains(touch.position):
+            if not hitbox(touch.position):
                 continue
             mark_touch_used(touch)
             self.touch_id = touch.id
@@ -300,17 +307,17 @@ class Note(PlayArchetype):
             return
 
     def handle_release_input(self):
-        touch_id = self.prev.touch_id
-        if touch_id != 0:
-            self.touch_id = touch_id
+        if self.prev.touch_id != 0:
+            self.touch_id = self.prev.touch_id
         if self.touch_id == 0:
             return
+        hitbox = self.get_hitbox()
         for touch in touches():
-            if touch.id != touch_id:
+            if touch.id != self.touch_id:
                 continue
             if not touch.ended:
                 return
-            if touch.time >= self.input_time.start and self.hitbox_contains(touch.position):
+            if touch.time >= self.input_time.start and hitbox(touch.position):
                 self.complete(touch.time)
             else:
                 self.fail(touch.time)
@@ -324,10 +331,11 @@ class Note(PlayArchetype):
         if self.touch_id == 0:
             if time() not in self.input_time:
                 return
+            hitbox = self.get_hitbox()
             if self.has_prev and self.prev.touch_id != 0:
                 for touch in touches():
                     if touch.id == self.prev.touch_id:
-                        if self.hitbox_contains(touch.position):
+                        if hitbox(touch.position):
                             mark_touch_used(touch)
                             self.touch_id = touch.id
                             break
@@ -340,7 +348,7 @@ class Note(PlayArchetype):
                     self.fail(time() - input_offset())
             else:
                 for touch in taps():
-                    if not self.hitbox_contains(touch.position):
+                    if not hitbox(touch.position):
                         continue
                     mark_touch_used(touch)
                     self.touch_id = touch.id
@@ -385,6 +393,7 @@ class Note(PlayArchetype):
         self.fail(time() - input_offset())
 
     def handle_hold_input(self):
+        hitbox = self.get_hitbox()
         if self.touch_id == 0:
             if self.has_prev and self.prev.touch_id != 0:
                 self.touch_id = self.prev.touch_id
@@ -392,7 +401,7 @@ class Note(PlayArchetype):
                 return
             else:
                 for touch in taps():
-                    if not self.hitbox_contains(touch.position):
+                    if not hitbox(touch.position):
                         continue
                     mark_touch_used(touch)
                     self.touch_id = touch.id
@@ -402,7 +411,7 @@ class Note(PlayArchetype):
         for touch in touches():
             if touch.id != self.touch_id:
                 continue
-            if self.hitbox_contains(touch.position):
+            if hitbox(touch.position):
                 if touch.ended:
                     # The touch has ended in the hitbox.
                     if time() >= self.input_time.start:
@@ -455,21 +464,26 @@ class Note(PlayArchetype):
         if self.has_prev and self.prev.touch_id != 0:
             self.touch_id = self.prev.touch_id
         target_velocity = swing_velocity_threshold()
+        hitbox = self.get_hitbox()
         for touch in touches():
             if self.touch_id != 0 and touch.id != self.touch_id:
                 continue
+            if self.touch_id == 0 and touch_is_used(touch):
+                continue
             velocity_met = touch.velocity.magnitude >= target_velocity
-            hitbox_met = self.hitbox_contains(touch.position) or self.hitbox_contains(touch.prev_position)
+            hitbox_met = hitbox(touch.position) or hitbox(touch.prev_position)
             met = velocity_met and hitbox_met
             if self.started:
                 if time() >= self.input_target_time:
                     # The touch has continuously met the swing criteria into the target time.
                     self.touch_id = touch.id
+                    mark_touch_used(touch)
                     self.complete(self.target_time)
                 elif not hitbox_met or touch.ended:
                     # The touch has stopped meeting the swing criteria or ended before the target time.
                     # It's ok if the touch has become too slow though, so we wait until the target time in that case.
                     self.touch_id = touch.id
+                    mark_touch_used(touch)
                     self.complete(touch.time)
                 else:
                     # The touch has continuously met the swing criteria, but we haven't reached the target time yet.
@@ -478,10 +492,12 @@ class Note(PlayArchetype):
                 if touch.time >= self.input_target_time:
                     # The touch has just met the swing criteria after the target time.
                     self.touch_id = touch.id
+                    mark_touch_used(touch)
                     self.complete(touch.time)
                 elif touch.time >= self.input_time.start:
                     # The touch has just met the swing criteria before the target time.
                     self.touch_id = touch.id
+                    mark_touch_used(touch)
                     self.started = True
                 else:
                     # The touch has just met the swing criteria before the input time.
@@ -504,7 +520,7 @@ class Note(PlayArchetype):
             # We have a touch from a previous note, but it has gone missing.
             self.fail(time() - input_offset())
 
-    def hitbox_contains(self, position: Vec2) -> bool:
+    def get_hitbox(self) -> Callable[[Vec2], bool]:
         hitbox_pos = copy(self.base_hitbox_pos)
         if self.touch_id != 0 or (self.has_prev and self.prev.touch_id != 0):
             pass
@@ -514,7 +530,7 @@ class Note(PlayArchetype):
                 if other_index == self.index:
                     continue
                 other = Note.at(other_index)
-                if other.input_finished or abs(other.target_time - self.target_time) > 0.01 or other.touch_id != 0:
+                if other.input_finished or abs(other.target_time - self.target_time) > 0.005 or other.touch_id != 0:
                     continue
                 other_mid = other.base_hitbox_pos.mid
                 if other_mid > own_mid and self.base_hitbox_pos.right > other.base_hitbox_pos.left:
@@ -532,7 +548,11 @@ class Note(PlayArchetype):
         # Splitting up the hitbox to prevent issues with it wrapping around with arc and high tilt
         left_hitbox = lane_hitbox(LanePosition(left=hitbox_pos.left, right=hitbox_pos.mid + 1e-3))
         right_hitbox = lane_hitbox(LanePosition(left=hitbox_pos.mid, right=hitbox_pos.right))
-        return left_hitbox.contains_point(position) or right_hitbox.contains_point(position)
+
+        def hitbox(position: Vec2):
+            return left_hitbox.contains_point(position) or right_hitbox.contains_point(position)
+
+        return hitbox
 
     def complete(self, actual_time: float):
         judgment = self.window.judge(actual=actual_time, target=self.target_time)

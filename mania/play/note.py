@@ -148,10 +148,6 @@ class Note(PlayArchetype):
             self.sim_note.y = note_y(self.sim_note.timescale_group.scaled_time, self.sim_note.target_scaled_time)
         if self.variant == NoteVariant.HOLD_ANCHOR:
             self.input_finished = self.prev.input_finished or self.prev.is_despawned
-        if self.has_prev and self.prev.touch_id != 0:
-            mark_touch_id_used(self.prev.touch_id)
-        if self.touch_id != 0:
-            mark_touch_id_used(self.touch_id)
         if (
             not self.input_finished
             and self.touch_id == 0
@@ -277,6 +273,10 @@ class Note(PlayArchetype):
     def touch(self):
         if self.has_prev and not (self.prev.is_despawned or self.prev.input_finished):
             return
+        if self.has_prev and self.prev.touch_id != 0:
+            mark_touch_id_used(self.prev.touch_id)
+        if self.touch_id != 0:
+            mark_touch_id_used(self.touch_id)
         match self.variant:
             case NoteVariant.SINGLE | NoteVariant.HOLD_START:
                 self.handle_tap_input()

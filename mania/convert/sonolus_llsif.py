@@ -116,6 +116,10 @@ def convert_sonolus_llsif_level_data(data: dict) -> LevelData:
                     )
                 )
 
+    notes.sort(key=lambda note: note.beat)
+    for a, b in itertools.pairwise(notes):
+        if a.beat != b.beat and abs(a.beat - b.beat) < 0.002:
+            b.beat = a.beat
     notes_by_beat: dict[float, list[Note]] = {}
     for note in notes:
         notes_by_beat.setdefault(note.beat, []).append(note)

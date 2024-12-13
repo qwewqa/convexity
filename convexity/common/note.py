@@ -3,6 +3,7 @@ from math import floor, pi
 
 from sonolus.script.bucket import Judgment, JudgmentWindow
 from sonolus.script.easing import ease_out_quad
+from sonolus.script.effect import Effect
 from sonolus.script.interval import lerp, unlerp
 from sonolus.script.particle import Particle, ParticleHandle
 from sonolus.script.quad import Quad
@@ -354,12 +355,35 @@ def swing_velocity_threshold():
     return 3.0 * Layout.reference_length
 
 
+def note_hit_sfx(variant: NoteVariant, judgment: Judgment):
+    result = zeros(Effect)
+    match variant:
+        case NoteVariant.FLICK | NoteVariant.DIRECTIONAL_FLICK:
+            match judgment:
+                case Judgment.PERFECT:
+                    result @= Effects.perfect_alt
+                case Judgment.GREAT:
+                    result @= Effects.great_alt
+                case Judgment.GOOD:
+                    result @= Effects.good_alt
+        case _:
+            match judgment:
+                case Judgment.PERFECT:
+                    result @= Effects.perfect
+                case Judgment.GREAT:
+                    result @= Effects.great
+                case Judgment.GOOD:
+                    result @= Effects.good
+    return result
+
+
 def play_hit_effects(
+    variant: NoteVariant,
     note_particle: Particle,
     pos: LanePosition,
     judgment: Judgment,
 ):
-    play_hit_sfx(judgment)
+    play_hit_sfx(variant, judgment)
     play_hit_particle(note_particle, pos)
 
 
@@ -371,44 +395,35 @@ def play_watch_hit_effects(
 
 
 def schedule_watch_hit_effects(
+    variant: NoteVariant,
     hit_time: float,
     judgment: Judgment,
 ):
-    schedule_hit_sfx(judgment, hit_time)
+    schedule_hit_sfx(variant, judgment, hit_time)
 
 
-def play_hit_sfx(judgment: Judgment):
+def play_hit_sfx(variant: NoteVariant, judgment: Judgment):
     if not Options.sfx_enabled or Options.auto_sfx:
         return
-    match judgment:
-        case Judgment.PERFECT:
-            Effects.perfect.play(SFX_DISTANCE)
-        case Judgment.GREAT:
-            Effects.great.play(SFX_DISTANCE)
-        case Judgment.GOOD:
-            Effects.good.play(SFX_DISTANCE)
-        case _:
-            pass
+    effect = note_hit_sfx(variant, judgment)
+    if effect.id == 0:
+        return
+    effect.play(SFX_DISTANCE)
 
 
-def schedule_auto_hit_sfx(judgment: Judgment, target_time: float):
+def schedule_auto_hit_sfx(variant: NoteVariant, judgment: Judgment, target_time: float):
     if not Options.auto_sfx:
         return
-    schedule_hit_sfx(judgment, target_time)
+    schedule_hit_sfx(variant, judgment, target_time)
 
 
-def schedule_hit_sfx(judgment: Judgment, target_time: float):
+def schedule_hit_sfx(variant: NoteVariant, judgment: Judgment, target_time: float):
     if not Options.sfx_enabled:
         return
-    match judgment:
-        case Judgment.PERFECT:
-            Effects.perfect.schedule(target_time, SFX_DISTANCE)
-        case Judgment.GREAT:
-            Effects.great.schedule(target_time, SFX_DISTANCE)
-        case Judgment.GOOD:
-            Effects.good.schedule(target_time, SFX_DISTANCE)
-        case _:
-            pass
+    effect = note_hit_sfx(variant, judgment)
+    if effect.id == 0:
+        return
+    effect.schedule(target_time, SFX_DISTANCE)
 
 
 def play_hit_particle(

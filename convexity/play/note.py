@@ -128,7 +128,7 @@ class Note(PlayArchetype):
         self.right_vec = (reference_hitbox.br - reference_hitbox.bl).normalize()
 
         if self.variant != NoteVariant.HOLD_ANCHOR:
-            schedule_auto_hit_sfx(Judgment.PERFECT, self.target_time)
+            schedule_auto_hit_sfx(self.variant, Judgment.PERFECT, self.target_time)
 
     def spawn_time(self) -> float:
         return min(self.start_time, self.prev_start_time, self.sim_start_time)
@@ -566,6 +566,7 @@ class Note(PlayArchetype):
         self.result.bucket_value = self.result.accuracy * 1000
         if self.variant != NoteVariant.HOLD_ANCHOR:
             play_hit_effects(
+                variant=self.variant,
                 note_particle=self.particle,
                 pos=self.pos,
                 judgment=judgment,

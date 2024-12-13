@@ -106,13 +106,13 @@ class Note(WatchArchetype):
             self.result.bucket @= self.bucket
             self.result.bucket_value = self.accuracy * 1000
             if self.variant != NoteVariant.HOLD_ANCHOR:
-                schedule_watch_hit_effects(self.finish_time, self.judgment)
+                schedule_watch_hit_effects(self.variant, self.finish_time, self.judgment)
         else:
             self.result.bucket @= self.bucket
             self.result.bucket_value = 0
             self.judgment = Judgment.PERFECT
             if self.variant != NoteVariant.HOLD_ANCHOR:
-                schedule_watch_hit_effects(self.target_time, self.judgment)
+                schedule_watch_hit_effects(self.variant, self.target_time, self.judgment)
 
     def spawn_time(self) -> float:
         return min(self.start_time, self.prev_start_time, self.sim_start_time)

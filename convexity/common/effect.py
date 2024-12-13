@@ -11,4 +11,8 @@ class Effects:
     great: StandardEffect.GREAT
     good: StandardEffect.GOOD
 
+    perfect_alt: StandardEffect.PERFECT_ALTERNATIVE
+    great_alt: StandardEffect.GREAT_ALTERNATIVE
+    good_alt: StandardEffect.GOOD_ALTERNATIVE
+
     hold: StandardEffect.HOLD

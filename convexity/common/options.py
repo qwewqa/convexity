@@ -157,7 +157,7 @@ class Options:
         default=0.0,
         min=0.0,
         max=5.0,
-        step=0.1,
+        step=0.05,
         standard=True,
     )
     window_size: float = slider_option(

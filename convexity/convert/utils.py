@@ -2,6 +2,8 @@ import gzip
 import json
 from collections.abc import Callable
 from functools import lru_cache
+from os import PathLike
+from pathlib import Path
 from typing import NamedTuple
 from urllib.parse import urljoin
 from urllib.request import Request, urlopen
@@ -76,7 +78,40 @@ def get_level_items(base_url: str) -> list[dict]:
     return results
 
 
-def convert_sonolus_level_item(item: dict, base_url: str, data_converter: Callable[[dict], LevelData]):
+def get_playlist_items(base_url: str) -> list[dict]:
+    playlist_url = urljoin(base_url, "sonolus/playlists/list?localization=en")
+    page = 0
+    results = []
+    while True:
+        data = get_json(playlist_url + f"&page={page}")
+        results.extend(data["items"])
+        page += 1
+        if page >= data["pageCount"]:
+            break
+    return results
+
+
+def write_playlist_items(path: PathLike, tag: str | None, items: list[dict]):
+    for item in items:
+        pl_path = Path(path) / f"convexity-{item["name"]}"
+        pl_path.mkdir(parents=True, exist_ok=True)
+        item = {
+            "version": item["version"],
+            "title": {"en": item["title"]},
+            "subtitle": {"en": item["subtitle"]},
+            "author": {"en": item["author"]},
+            "levels": [f"convexity-{level_item["name"]}" for level_item in item["levels"]],
+            "tags": [Tag(title=tag["title"], icon=tag.get("icon")).as_dict() for tag in item["tags"]],
+        }
+        if tag:
+            item["tags"].append(Tag(title=tag).as_dict())
+        (pl_path / "item.json").write_text(json.dumps(item, ensure_ascii=False), encoding="utf-8")
+
+
+def convert_sonolus_level_item(item: dict, base_url: str, tag: str | None, data_converter: Callable[[dict], LevelData]):
+    tags = [Tag(title=tag["title"], icon=tag.get("icon")) for tag in item["tags"]]
+    if tag:
+        tags.append(Tag(title=tag))
     return Level(
         name=f"convexity-{item["name"]}",
         rating=item["rating"],
@@ -84,7 +119,7 @@ def convert_sonolus_level_item(item: dict, base_url: str, data_converter: Callab
         artists=item["artists"],
         author=item["author"],
         description=item.get("description"),
-        tags=[Tag(title=tag["title"], icon=tag.get("icon")) for tag in item["tags"]],
+        tags=tags,
         cover=get_bytes(urljoin(base_url, item["cover"]["url"].replace(" ", "%20"))),
         bgm=get_bytes(urljoin(base_url, item["bgm"]["url"].replace(" ", "%20"))),
         preview=get_bytes(urljoin(base_url, item["preview"]["url"].replace(" ", "%20")))

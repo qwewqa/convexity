@@ -262,7 +262,12 @@ def draw_note_arrow(
 
     period = 0.3
     count = max(abs(direction), 1)
-    start_lane = pos.mid
+    lane_offset = 0
+    if direction > 0:
+        lane_offset = 0.4
+    elif direction < 0:
+        lane_offset = -0.4
+    start_lane = pos.mid + lane_offset
     end_lane = start_lane + direction
     offset = ((time() + 5) % period) / period
     fade_progress = 1 / 4 / count

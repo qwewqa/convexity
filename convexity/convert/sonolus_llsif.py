@@ -18,7 +18,7 @@ from convexity.play.timescale import TimescaleChange, TimescaleGroup
 
 def convert_sonolus_llsif_level(name: str, base_url: str = "https://sonolus.milkbun.org/llsif/") -> Level:
     item = get_sonolus_level_item(name, base_url)
-    return convert_sonolus_level_item(item, base_url, convert_sonolus_llsif_level_data)
+    return convert_sonolus_level_item(item, base_url, "LLSIF", convert_sonolus_llsif_level_data)
 
 
 def convert_sonolus_llsif_level_data(data: dict) -> LevelData:

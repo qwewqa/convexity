@@ -51,7 +51,7 @@ def init_layout():
     Layout.judge_line_y = -0.6 + 0.05 * Options.judge_line_position
     Layout.lane_length = 10 * Options.lane_length
     Layout.note_height = Options.note_height
-    Layout.sim_line_height = 0.16
+    Layout.sim_line_height = 0.3
 
     if Options.stage_tilt > 0:
         max_tilt_angle = atan(1.8)

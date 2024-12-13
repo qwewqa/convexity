@@ -85,7 +85,10 @@ def convert_sonolus_level_item(item: dict, base_url: str, data_converter: Callab
         author=item["author"],
         description=item.get("description"),
         tags=[Tag(title=tag["title"], icon=tag.get("icon")) for tag in item["tags"]],
-        cover=get_bytes(urljoin(base_url, item["cover"]["url"])),
-        bgm=get_bytes(urljoin(base_url, item["bgm"]["url"])),
-        data=data_converter(get_json_gzip(urljoin(base_url, make_relative(item["data"]["url"])))),
+        cover=get_bytes(urljoin(base_url, item["cover"]["url"].replace(" ", "%20"))),
+        bgm=get_bytes(urljoin(base_url, item["bgm"]["url"].replace(" ", "%20"))),
+        preview=get_bytes(urljoin(base_url, item["preview"]["url"].replace(" ", "%20")))
+        if item.get("preview")
+        else None,
+        data=data_converter(get_json_gzip(urljoin(base_url, make_relative(item["data"]["url"].replace(" ", "%20"))))),
     )

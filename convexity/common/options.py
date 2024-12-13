@@ -152,7 +152,7 @@ class Options:
         standard=True,
     )
     leniency: float = slider_option(
-        name="Base Leniency Override",
+        name="Leniency Override",
         scope=None,
         default=0.0,
         min=0.0,

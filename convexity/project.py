@@ -14,6 +14,7 @@ engine = Engine(
     title="Convexity",
     skin="pixel",
     particle="pixel",
+    effect="8bit",
     background="darkblue",
     data=EngineData(
         ui=ui_config,

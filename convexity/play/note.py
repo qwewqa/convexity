@@ -473,7 +473,7 @@ class Note(PlayArchetype):
                 continue
             velocity_met = touch.velocity.magnitude >= target_velocity
             hitbox_met = hitbox(touch.position) or hitbox(touch.prev_position)
-            met = velocity_met and hitbox_met
+            met = (velocity_met or touch.started) and hitbox_met
             if self.started:
                 if time() >= self.input_target_time:
                     # The touch has continuously met the swing criteria into the target time.
@@ -500,6 +500,8 @@ class Note(PlayArchetype):
                     self.touch_id = touch.id
                     mark_touch_used(touch)
                     self.started = True
+                    if touch.ended:
+                        self.complete(touch.time)
                 else:
                     # The touch has just met the swing criteria before the input time.
                     pass

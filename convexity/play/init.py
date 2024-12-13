@@ -1,4 +1,4 @@
-from sonolus.script.archetype import PlayArchetype, callback
+from sonolus.script.archetype import PlayArchetype, callback, imported
 from sonolus.script.runtime import (
     HorizontalAlign,
     screen,
@@ -13,11 +13,15 @@ from sonolus.script.vec import Vec2
 
 from convexity.common.init import init_buckets, init_life, init_score
 from convexity.common.layout import init_layout
+from convexity.common.options import Options
+from convexity.play.config import PlayConfig
 from convexity.play.input_manager import InputManager
 from convexity.play.note import Note
 
 
 class Init(PlayArchetype):
+    base_leniency: float = imported()
+
     def spawn_order(self) -> float:
         return -1e8
 
@@ -28,6 +32,11 @@ class Init(PlayArchetype):
         init_life(Note)
         init_ui()
         init_layout()
+
+        if Options.leniency == 0:
+            PlayConfig.base_leniency = self.base_leniency
+        else:
+            PlayConfig.base_leniency = Options.leniency
 
     def update_sequential(self):
         InputManager.spawn()

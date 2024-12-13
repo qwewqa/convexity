@@ -152,12 +152,12 @@ class Options:
         standard=True,
     )
     leniency: float = slider_option(
-        name="Additional Hitbox Leniency",
+        name="Base Leniency Override",
         scope=None,
         default=0.0,
-        min=-2.0,
-        max=2.0,
-        step=0.05,
+        min=0.0,
+        max=5.0,
+        step=0.1,
         standard=True,
     )
     window_size: float = slider_option(

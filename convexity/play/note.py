@@ -49,6 +49,7 @@ from convexity.common.note import (
     swing_velocity_threshold,
 )
 from convexity.common.options import Options
+from convexity.play.config import PlayConfig
 from convexity.play.input_manager import input_note_indexes, mark_touch_id_used, mark_touch_used, taps, touch_is_used
 from convexity.play.timescale import TimescaleGroup
 
@@ -99,7 +100,7 @@ class Note(PlayArchetype):
         if Options.mirror:
             self.lane = -self.lane
             self.direction = -self.direction
-        self.leniency = max(self.leniency + Options.leniency, 0.2)
+        self.leniency += PlayConfig.base_leniency
 
         self.pos @= lane_to_pos(self.lane)
         self.target_time = beat_to_time(self.beat)

@@ -26,7 +26,6 @@ def convert_sonolus_llsif_level_data(data: dict) -> LevelData:
     entities = parse_entities(data["entities"])
 
     lane_count = 9
-    leniency = 1
 
     stages = [
         Stage(
@@ -65,7 +64,6 @@ def convert_sonolus_llsif_level_data(data: dict) -> LevelData:
                     variant=NoteVariant.SINGLE if not d.get("hold") else NoteVariant.HOLD_START,
                     beat=d["#BEAT"],
                     lane=d["lane"],
-                    leniency=leniency,
                     timescale_group_ref=timescale_group.ref(),
                 )
                 notes.append(note)
@@ -76,7 +74,6 @@ def convert_sonolus_llsif_level_data(data: dict) -> LevelData:
                     variant=NoteVariant.HOLD_END,
                     beat=d["#BEAT"],
                     lane=prev.lane,
-                    leniency=leniency,
                     timescale_group_ref=timescale_group.ref(),
                     prev_note_ref=prev.ref(),
                 )
@@ -87,7 +84,6 @@ def convert_sonolus_llsif_level_data(data: dict) -> LevelData:
                     variant=NoteVariant.SWING,
                     beat=d["#BEAT"],
                     lane=d["lane"],
-                    leniency=leniency,
                     timescale_group_ref=timescale_group.ref(),
                     direction=d["direction"],
                 )
@@ -116,7 +112,9 @@ def convert_sonolus_llsif_level_data(data: dict) -> LevelData:
     return LevelData(
         bgm_offset=bgm_offset,
         entities=[
-            Init(),
+            Init(
+                base_leniency=1,
+            ),
             timescale_group,
             *timescale_changes,
             *stages,

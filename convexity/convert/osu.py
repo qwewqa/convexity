@@ -144,7 +144,6 @@ def convert_osu(data: str, assets: Path) -> Level | None:
                     variant=NoteVariant.SINGLE,
                     beat=section_beat + (hit_object.time - bpm_time) / 60000 * bpm,
                     lane=x_to_lane(hit_object.x),
-                    leniency=1,
                     timescale_group_ref=timescale_group.ref(),
                 )
             )
@@ -153,14 +152,12 @@ def convert_osu(data: str, assets: Path) -> Level | None:
                 variant=NoteVariant.HOLD_START,
                 beat=section_beat + (hit_object.time - bpm_time) / 60000 * bpm,
                 lane=x_to_lane(hit_object.x),
-                leniency=1,
                 timescale_group_ref=timescale_group.ref(),
             )
             end = Note(
                 variant=NoteVariant.HOLD_END,
                 beat=section_beat + (hit_object.slide_end_time - bpm_time) / 60000 * bpm,
                 lane=x_to_lane(hit_object.x),
-                leniency=1,
                 timescale_group_ref=timescale_group.ref(),
                 prev_note_ref=start.ref(),
             )
@@ -186,7 +183,9 @@ def convert_osu(data: str, assets: Path) -> Level | None:
         data=LevelData(
             bgm_offset=0,
             entities=[
-                Init(),
+                Init(
+                    base_leniency=1,
+                ),
                 timescale_group,
                 *timescale_changes,
                 *stages,

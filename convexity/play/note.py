@@ -72,6 +72,7 @@ class Note(PlayArchetype):
     finished: bool = shared_memory()
     base_hitbox_pos: LanePosition = shared_memory()
     right_vec: Vec2 = shared_memory()
+    shared_hold_handle: HoldHandle = shared_memory()
 
     pos: LanePosition = entity_data()
     target_time: float = entity_data()
@@ -89,6 +90,7 @@ class Note(PlayArchetype):
     has_sim: bool = entity_data()
     start_time: float = entity_data()
     target_scaled_time: float = entity_data()
+    next_note_ref: EntityRef[Note] = entity_data()
 
     started: bool = entity_memory()
     hold_handle: HoldHandle = entity_memory()
@@ -130,6 +132,9 @@ class Note(PlayArchetype):
         if self.variant != NoteVariant.HOLD_ANCHOR:
             schedule_auto_hit_sfx(self.variant, Judgment.PERFECT, self.target_time)
 
+        if self.has_prev:
+            self.prev_note_ref.get().next_note_ref @= self.ref()
+
     def spawn_time(self) -> float:
         return min(self.start_time, self.prev_start_time, self.sim_start_time)
 
@@ -160,6 +165,14 @@ class Note(PlayArchetype):
             and self.variant != NoteVariant.HOLD_ANCHOR
         ):
             input_note_indexes.append(self.index)
+        if (
+            self.has_prev
+            and self.hold_handle.handle != self.prev.shared_hold_handle.handle
+            and self.prev.shared_hold_handle.is_active
+        ):
+            self.hold_handle.destroy()
+            self.hold_handle @= self.prev.shared_hold_handle
+        self.shared_hold_handle @= self.hold_handle
 
     def update_parallel(self):
         if self.despawn:
@@ -232,12 +245,18 @@ class Note(PlayArchetype):
                 particle=self.hold_particle,
                 pos=prev_pos,
             )
-        elif self.variant != NoteVariant.HOLD_END:
+        elif self.variant != NoteVariant.HOLD_END and self.prev.touch_id != 0:
             draw_note_body(
                 sprite=self.head_sprite,
                 pos=self.pos,
                 y=0,
             )
+            self.hold_handle.update(
+                particle=self.hold_particle,
+                pos=self.pos,
+            )
+        else:
+            self.hold_handle.destroy()
 
     def draw_arrow(self):
         match self.variant:
@@ -588,7 +607,8 @@ class Note(PlayArchetype):
         self.input_finished = True
 
     def terminate(self):
-        self.hold_handle.destroy()
+        if not self.has_next:
+            self.hold_handle.destroy()
         self.finish_time = time()
 
     @property
@@ -614,6 +634,14 @@ class Note(PlayArchetype):
         if not self.has_sim:
             return 1e8
         return self.sim_note.start_time
+
+    @property
+    def has_next(self) -> bool:
+        return self.next_note_ref.index > 0
+
+    @property
+    def next(self) -> Note:
+        return self.next_note_ref.get()
 
 
 class UnscoredNote(Note):

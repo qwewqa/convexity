@@ -472,6 +472,10 @@ def play_hit_particle(
 class HoldHandle(Record):
     handle: ParticleHandle
 
+    @property
+    def is_active(self):
+        return self.handle.id != 0
+
     def update(self, particle: Particle, pos: LanePosition):
         if not Options.note_effect_enabled:
             return

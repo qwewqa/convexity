@@ -12,7 +12,7 @@ from sonolus.script.archetype import (
 from sonolus.script.bucket import Bucket, Judgment, JudgmentWindow
 from sonolus.script.interval import lerp, unlerp
 from sonolus.script.particle import Particle
-from sonolus.script.runtime import is_replay, time
+from sonolus.script.runtime import is_replay, is_skip, time
 from sonolus.script.sprite import Sprite
 from sonolus.script.timing import beat_to_time
 from sonolus.script.values import copy
@@ -57,6 +57,7 @@ class Note(WatchArchetype):
     sim_note_ref: EntityRef[Note] = imported()
 
     y: float = shared_memory()
+    shared_hold_handle: HoldHandle = shared_memory()
 
     pos: LanePosition = imported()
     target_time: float = entity_data()
@@ -72,6 +73,7 @@ class Note(WatchArchetype):
     has_sim: bool = entity_data()
     start_time: float = entity_data()
     target_scaled_time: float = entity_data()
+    next_note_ref: EntityRef[Note] = entity_data()
 
     started: bool = entity_memory()
     hold_handle: HoldHandle = entity_memory()
@@ -114,6 +116,9 @@ class Note(WatchArchetype):
             if self.variant != NoteVariant.HOLD_ANCHOR:
                 schedule_watch_hit_effects(self.variant, self.target_time, self.judgment)
 
+        if self.has_prev:
+            self.prev_note_ref.get().next_note_ref @= self.ref()
+
     def spawn_time(self) -> float:
         return min(self.start_time, self.prev_start_time, self.sim_start_time)
 
@@ -127,6 +132,18 @@ class Note(WatchArchetype):
         self.y = note_y(self.timescale_group.scaled_time, self.target_scaled_time)
         if self.has_sim and time() < self.sim_note.spawn_time():
             self.sim_note.y = note_y(self.sim_note.timescale_group.scaled_time, self.sim_note.target_scaled_time)
+        if (
+            self.has_prev
+            and self.hold_handle.handle != self.prev.shared_hold_handle.handle
+            and self.prev.shared_hold_handle.is_active
+        ):
+            self.hold_handle.destroy()
+            self.hold_handle @= self.prev.shared_hold_handle
+        self.shared_hold_handle @= self.hold_handle
+        if is_skip():
+            self.hold_handle.destroy()
+            self.shared_hold_handle.destroy()
+            self.prev.shared_hold_handle.destroy()
 
     def update_parallel(self):
         self.draw_body()
@@ -189,12 +206,18 @@ class Note(WatchArchetype):
                 particle=self.hold_particle,
                 pos=prev_pos,
             )
-        elif self.variant != NoteVariant.HOLD_END:
+        elif self.variant != NoteVariant.HOLD_END and prev.judgment != Judgment.MISS:
             draw_note_body(
                 sprite=self.head_sprite,
                 pos=self.pos,
                 y=0,
             )
+            self.hold_handle.update(
+                particle=self.hold_particle,
+                pos=self.pos,
+            )
+        else:
+            self.hold_handle.destroy()
 
     def draw_arrow(self):
         match self.variant:
@@ -229,7 +252,8 @@ class Note(WatchArchetype):
         )
 
     def terminate(self):
-        self.hold_handle.destroy()
+        if not self.has_next or is_skip():
+            self.hold_handle.destroy()
         if (not is_replay() or self.judgment != Judgment.MISS) and self.variant != NoteVariant.HOLD_ANCHOR:
             play_watch_hit_effects(
                 note_particle=self.particle,
@@ -259,6 +283,14 @@ class Note(WatchArchetype):
         if not self.has_sim:
             return 1e8
         return self.sim_note.start_time
+
+    @property
+    def has_next(self) -> bool:
+        return self.next_note_ref.index > 0
+
+    @property
+    def next(self) -> Note:
+        return self.next_note_ref.get()
 
 
 class UnscoredNote(Note):

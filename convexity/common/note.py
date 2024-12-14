@@ -160,7 +160,7 @@ def y_to_alpha(y: float):
         0,
         y,
     )
-    if 0.0 <= progress <= 0.2:
+    if Options.extend_lanes and 0.0 <= progress <= 0.2:
         return ease_out_cubic(remap(0.0, 0.2, 0, 1, progress))
     if Options.hidden != 0 and progress > 1 - Options.hidden - 0.1:
         return ease_out_cubic(remap(1 - Options.hidden - 0.1, 1 - Options.hidden + 0.1, 1, 0, progress))

@@ -1,13 +1,16 @@
-from sonolus.script.sprite import StandardSprite, skin
+from sonolus.script.sprite import RenderMode, StandardSprite, skin
 
 
 @skin
 class Skin:
+    render_mode = RenderMode.LIGHTWEIGHT
+
     cover: StandardSprite.STAGE_COVER
 
     lane: StandardSprite.LANE
     stage_left_border: StandardSprite.STAGE_LEFT_BORDER
     stage_right_border: StandardSprite.STAGE_RIGHT_BORDER
+    stage_middle: StandardSprite.STAGE_MIDDLE
     judgment_line: StandardSprite.JUDGMENT_LINE
     slot: StandardSprite.NOTE_SLOT
 

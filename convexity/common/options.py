@@ -130,6 +130,16 @@ class Options:
         scope="convexity",
         default=True,
     )
+    laneless: bool = toggle_option(
+        name="Laneless",
+        scope="convexity",
+        default=False,
+    )
+    extend_lanes: bool = toggle_option(
+        name="Extend Lanes",
+        scope="convexity",
+        default=False,
+    )
     spread: float = slider_option(
         name="Spread",
         scope=None,

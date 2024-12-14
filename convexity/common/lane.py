@@ -6,9 +6,9 @@ from convexity.common.skin import Skin
 
 
 def draw_lane(pos: LanePosition):
-    Skin.lane.draw(lane_layout(pos), z=Layer.LANE)
-    # Skin.slot.draw(note_layout(pos, 0), z=Layer.SLOT)
-    Skin.judgment_line.draw(line_layout(pos, 0), z=Layer.JUDGE_LINE)
+    if not Options.laneless:
+        Skin.lane.draw(lane_layout(pos), z=Layer.LANE)
+        Skin.judgment_line.draw(line_layout(pos, 0), z=Layer.JUDGE_LINE)
 
 
 def play_lane_effects(pos: LanePosition):

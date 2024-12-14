@@ -84,6 +84,10 @@ class LanePosition(Record):
     def mid(self) -> float:
         return (self.left + self.right) / 2
 
+    @property
+    def width(self) -> float:
+        return self.right - self.left
+
     def scale_centered(self, factor: float) -> Self:
         mid = self.mid
         length = self.right - self.left
@@ -135,7 +139,12 @@ def transform_vec(vec: Vec2) -> Vec2:
 
 
 def lane_layout(pos: LanePosition) -> Quad:
-    base = Rect(l=pos.left, r=pos.right, b=Layout.min_safe_y - Layout.note_height / 2, t=Layout.lane_length)
+    base = Rect(
+        l=pos.left,
+        r=pos.right,
+        b=Layout.min_safe_y - Layout.note_height / 2,
+        t=Layout.lane_length if not Options.extend_lanes else 999,
+    )
     return transform_quad(base)
 
 

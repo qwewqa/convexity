@@ -3,6 +3,7 @@ from pathlib import Path
 from sonolus.script.level import BpmChange, Level, LevelData
 
 from convexity.convert.osu import convert_osz
+from convexity.convert.sonolus_bandori import convert_sonolus_bandori_level
 from convexity.play.init import Init
 from convexity.play.lane import Lane
 from convexity.play.note import Note, NoteVariant
@@ -154,32 +155,4 @@ levels = [level]
 
 for osz_file in Path("resources").glob("*.osz"):
     levels.extend(convert_osz(osz_file.read_bytes()))
-# levels.append(convert_sonolus_llsif_level("milkbun-llsif-1557"))
-# levels.append(convert_sonolus_llsif_level("milkbun-llsif-738"))
-# levels.append(convert_sonolus_llsif_level("milkbun-llsif-700"))
-# levels.append(convert_sonolus_llsif_level("milkbun-llsif-20008"))
-# levels.append(convert_sonolus_llsif_level("milkbun-llsif-20004"))
-# levels.append(convert_sonolus_llsif_level("milkbun-llsif-1482"))
-# levels.append(convert_sonolus_llsif_level("milkbun-llsif-20007"))
-# levels.append(convert_sonolus_llsif_level("milkbun-llsif-2001"))
-# levels.append(convert_sonolus_llsif_level("milkbun-llsif-1187"))
-# levels.append(convert_sonolus_llsif_level("milkbun-llsif-2028"))
-# levels.append(convert_sonolus_llsif_level("milkbun-llsif-2030"))
-# levels.append(convert_sonolus_llsif_level("milkbun-llsif-719"))
-# levels.append(convert_sonolus_llsif_level("milkbun-llsif-1095"))
-# levels.append(convert_sonolus_llsif_level("milkbun-llsif-1018"))
-# levels.append(convert_sonolus_llsif_level("milkbun-llsif-1345"))
-# levels.extend(get_bestdori_official(307))
-# levels.extend(get_bestdori_official(306))
-# levels.extend(get_bestdori_official(292))
-# levels.extend(get_bestdori_official(247))
-# levels.extend(get_bestdori_official(187))
-# levels.extend(get_bestdori_official(185))
-# levels.extend(get_bestdori_official(484))
-# levels.extend(get_bestdori_official(253))
-# levels.extend(get_bestdori_official(598))
-# levels.extend(get_bestdori_official(597))
-# levels.extend(get_bestdori_official(596))
-# levels.extend(get_bestdori_official(470))
-# levels.extend(get_bestdori_official(406))
-# levels.extend(get_bestdori_official(4))
+levels.append(convert_sonolus_bandori_level("bestdori-official-406-special"))

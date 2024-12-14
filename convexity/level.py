@@ -12,7 +12,7 @@ from convexity.play.timescale import TimescaleChange, TimescaleGroup
 level = Level(
     name="convexity-level",
     title="Convexity Level",
-    bgm=None,
+    bgm="https://bestdori.com/assets/en/sound/bgm257_rip/bgm257.mp3",
     data=LevelData(
         bgm_offset=0,
         entities=[
@@ -125,27 +125,50 @@ level = Level(
             #     )
             #     for i in range(8, 100)
             # ],
-            *[
-                Note(
-                    variant=NoteVariant.DIRECTIONAL_FLICK,
-                    beat=i / 4,
-                    lane=-2.5,
-                    leniency=3,
-                    direction=3,
-                    timescale_group_ref=ts1.ref(),
-                )
-                for i in range(8, 100)
-            ],
-            *[
-                Note(
-                    variant=NoteVariant.DIRECTIONAL_FLICK,
-                    beat=i / 4,
-                    lane=1.5,
-                    leniency=3,
-                    direction=3,
-                    timescale_group_ref=ts1.ref(),
-                )
-                for i in range(8, 100)
+            # *[
+            #     Note(
+            #         variant=NoteVariant.DIRECTIONAL_FLICK,
+            #         beat=i / 4,
+            #         lane=-2.5,
+            #         leniency=3,
+            #         direction=3,
+            #         timescale_group_ref=ts1.ref(),
+            #     )
+            #     for i in range(8, 100)
+            # ],
+            # *[
+            #     Note(
+            #         variant=NoteVariant.DIRECTIONAL_FLICK,
+            #         beat=i / 4,
+            #         lane=1.5,
+            #         leniency=3,
+            #         direction=3,
+            #         timescale_group_ref=ts1.ref(),
+            #     )
+            #     for i in range(8, 100)
+            # ],
+            [
+                [
+                    [
+                        prev := Note(
+                            variant=NoteVariant.HOLD_START,
+                            beat=0.5 * i,
+                            lane=j,
+                            leniency=2,
+                            timescale_group_ref=ts1.ref(),
+                        ),
+                        Note(
+                            variant=NoteVariant.HOLD_END,
+                            beat=0.5 * i + 0.4,
+                            lane=-j,
+                            leniency=2,
+                            timescale_group_ref=ts1.ref(),
+                            prev_note_ref=prev.ref(),
+                        ),
+                    ]
+                    for j in range(7)
+                ]
+                for i in range(1, 100)
             ],
         ],
     ),

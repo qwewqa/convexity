@@ -2,9 +2,9 @@ from enum import IntEnum
 from math import floor, pi
 
 from sonolus.script.bucket import Judgment, JudgmentWindow
-from sonolus.script.easing import ease_out_quad
+from sonolus.script.easing import ease_out_cubic, ease_out_quad
 from sonolus.script.effect import Effect
-from sonolus.script.interval import lerp, unlerp
+from sonolus.script.interval import lerp, remap, unlerp
 from sonolus.script.particle import Particle, ParticleHandle
 from sonolus.script.quad import Quad
 from sonolus.script.record import Record
@@ -154,6 +154,19 @@ def note_hold_particle(variant: NoteVariant):
     return copy(Particles.hold)
 
 
+def y_to_alpha(y: float):
+    progress = unlerp(
+        Layout.lane_length,
+        0,
+        y,
+    )
+    if 0.0 <= progress <= 0.2:
+        return ease_out_cubic(remap(0.0, 0.2, 0, 1, progress))
+    if Options.hidden != 0 and progress > 1 - Options.hidden - 0.1:
+        return ease_out_cubic(remap(1 - Options.hidden - 0.1, 1 - Options.hidden + 0.1, 1, 0, progress))
+    return 1
+
+
 def draw_note_body(
     sprite: Sprite,
     pos: LanePosition,
@@ -162,7 +175,7 @@ def draw_note_body(
     if not (Layout.min_safe_y <= y <= Layout.lane_length):
         return
     layout = note_layout(pos, y)
-    sprite.draw(layout, z=Layer.NOTE + y + pos.mid / 100)
+    sprite.draw(layout, z=Layer.NOTE + y + pos.mid / 100, a=y_to_alpha(y))
 
 
 def draw_note_connector(
@@ -193,8 +206,12 @@ def draw_note_connector(
         unlerp(prev_y, y, clamped_y),
     ).scale_centered(Options.note_size)
 
-    arc_quality = 5
-    n_segments = floor(abs(clamped_pos.mid - clamped_prev_pos.mid) * arc_quality * Options.arc) + 1
+    arc_quality = Options.arc_quality
+    n_segments = (
+        floor(abs(clamped_pos.mid - clamped_prev_pos.mid) * arc_quality * Options.arc)
+        + floor(abs(clamped_y - clamped_prev_y) * arc_quality)
+        + 1
+    )
     for i in range(n_segments):
         segment_pos = lerp(clamped_prev_pos, clamped_pos, (i + 1) / n_segments)
         segment_y = lerp(clamped_prev_y, clamped_y, (i + 1) / n_segments)
@@ -206,7 +223,11 @@ def draw_note_connector(
             prev_pos=segment_prev_pos,
             prev_y=segment_prev_y,
         )
-        sprite.draw(layout, z=Layer.CONNECTOR - y + pos.mid / 100, a=Options.connector_alpha)
+        sprite.draw(
+            layout,
+            z=Layer.CONNECTOR - y + pos.mid / 100,
+            a=Options.connector_alpha * y_to_alpha((segment_y + segment_prev_y) / 2),
+        )
 
 
 def draw_note_sim_line(
@@ -236,8 +257,12 @@ def draw_note_sim_line(
         unlerp(y, sim_y, clamped_y) if abs(sim_y - y) > EPSILON else 0,
     ).scale_centered(Options.note_size)
 
-    arc_quality = 5
-    n_segments = floor(abs(clamped_pos.mid - clamped_sim_pos.mid) * arc_quality * Options.arc) + 1
+    arc_quality = Options.arc_quality
+    n_segments = (
+        floor(abs(clamped_pos.mid - clamped_sim_pos.mid) * arc_quality * Options.arc)
+        + floor(abs(clamped_y - clamped_sim_y) * arc_quality)
+        + 1
+    )
     for i in range(n_segments):
         segment_pos = lerp(clamped_pos, clamped_sim_pos, (i + 1) / n_segments)
         segment_y = lerp(clamped_y, clamped_sim_y, (i + 1) / n_segments)
@@ -249,7 +274,9 @@ def draw_note_sim_line(
             sim_pos=segment_prev_pos,
             sim_y=segment_prev_y,
         )
-        Skin.sim_line.draw(layout, z=Layer.CONNECTOR - y + pos.mid / 100, a=1)
+        Skin.sim_line.draw(
+            layout, z=Layer.CONNECTOR - y + pos.mid / 100, a=y_to_alpha((segment_y + segment_prev_y) / 2)
+        )
 
 
 def draw_note_arrow(
@@ -313,7 +340,7 @@ def draw_note_arrow(
                     tl=up_layout.bl,
                     tr=up_layout.tl,
                 )
-        sprite.draw(layout, z=Layer.ARROW - y + lane / 100, a=alpha)
+        sprite.draw(layout, z=Layer.ARROW - y + lane / 100, a=alpha * y_to_alpha(y))
 
 
 def draw_swing_arrow(
@@ -341,7 +368,7 @@ def draw_swing_arrow(
         layout @= layout.rotate_centered(-pi / 2)
     elif direction < 0:
         layout @= layout.rotate_centered(pi / 2)
-    sprite.draw(layout, z=Layer.ARROW - y + lane / 100)
+    sprite.draw(layout, z=Layer.ARROW - y + lane / 100, a=y_to_alpha(y))
 
 
 def flick_velocity_threshold(direction: int = 0):

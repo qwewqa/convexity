@@ -69,6 +69,15 @@ class Options:
         step=0.05,
         unit=StandardText.PERCENTAGE_UNIT,
     )
+    arc_quality: int = slider_option(
+        name="Connector Quality",
+        scope="convexity",
+        default=5,
+        min=1,
+        max=20,
+        step=1,
+        unit=None,
+    )
     lane_effect_enabled: bool = toggle_option(
         name=StandardText.LANE_EFFECT,
         scope="convexity",
@@ -139,6 +148,14 @@ class Options:
         name="Extend Lanes",
         scope="convexity",
         default=False,
+    )
+    hidden: float = slider_option(
+        name=StandardText.HIDDEN,
+        default=0,
+        min=0,
+        max=0.8,
+        step=0.05,
+        unit=StandardText.PERCENTAGE_UNIT,
     )
     spread: float = slider_option(
         name="Spread",

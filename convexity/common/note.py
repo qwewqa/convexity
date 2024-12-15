@@ -351,7 +351,7 @@ def draw_swing_arrow(
     pos: LanePosition,
     y: float,
 ):
-    y_offset = 0 if not Options.vertical_notes else 0.4
+    y_offset = 0 if not Options.vertical_notes or Options.stage_tilt > 0 else 0.4
     lane = pos.mid
     base_bl = transform_vec(Vec2(lane - 0.5 * Options.note_size, y))
     base_br = transform_vec(Vec2(lane + 0.5 * Options.note_size, y))
@@ -370,7 +370,7 @@ def draw_swing_arrow(
         layout @= layout.rotate_centered(-pi / 2)
     elif direction < 0:
         layout @= layout.rotate_centered(pi / 2)
-    sprite.draw(layout, z=Layer.ARROW - y + lane / 100, a=y_to_alpha(y))
+    sprite.draw(layout, z=Layer.ARROW - y + lane / 1000, a=y_to_alpha(y))
 
 
 def flick_velocity_threshold(direction: int = 0):

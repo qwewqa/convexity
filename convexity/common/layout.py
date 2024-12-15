@@ -39,8 +39,13 @@ class Layout:
 
     stage_border_width: float
 
+    approach_distance: float
     transform: Transform2d
+    inverse_transform: Transform2d
     min_safe_y: float
+    lane_max_screen_y: float
+    approach_1_screen_y: float
+    approach_0_screen_y: float
 
     reference_length: float
 
@@ -62,11 +67,22 @@ def init_layout():
 
     Layout.stage_border_width = 0.125
 
+    Layout.approach_distance = Options.linear_approach**3 * 999
     Layout.transform @= (
         Transform2d.new()
         .scale(Vec2(Layout.scale, Layout.scale))
         .perspective_y(Layout.judge_line_y, Layout.vanishing_point)
     )
+    Layout.inverse_transform @= (
+        Transform2d.new()
+        .inverse_perspective_y(Layout.judge_line_y, Layout.vanishing_point)
+        .scale(Vec2(1 / Layout.scale, 1 / Layout.scale))
+    )
+    Layout.lane_max_screen_y = Layout.transform.transform_vec(Vec2(0, Layout.lane_length)).y
+    Layout.approach_1_screen_y = Layout.transform.transform_vec(
+        Vec2(0, Layout.lane_length + Layout.approach_distance)
+    ).y
+    Layout.approach_0_screen_y = Layout.transform.transform_vec(Vec2(0, Layout.approach_distance)).y
 
     # Below this coordinate, points are "behind" the screen so they shouldn't be displayed.
     # We add half of the note height to make this the safe note center y-coordinate.
@@ -269,6 +285,26 @@ def preempt_time() -> float:
 
 
 def note_y(scaled_time: float, target_scaled_time: float) -> float:
+    if Layout.approach_distance:
+        approach_y = (
+            remap(
+                target_scaled_time - preempt_time(),
+                target_scaled_time,
+                Layout.lane_length,
+                0,
+                scaled_time,
+            )
+            + Layout.approach_distance
+        )
+        screen_y = remap(
+            Layout.approach_0_screen_y,
+            Layout.approach_1_screen_y,
+            Layout.judge_line_y,
+            Layout.lane_max_screen_y,
+            Layout.transform.transform_vec(Vec2(0, approach_y)).y,
+        )
+        screen_y = min(screen_y, Layout.vanishing_point.y - 1e-2)
+        return Layout.inverse_transform.transform_vec(Vec2(0, screen_y)).y
     return remap(
         target_scaled_time - preempt_time(),
         target_scaled_time,

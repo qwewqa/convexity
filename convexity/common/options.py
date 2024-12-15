@@ -204,6 +204,15 @@ class Options:
         scope="convexity",
         default=False,
     )
+    linear_approach: float = slider_option(
+        name="Linear Approach",
+        scope="convexity",
+        default=0,
+        min=0,
+        max=1,
+        step=0.05,
+        unit=StandardText.PERCENTAGE_UNIT,
+    )
     laneless: bool = toggle_option(
         name="Laneless",
         scope="convexity",

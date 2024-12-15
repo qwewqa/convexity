@@ -351,7 +351,7 @@ def draw_swing_arrow(
     pos: LanePosition,
     y: float,
 ):
-    y_offset = 0 if not Options.vertical_notes or Options.stage_tilt > 0 else 0.4
+    y_offset = 0.4 if Options.vertical_notes or Options.stage_tilt == 0 else 0
     lane = pos.mid
     base_bl = transform_vec(Vec2(lane - 0.5 * Options.note_size, y))
     base_br = transform_vec(Vec2(lane + 0.5 * Options.note_size, y))

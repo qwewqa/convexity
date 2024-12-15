@@ -4,6 +4,7 @@ from sonolus.script.level import BpmChange, Level, LevelData
 
 from convexity.convert.osu import convert_osz
 from convexity.convert.sonolus_bandori import convert_sonolus_bandori_level
+from convexity.convert.sonolus_llsif import convert_sonolus_llsif_level
 from convexity.play.init import Init
 from convexity.play.lane import Lane
 from convexity.play.note import Note, NoteVariant
@@ -180,3 +181,4 @@ for osz_file in Path("resources").glob("*.osz"):
     levels.extend(convert_osz(osz_file.read_bytes()))
 levels.append(convert_sonolus_bandori_level("bestdori-official-387-special"))
 levels.append(convert_sonolus_bandori_level("bestdori-official-253-special"))
+levels.append(convert_sonolus_llsif_level("milkbun-llsif-1557"))

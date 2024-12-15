@@ -105,7 +105,7 @@ class Note(PlayArchetype):
             match self.variant:
                 case NoteVariant.FLICK | NoteVariant.DIRECTIONAL_FLICK:
                     if self.has_prev:
-                        self.variant = NoteVariant.HOLD_TICK
+                        self.variant = NoteVariant.HOLD_END
                     else:
                         self.variant = NoteVariant.SINGLE
 

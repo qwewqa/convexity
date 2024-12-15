@@ -3,7 +3,7 @@ from math import atan, cos, pi, sin, tan
 from typing import Self
 
 from sonolus.script.globals import level_data
-from sonolus.script.interval import clamp, remap
+from sonolus.script.interval import clamp, lerp, remap
 from sonolus.script.quad import Quad, QuadLike, Rect
 from sonolus.script.record import Record
 from sonolus.script.transform import Transform2d
@@ -48,7 +48,7 @@ class Layout:
 def init_layout():
     Layout.scale = 0.4 * Options.stage_size
 
-    Layout.judge_line_y = -0.6 + 0.05 * Options.judge_line_position
+    Layout.judge_line_y = lerp(-1, 1, Options.judge_line_position)
     Layout.lane_length = 10 * Options.lane_length * (1.05 if Options.extend_lanes else 1)
     Layout.note_height = Options.note_height
     Layout.sim_line_height = 0.3

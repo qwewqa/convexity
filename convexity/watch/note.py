@@ -76,6 +76,7 @@ class Note(WatchArchetype):
     next_note_ref: EntityRef[Note] = entity_data()
 
     started: bool = entity_memory()
+    needs_init: bool = entity_memory()
 
     judgment: Judgment = imported()
     accuracy: StandardImport.ACCURACY
@@ -127,12 +128,16 @@ class Note(WatchArchetype):
         else:
             return self.target_time
 
+    def initialize(self):
+        self.needs_init = True
+
     def update_sequential(self):
+        if self.needs_init:
+            self.hold_handle.destroy()
+        self.needs_init = False
         self.y = note_y(self.timescale_group.scaled_time, self.target_scaled_time)
         if self.has_sim and time() < self.sim_note.spawn_time():
             self.sim_note.y = note_y(self.sim_note.timescale_group.scaled_time, self.sim_note.target_scaled_time)
-        if not self.has_prev and self.has_next:
-            self.next.hold_handle.destroy()
         if self.has_prev and (time() >= self.prev.despawn_time()) and self.prev.judgment == Judgment.MISS:
             if self.hold_handle == self.prev.hold_handle:
                 self.hold_handle.destroy()
@@ -283,7 +288,16 @@ class Note(WatchArchetype):
             pass
 
     def terminate(self):
-        if not self.has_next or self.next.hold_handle != self.hold_handle:
+        if not self.has_next:
+            self.hold_handle.handle.destroy()
+            if self.has_prev:
+                ref = copy(self.prev_note_ref)
+                while True:
+                    ref.get().hold_handle.handle.destroy()
+                    if not ref.get().has_prev:
+                        break
+                    ref @= ref.get().prev_note_ref
+        elif self.next.hold_handle != self.hold_handle:
             self.hold_handle.handle.destroy()
         if (not is_replay() or self.judgment != Judgment.MISS) and self.variant != NoteVariant.HOLD_ANCHOR:
             play_watch_hit_effects(

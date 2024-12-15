@@ -86,11 +86,11 @@ class Options:
     judge_line_position: float = slider_option(
         name=StandardText.JUDGELINE_POSITION,
         scope="convexity",
-        default=0,
-        min=-5,
-        max=10,
-        step=1,
-        unit=None,
+        default=0.2,
+        min=0,
+        max=1,
+        step=0.05,
+        unit=StandardText.PERCENTAGE_UNIT,
     )
     stage_size: float = slider_option(
         name=StandardText.STAGE_SIZE,

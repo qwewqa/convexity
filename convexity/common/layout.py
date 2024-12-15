@@ -159,8 +159,9 @@ def lane_hitbox_layout(pos: LanePosition) -> Quad:
 def note_layout(pos: LanePosition, y: float) -> Quad:
     result = zeros(Quad)
     if Options.vertical_notes:
-        ml = transform_vec(Vec2(pos.left, y))
-        mr = transform_vec(Vec2(pos.right, y))
+        scaled_pos = pos.scale_centered(Options.note_size)
+        ml = transform_vec(Vec2(scaled_pos.left, y))
+        mr = transform_vec(Vec2(scaled_pos.right, y))
         ort = (mr - ml).orthogonal()
         ort *= Layout.note_height / 2
         result @= Quad(

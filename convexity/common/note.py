@@ -313,8 +313,8 @@ def draw_note_arrow(
         layout = zeros(Quad)
         if direction == 0:
             y_offset = lerp(0.0, 0.5, progress)
-            base_bl = transform_vec(Vec2(lane - 0.5, y))
-            base_br = transform_vec(Vec2(lane + 0.5, y))
+            base_bl = transform_vec(Vec2(lane - 0.5 * Options.note_size, y))
+            base_br = transform_vec(Vec2(lane + 0.5 * Options.note_size, y))
             ort = (base_br - base_bl).orthogonal()
             bl = base_bl + ort * y_offset
             br = base_br + ort * y_offset
@@ -351,10 +351,10 @@ def draw_swing_arrow(
     pos: LanePosition,
     y: float,
 ):
-    y_offset = 0
+    y_offset = 0 if not Options.vertical_notes else 0.4
     lane = pos.mid
-    base_bl = transform_vec(Vec2(lane - 0.5, y))
-    base_br = transform_vec(Vec2(lane + 0.5, y))
+    base_bl = transform_vec(Vec2(lane - 0.5 * Options.note_size, y))
+    base_br = transform_vec(Vec2(lane + 0.5 * Options.note_size, y))
     ort = (base_br - base_bl).orthogonal()
     bl = base_bl + ort * y_offset
     br = base_br + ort * y_offset

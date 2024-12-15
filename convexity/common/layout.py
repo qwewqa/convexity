@@ -49,7 +49,7 @@ def init_layout():
     Layout.scale = 0.4 * Options.stage_size
 
     Layout.judge_line_y = lerp(-1, 1, Options.judge_line_position)
-    Layout.lane_length = 10 * Options.lane_length * (1.05 if Options.extend_lanes else 1)
+    Layout.lane_length = Options.lane_length * (1.05 if Options.extend_lanes else 1)
     Layout.note_height = Options.note_height
     Layout.sim_line_height = 0.3
 

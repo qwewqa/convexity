@@ -14,6 +14,61 @@ class Options:
         unit=StandardText.PERCENTAGE_UNIT,
         standard=True,
     )
+    spread: float = slider_option(
+        name="Spread",
+        scope=None,
+        default=0,
+        min=0,
+        max=1,
+        step=0.05,
+        unit=None,
+    )
+    disable_soflan: bool = toggle_option(
+        name="Disable Soflan",
+        scope=None,
+        default=False,
+        standard=True,
+    )
+    auto_release_holds: bool = toggle_option(
+        name="Auto Release Holds",
+        scope=None,
+        default=False,
+        standard=True,
+    )
+    leniency: float = slider_option(
+        name="Leniency Override",
+        scope=None,
+        default=0.0,
+        min=0.0,
+        max=5.0,
+        step=0.05,
+        standard=True,
+    )
+    window_size: float = slider_option(
+        name="Judgment Window Size",
+        scope=None,
+        default=1.0,
+        min=0.2,
+        max=2.0,
+        step=0.05,
+        unit=StandardText.PERCENTAGE_UNIT,
+        standard=True,
+    )
+    hidden: float = slider_option(
+        name=StandardText.HIDDEN,
+        scope=None,
+        default=0,
+        min=0,
+        max=0.8,
+        step=0.05,
+        unit=StandardText.PERCENTAGE_UNIT,
+        standard=True,
+    )
+    mirror: bool = toggle_option(
+        name=StandardText.MIRROR,
+        scope=None,
+        default=False,
+    )
     note_speed: float = slider_option(
         name=StandardText.NOTE_SPEED,
         scope="convexity",
@@ -111,13 +166,12 @@ class Options:
         unit=StandardText.PERCENTAGE_UNIT,
     )
     lane_length: float = slider_option(
-        name=StandardText.LANE_SIZE,
+        name="Lane Length",
         scope="convexity",
-        default=1,
-        min=0.1,
-        max=2,
-        step=0.05,
-        unit=StandardText.PERCENTAGE_UNIT,
+        default=10,
+        min=1,
+        max=40,
+        step=0.5,
     )
     sfx_enabled: bool = toggle_option(
         name=StandardText.EFFECT,
@@ -147,58 +201,5 @@ class Options:
     extend_lanes: bool = toggle_option(
         name="Extend Lanes",
         scope="convexity",
-        default=False,
-    )
-    hidden: float = slider_option(
-        name=StandardText.HIDDEN,
-        default=0,
-        min=0,
-        max=0.8,
-        step=0.05,
-        unit=StandardText.PERCENTAGE_UNIT,
-    )
-    spread: float = slider_option(
-        name="Spread",
-        scope=None,
-        default=0,
-        min=0,
-        max=1,
-        step=0.05,
-        unit=None,
-    )
-    disable_soflan: bool = toggle_option(
-        name="Disable Soflan",
-        scope=None,
-        default=False,
-        standard=True,
-    )
-    auto_release_holds: bool = toggle_option(
-        name="Auto Release Holds",
-        scope=None,
-        default=False,
-        standard=True,
-    )
-    leniency: float = slider_option(
-        name="Leniency Override",
-        scope=None,
-        default=0.0,
-        min=0.0,
-        max=5.0,
-        step=0.05,
-        standard=True,
-    )
-    window_size: float = slider_option(
-        name="Judgment Window Size",
-        scope=None,
-        default=1.0,
-        min=0.2,
-        max=2.0,
-        step=0.05,
-        unit=StandardText.PERCENTAGE_UNIT,
-        standard=True,
-    )
-    mirror: bool = toggle_option(
-        name=StandardText.MIRROR,
-        scope=None,
         default=False,
     )

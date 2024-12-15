@@ -16,7 +16,7 @@ class Buckets:
                 w=2,
                 h=2,
                 rotation=-90,
-            )
+            ),
         ],
         unit=StandardText.MILLISECOND_UNIT,
     )
@@ -66,10 +66,10 @@ class Buckets:
         sprites=[
             bucket_sprite(
                 sprite=Skin.connector,
-                x=-0.5,
+                x=0,
                 y=0,
                 w=2,
-                h=5,
+                h=5.5,
                 rotation=-90,
             ),
             bucket_sprite(
@@ -92,7 +92,15 @@ class Buckets:
                 w=2,
                 h=2,
                 rotation=-90,
-            )
+            ),
+            bucket_sprite(
+                sprite=Skin.flick_arrow,
+                x=1,
+                y=0,
+                w=2,
+                h=2,
+                rotation=-90,
+            ),
         ],
         unit=StandardText.MILLISECOND_UNIT,
     )
@@ -100,12 +108,36 @@ class Buckets:
         sprites=[
             bucket_sprite(
                 sprite=Skin.right_flick_note,
-                x=0,
+                x=2,
                 y=0,
                 w=2,
                 h=2,
                 rotation=-90,
-            )
+            ),
+            bucket_sprite(
+                sprite=Skin.left_flick_note,
+                x=-2,
+                y=0,
+                w=2,
+                h=2,
+                rotation=90,
+            ),
+            bucket_sprite(
+                sprite=Skin.right_flick_arrow,
+                x=3,
+                y=0,
+                w=2,
+                h=2,
+                rotation=-90,
+            ),
+            bucket_sprite(
+                sprite=Skin.left_flick_arrow,
+                x=-3,
+                y=0,
+                w=2,
+                h=2,
+                rotation=90,
+            ),
         ],
         unit=StandardText.MILLISECOND_UNIT,
     )
@@ -118,7 +150,15 @@ class Buckets:
                 w=2,
                 h=2,
                 rotation=-90,
-            )
+            ),
+            bucket_sprite(
+                sprite=Skin.swing_arrow,
+                x=1,
+                y=0,
+                w=2,
+                h=2,
+                rotation=-90,
+            ),
         ],
         unit=StandardText.MILLISECOND_UNIT,
     )

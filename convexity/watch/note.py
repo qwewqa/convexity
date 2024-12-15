@@ -57,7 +57,7 @@ class Note(WatchArchetype):
     sim_note_ref: EntityRef[Note] = imported()
 
     y: float = shared_memory()
-    shared_hold_handle: HoldHandle = shared_memory()
+    hold_handle: HoldHandle = shared_memory()
 
     pos: LanePosition = imported()
     target_time: float = entity_data()
@@ -76,7 +76,6 @@ class Note(WatchArchetype):
     next_note_ref: EntityRef[Note] = entity_data()
 
     started: bool = entity_memory()
-    hold_handle: HoldHandle = entity_memory()
 
     judgment: Judgment = imported()
     accuracy: StandardImport.ACCURACY
@@ -132,18 +131,18 @@ class Note(WatchArchetype):
         self.y = note_y(self.timescale_group.scaled_time, self.target_scaled_time)
         if self.has_sim and time() < self.sim_note.spawn_time():
             self.sim_note.y = note_y(self.sim_note.timescale_group.scaled_time, self.sim_note.target_scaled_time)
-        if (
-            self.has_prev
-            and self.hold_handle.handle != self.prev.shared_hold_handle.handle
-            and self.prev.shared_hold_handle.is_active
-        ):
+        if not self.has_prev and self.has_next:
+            self.next.hold_handle.destroy()
+        if self.has_prev and self.prev.hold_handle != self.hold_handle and self.prev.hold_handle.is_active:
             self.hold_handle.destroy()
-            self.hold_handle @= self.prev.shared_hold_handle
-        self.shared_hold_handle @= self.hold_handle
+            self.hold_handle @= self.prev.hold_handle
+        if self.has_prev and (time() >= self.prev.despawn_time()) and self.prev.judgment == Judgment.MISS:
+            self.prev.hold_handle.destroy()
         if is_skip():
             self.hold_handle.destroy()
-            self.shared_hold_handle.destroy()
-            self.prev.shared_hold_handle.destroy()
+            if self.has_prev:
+                self.prev.hold_handle.destroy()
+        self.update_particle()
 
     def update_parallel(self):
         self.draw_body()
@@ -202,22 +201,12 @@ class Note(WatchArchetype):
                 pos=prev_pos,
                 y=0,
             )
-            self.hold_handle.update(
-                particle=self.hold_particle,
-                pos=prev_pos,
-            )
         elif self.variant != NoteVariant.HOLD_END and prev.judgment != Judgment.MISS:
             draw_note_body(
                 sprite=self.head_sprite,
                 pos=self.pos,
                 y=0,
             )
-            self.hold_handle.update(
-                particle=self.hold_particle,
-                pos=self.pos,
-            )
-        else:
-            self.hold_handle.destroy()
 
     def draw_arrow(self):
         match self.variant:
@@ -251,9 +240,47 @@ class Note(WatchArchetype):
             sim_y=sim.y,
         )
 
+    def update_particle(self):
+        if not self.has_prev:
+            return
+        prev_finished = True
+        ref = copy(self.prev_note_ref)
+        for _ in range(20):
+            # Handle a tick finishing before previous anchors by looking further back.
+            prev_finished = prev_finished and time() >= ref.get().despawn_time()
+            if not prev_finished:
+                break
+            if not ref.get().has_prev:
+                break
+            ref @= ref.get().prev_note_ref
+        if prev_finished:
+            ref @= self.prev_note_ref
+        prev = ref.get()
+        if not prev_finished:
+            pass
+        elif time() < self.target_time:
+            if prev.judgment == Judgment.MISS:
+                self.hold_handle.destroy()
+            else:
+                prev_target_time = prev.target_time
+                target_time = self.target_time
+                progress = max(0, unlerp(prev_target_time, target_time, time()))
+                prev_pos = lerp(prev.pos, self.pos, progress)
+                self.hold_handle.update(
+                    particle=self.hold_particle,
+                    pos=prev_pos,
+                )
+        elif self.variant != NoteVariant.HOLD_END and prev.judgment != Judgment.MISS:
+            self.hold_handle.update(
+                particle=self.hold_particle,
+                pos=self.pos,
+            )
+        else:
+            self.hold_handle.hide()
+
     def terminate(self):
-        if not self.has_next or is_skip():
-            self.hold_handle.destroy()
+        if not self.has_next:
+            self.hold_handle.handle.destroy()
         if (not is_replay() or self.judgment != Judgment.MISS) and self.variant != NoteVariant.HOLD_ANCHOR:
             play_watch_hit_effects(
                 note_particle=self.particle,

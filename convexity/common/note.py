@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from enum import IntEnum
 from math import floor, pi
 
@@ -6,7 +8,7 @@ from sonolus.script.easing import ease_out_cubic, ease_out_quad
 from sonolus.script.effect import Effect
 from sonolus.script.interval import lerp, remap, unlerp
 from sonolus.script.particle import Particle, ParticleHandle
-from sonolus.script.quad import Quad
+from sonolus.script.quad import Quad, Rect
 from sonolus.script.record import Record
 from sonolus.script.runtime import time
 from sonolus.script.sprite import Sprite
@@ -487,6 +489,10 @@ class HoldHandle(Record):
             )
         else:
             self.handle.move(note_particle_layout(pos))
+
+    def hide(self):
+        if self.handle.id != 0:
+            self.handle.move(Rect(-9, -9, -9, -9))
 
     def destroy(self):
         if self.handle.id != 0:

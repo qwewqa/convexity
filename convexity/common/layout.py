@@ -49,7 +49,7 @@ def init_layout():
     Layout.scale = 0.4 * Options.stage_size
 
     Layout.judge_line_y = -0.6 + 0.05 * Options.judge_line_position
-    Layout.lane_length = 10 * Options.lane_length
+    Layout.lane_length = 10 * Options.lane_length * (1.05 if Options.extend_lanes else 1)
     Layout.note_height = Options.note_height
     Layout.sim_line_height = 0.3
 
@@ -250,7 +250,7 @@ def lane_hitbox(pos: LanePosition) -> Quad:
 
 
 def preempt_time() -> float:
-    return 5 / Options.note_speed
+    return 5 / Options.note_speed * (1.05 if Options.extend_lanes else 1)
 
 
 def note_y(scaled_time: float, target_scaled_time: float) -> float:

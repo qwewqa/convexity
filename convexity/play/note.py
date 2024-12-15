@@ -72,7 +72,7 @@ class Note(PlayArchetype):
     finished: bool = shared_memory()
     base_hitbox_pos: LanePosition = shared_memory()
     right_vec: Vec2 = shared_memory()
-    shared_hold_handle: HoldHandle = shared_memory()
+    hold_handle: HoldHandle = shared_memory()
 
     pos: LanePosition = entity_data()
     target_time: float = entity_data()
@@ -93,7 +93,6 @@ class Note(PlayArchetype):
     next_note_ref: EntityRef[Note] = entity_data()
 
     started: bool = entity_memory()
-    hold_handle: HoldHandle = entity_memory()
 
     finish_time: float = exported()
     judgment: Judgment = exported()
@@ -165,14 +164,12 @@ class Note(PlayArchetype):
             and self.variant != NoteVariant.HOLD_ANCHOR
         ):
             input_note_indexes.append(self.index)
-        if (
-            self.has_prev
-            and self.hold_handle.handle != self.prev.shared_hold_handle.handle
-            and self.prev.shared_hold_handle.is_active
-        ):
+        if self.has_prev and self.prev.hold_handle != self.hold_handle and self.prev.hold_handle.is_active:
             self.hold_handle.destroy()
-            self.hold_handle @= self.prev.shared_hold_handle
-        self.shared_hold_handle @= self.hold_handle
+            self.hold_handle @= self.prev.hold_handle
+        if self.has_prev and self.prev.is_despawned and self.prev.touch_id == 0:
+            self.prev.hold_handle.destroy()
+        self.update_particle()
 
     def update_parallel(self):
         if self.despawn:
@@ -241,22 +238,12 @@ class Note(PlayArchetype):
                 pos=prev_pos,
                 y=0,
             )
-            self.hold_handle.update(
-                particle=self.hold_particle,
-                pos=prev_pos,
-            )
         elif self.variant != NoteVariant.HOLD_END and self.prev.touch_id != 0:
             draw_note_body(
                 sprite=self.head_sprite,
                 pos=self.pos,
                 y=0,
             )
-            self.hold_handle.update(
-                particle=self.hold_particle,
-                pos=self.pos,
-            )
-        else:
-            self.hold_handle.destroy()
 
     def draw_arrow(self):
         match self.variant:
@@ -289,6 +276,44 @@ class Note(PlayArchetype):
             sim_pos=sim.pos,
             sim_y=sim.y,
         )
+
+    def update_particle(self):
+        if not self.has_prev:
+            return
+        prev_finished = True
+        ref = copy(self.prev_note_ref)
+        for _ in range(20):
+            # Handle a tick finishing before previous anchors by looking further back.
+            prev_finished = prev_finished and ref.get().finished
+            if not prev_finished:
+                break
+            if not ref.get().has_prev:
+                break
+            ref @= ref.get().prev_note_ref
+        if prev_finished:
+            ref @= self.prev_note_ref
+        prev = ref.get()
+        if not prev_finished:
+            pass
+        elif time() < self.target_time:
+            if prev.touch_id == 0:
+                self.hold_handle.destroy()
+            else:
+                prev_target_time = prev.target_time
+                target_time = self.target_time
+                progress = max(0, unlerp(prev_target_time, target_time, time()))
+                prev_pos = lerp(prev.pos, self.pos, progress)
+                self.hold_handle.update(
+                    particle=self.hold_particle,
+                    pos=prev_pos,
+                )
+        elif self.variant != NoteVariant.HOLD_END and self.prev.touch_id != 0:
+            self.hold_handle.update(
+                particle=self.hold_particle,
+                pos=self.pos,
+            )
+        else:
+            self.hold_handle.hide()
 
     def touch(self):
         if self.has_prev and not (self.prev.is_despawned or self.prev.input_finished):
@@ -608,7 +633,7 @@ class Note(PlayArchetype):
 
     def terminate(self):
         if not self.has_next:
-            self.hold_handle.destroy()
+            self.hold_handle.handle.destroy()
         self.finish_time = time()
 
     @property

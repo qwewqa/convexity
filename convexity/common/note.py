@@ -177,7 +177,7 @@ def draw_note_body(
     if not (Layout.min_safe_y <= y <= Layout.lane_length):
         return
     layout = note_layout(pos, y)
-    sprite.draw(layout, z=Layer.NOTE + y + pos.mid / 100, a=y_to_alpha(y))
+    sprite.draw(layout, z=Layer.NOTE - y + pos.mid / 1000, a=y_to_alpha(y))
 
 
 def draw_note_connector(
@@ -227,7 +227,7 @@ def draw_note_connector(
         )
         sprite.draw(
             layout,
-            z=Layer.CONNECTOR - y + pos.mid / 100,
+            z=Layer.CONNECTOR - y + pos.mid / 1000,
             a=Options.connector_alpha * y_to_alpha((segment_y + segment_prev_y) / 2),
         )
 
@@ -277,7 +277,7 @@ def draw_note_sim_line(
             sim_y=segment_prev_y,
         )
         Skin.sim_line.draw(
-            layout, z=Layer.CONNECTOR - y + pos.mid / 100, a=y_to_alpha((segment_y + segment_prev_y) / 2)
+            layout, z=Layer.CONNECTOR - y + pos.mid / 1000, a=y_to_alpha((segment_y + segment_prev_y) / 2)
         )
 
 
@@ -342,7 +342,7 @@ def draw_note_arrow(
                     tl=up_layout.bl,
                     tr=up_layout.tl,
                 )
-        sprite.draw(layout, z=Layer.ARROW - y + lane / 100, a=alpha * y_to_alpha(y))
+        sprite.draw(layout, z=Layer.ARROW - y + pos.mid / 1000, a=alpha * y_to_alpha(y))
 
 
 def draw_swing_arrow(

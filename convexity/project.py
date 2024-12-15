@@ -12,6 +12,8 @@ from convexity.watch.mode import watch_mode
 engine = Engine(
     name="convexity",
     title="Convexity",
+    subtitle="An experimental vsrg engine.",
+    author="qwewqa",
     skin="pixel",
     particle="pixel",
     effect="8bit",

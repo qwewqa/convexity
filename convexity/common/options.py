@@ -14,27 +14,6 @@ class Options:
         unit=StandardText.PERCENTAGE_UNIT,
         standard=True,
     )
-    spread: float = slider_option(
-        name="Spread",
-        scope=None,
-        default=0,
-        min=0,
-        max=1,
-        step=0.05,
-        unit=None,
-    )
-    disable_soflan: bool = toggle_option(
-        name="Disable Soflan",
-        scope=None,
-        default=False,
-        standard=True,
-    )
-    auto_release_holds: bool = toggle_option(
-        name="Auto Release Holds",
-        scope=None,
-        default=False,
-        standard=True,
-    )
     leniency: float = slider_option(
         name="Leniency Override",
         scope=None,
@@ -63,6 +42,33 @@ class Options:
         step=0.05,
         unit=StandardText.PERCENTAGE_UNIT,
         standard=True,
+    )
+    auto_release_holds: bool = toggle_option(
+        name="Auto Release Holds",
+        scope=None,
+        default=False,
+        standard=True,
+    )
+    no_flicks: bool = toggle_option(
+        name="No Flicks",
+        scope=None,
+        default=False,
+        standard=True,
+    )
+    disable_soflan: bool = toggle_option(
+        name="Disable Soflan",
+        scope=None,
+        default=False,
+        standard=True,
+    )
+    spread: float = slider_option(
+        name="Lane Spacing",
+        scope=None,
+        default=0,
+        min=0,
+        max=1,
+        step=0.05,
+        unit=None,
     )
     mirror: bool = toggle_option(
         name=StandardText.MIRROR,
@@ -192,6 +198,11 @@ class Options:
         name="Arc",
         scope="convexity",
         default=True,
+    )
+    vertical_notes: bool = toggle_option(
+        name="Vertical Notes",
+        scope="convexity",
+        default=False,
     )
     laneless: bool = toggle_option(
         name="Laneless",

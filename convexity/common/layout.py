@@ -1,4 +1,3 @@
-from enum import IntEnum
 from math import atan, cos, pi, sin, tan
 from typing import Self
 
@@ -15,15 +14,16 @@ from convexity.common.options import Options
 EPSILON = 1e-3
 
 
-class Layer(IntEnum):
+class Layer:
     STAGE = 0
     LANE = 1
     JUDGE_LINE = 2
     SLOT = 3
 
     CONNECTOR = 1000
+
     NOTE = 2000
-    ARROW = 3000
+    ARROW = 2000 + 1e-4
 
 
 @level_data
@@ -157,13 +157,27 @@ def lane_hitbox_layout(pos: LanePosition) -> Quad:
 
 
 def note_layout(pos: LanePosition, y: float) -> Quad:
-    base = Rect(
-        l=pos.left,
-        r=pos.right,
-        b=y - Layout.note_height / 2,
-        t=y + Layout.note_height / 2,
-    ).scale_centered(Vec2(Options.note_size, Options.note_size))
-    return transform_quad(base)
+    result = zeros(Quad)
+    if Options.vertical_notes:
+        ml = transform_vec(Vec2(pos.left, y))
+        mr = transform_vec(Vec2(pos.right, y))
+        ort = (mr - ml).orthogonal()
+        ort *= Layout.note_height / 2
+        result @= Quad(
+            bl=ml - ort,
+            br=mr - ort,
+            tl=ml + ort,
+            tr=mr + ort,
+        )
+    else:
+        base = Rect(
+            l=pos.left,
+            r=pos.right,
+            b=y - Layout.note_height / 2,
+            t=y + Layout.note_height / 2,
+        ).scale_centered(Vec2(Options.note_size, Options.note_size))
+        result @= transform_quad(base)
+    return result
 
 
 def line_layout(pos: LanePosition, y: float) -> Quad:

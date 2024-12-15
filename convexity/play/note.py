@@ -86,8 +86,6 @@ class Note(PlayArchetype):
     connector_sprite: Sprite = entity_data()
     particle: Particle = entity_data()
     hold_particle: Particle = entity_data()
-    has_prev: bool = entity_data()
-    has_sim: bool = entity_data()
     start_time: float = entity_data()
     target_scaled_time: float = entity_data()
     next_note_ref: EntityRef[Note] = entity_data()
@@ -103,6 +101,14 @@ class Note(PlayArchetype):
             self.direction = -self.direction
         self.leniency += PlayConfig.base_leniency
 
+        if Options.no_flicks:
+            match self.variant:
+                case NoteVariant.FLICK | NoteVariant.DIRECTIONAL_FLICK:
+                    if self.has_prev:
+                        self.variant = NoteVariant.HOLD_TICK
+                    else:
+                        self.variant = NoteVariant.SINGLE
+
         self.pos @= lane_to_pos(self.lane)
         self.target_time = beat_to_time(self.beat)
         self.input_target_time = self.target_time + input_offset()
@@ -115,8 +121,6 @@ class Note(PlayArchetype):
         self.connector_sprite @= note_connector_sprite(self.variant)
         self.particle @= note_particle(self.variant, self.direction)
         self.hold_particle @= note_hold_particle(self.variant)
-        self.has_prev = self.prev_note_ref.index > 0
-        self.has_sim = self.sim_note_ref.index > 0
 
         self.start_time, self.target_scaled_time = self.timescale_group.get_note_times(self.target_time)
 
@@ -659,6 +663,10 @@ class Note(PlayArchetype):
         return self.prev_note_ref.get()
 
     @property
+    def has_prev(self) -> bool:
+        return self.prev_note_ref.index > 0
+
+    @property
     def prev_start_time(self) -> float:
         if not self.has_prev:
             return 1e8
@@ -667,6 +675,10 @@ class Note(PlayArchetype):
     @property
     def sim_note(self) -> Note:
         return self.sim_note_ref.get()
+
+    @property
+    def has_sim(self) -> bool:
+        return self.sim_note_ref.index > 0
 
     @property
     def sim_start_time(self) -> float:

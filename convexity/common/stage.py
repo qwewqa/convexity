@@ -13,14 +13,13 @@ def draw_stage(pos: LanePosition):
     Skin.stage_left_border.draw(left_border_layout, z=Layer.STAGE)
     Skin.stage_right_border.draw(right_border_layout, z=Layer.STAGE)
     if Options.laneless:
-        pass
-    arc_quality = 5
-    n_segments = 1 if not Options.arc else ceil(pos.width * arc_quality)
-    start = pos.left
-    segment_width = pos.width / n_segments
-    for i in range(n_segments):
-        segment_pos = LanePosition(start + i * segment_width, start + (i + 1) * segment_width)
-        segment_layout = line_layout(segment_pos, 0)
-        background_layout = lane_layout(segment_pos)
-        Skin.judgment_line.draw(segment_layout, z=Layer.JUDGE_LINE)
-        Skin.stage_middle.draw(background_layout, z=Layer.STAGE)
+        arc_quality = 5
+        n_segments = 1 if not Options.arc else ceil(pos.width * arc_quality)
+        start = pos.left
+        segment_width = pos.width / n_segments
+        for i in range(n_segments):
+            segment_pos = LanePosition(start + i * segment_width, start + (i + 1) * segment_width)
+            segment_layout = line_layout(segment_pos, 0)
+            background_layout = lane_layout(segment_pos)
+            Skin.judgment_line.draw(segment_layout, z=Layer.JUDGE_LINE)
+            Skin.stage_middle.draw(background_layout, z=Layer.STAGE)

@@ -178,5 +178,5 @@ levels = [level]
 
 for osz_file in Path("resources").glob("*.osz"):
     levels.extend(convert_osz(osz_file.read_bytes()))
-levels.append(convert_sonolus_bandori_level("bestdori-official-406-special"))
+levels.append(convert_sonolus_bandori_level("bestdori-official-387-special"))
 levels.append(convert_sonolus_bandori_level("bestdori-official-253-special"))

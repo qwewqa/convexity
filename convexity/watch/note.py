@@ -133,11 +133,13 @@ class Note(WatchArchetype):
             self.sim_note.y = note_y(self.sim_note.timescale_group.scaled_time, self.sim_note.target_scaled_time)
         if not self.has_prev and self.has_next:
             self.next.hold_handle.destroy()
+        if self.has_prev and (time() >= self.prev.despawn_time()) and self.prev.judgment == Judgment.MISS:
+            if self.hold_handle == self.prev.hold_handle:
+                self.hold_handle.destroy()
+            self.prev.hold_handle.destroy()
         if self.has_prev and self.prev.hold_handle != self.hold_handle and self.prev.hold_handle.is_active:
             self.hold_handle.destroy()
             self.hold_handle @= self.prev.hold_handle
-        if self.has_prev and (time() >= self.prev.despawn_time()) and self.prev.judgment == Judgment.MISS:
-            self.prev.hold_handle.destroy()
         if is_skip():
             self.hold_handle.destroy()
             if self.has_prev:
@@ -257,7 +259,9 @@ class Note(WatchArchetype):
             ref @= self.prev_note_ref
         prev = ref.get()
         if not prev_finished:
-            pass
+            if self.hold_handle != prev.hold_handle:
+                self.hold_handle.destroy()
+                self.hold_handle @= prev.hold_handle
         elif time() < self.target_time:
             if prev.judgment == Judgment.MISS:
                 self.hold_handle.destroy()
@@ -276,10 +280,10 @@ class Note(WatchArchetype):
                 pos=self.pos,
             )
         else:
-            self.hold_handle.hide()
+            pass
 
     def terminate(self):
-        if not self.has_next:
+        if not self.has_next or self.next.hold_handle != self.hold_handle:
             self.hold_handle.handle.destroy()
         if (not is_replay() or self.judgment != Judgment.MISS) and self.variant != NoteVariant.HOLD_ANCHOR:
             play_watch_hit_effects(

@@ -164,11 +164,13 @@ class Note(PlayArchetype):
             and self.variant != NoteVariant.HOLD_ANCHOR
         ):
             input_note_indexes.append(self.index)
+        if self.has_prev and self.prev.is_despawned and self.prev.touch_id == 0:
+            if self.hold_handle == self.prev.hold_handle:
+                self.hold_handle.destroy()
+            self.prev.hold_handle.destroy()
         if self.has_prev and self.prev.hold_handle != self.hold_handle and self.prev.hold_handle.is_active:
             self.hold_handle.destroy()
             self.hold_handle @= self.prev.hold_handle
-        if self.has_prev and self.prev.is_despawned and self.prev.touch_id == 0:
-            self.prev.hold_handle.destroy()
         self.update_particle()
 
     def update_parallel(self):
@@ -294,7 +296,9 @@ class Note(PlayArchetype):
             ref @= self.prev_note_ref
         prev = ref.get()
         if not prev_finished:
-            pass
+            if self.hold_handle != prev.hold_handle:
+                self.hold_handle.destroy()
+                self.hold_handle @= prev.hold_handle
         elif time() < self.target_time:
             if prev.touch_id == 0:
                 self.hold_handle.destroy()
@@ -313,7 +317,7 @@ class Note(PlayArchetype):
                 pos=self.pos,
             )
         else:
-            self.hold_handle.hide()
+            pass
 
     def touch(self):
         if self.has_prev and not (self.prev.is_despawned or self.prev.input_finished):
@@ -375,6 +379,16 @@ class Note(PlayArchetype):
     def handle_flick_input(self):
         if self.touch_id == 0:
             if time() not in self.input_time:
+                if self.has_prev and self.prev.touch_id != 0:
+                    for touch in touches():
+                        if touch.id != self.prev.touch_id:
+                            continue
+                        if touch.ended:
+                            self.fail(touch.time)
+                            return
+                        break
+                    else:
+                        self.fail(time() - input_offset())
                 return
             hitbox = self.get_hitbox()
             if self.has_prev and self.prev.touch_id != 0:
@@ -632,7 +646,7 @@ class Note(PlayArchetype):
         self.input_finished = True
 
     def terminate(self):
-        if not self.has_next:
+        if not self.has_next or self.next.hold_handle != self.hold_handle:
             self.hold_handle.handle.destroy()
         self.finish_time = time()
 

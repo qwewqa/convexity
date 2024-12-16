@@ -1,4 +1,4 @@
-from math import atan, cos, pi, sin, tan
+from math import asin, atan, cos, pi, sin, tan
 from typing import Self
 
 from sonolus.script.globals import level_data
@@ -67,7 +67,8 @@ def init_layout():
 
     Layout.stage_border_width = 0.125
 
-    Layout.approach_distance = Options.linear_approach**3 * 999 + Options.linear_approach * 9
+    # This empirically works well enough. There isn't a particular reason for this formula.
+    Layout.approach_distance = 99 ** asin(Options.linear_approach) - 1
     Layout.transform @= (
         Transform2d.new()
         .scale(Vec2(Layout.scale, Layout.scale))

@@ -306,12 +306,15 @@ def note_y(scaled_time: float, target_scaled_time: float) -> float:
         screen_y = min(screen_y, Layout.vanishing_point.y - 1e-2)
         return min(
             Layout.inverse_transform.transform_vec(Vec2(0, screen_y)).y,
-            remap(
-                target_scaled_time - preempt_time(),
-                target_scaled_time,
-                Layout.lane_length,
+            max(
+                remap(
+                    target_scaled_time - preempt_time(),
+                    target_scaled_time,
+                    Layout.lane_length,
+                    0,
+                    scaled_time,
+                ),
                 0,
-                scaled_time,
             ),
         )
     return remap(

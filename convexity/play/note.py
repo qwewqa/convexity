@@ -437,9 +437,13 @@ class Note(PlayArchetype):
                     # The touch has continuously met the flick criteria, but we haven't reached the target time yet.
                     pass
             elif met:
-                if touch.time >= self.input_target_time:
+                if touch.time >= self.target_time:
                     # The touch has just met the flick criteria after the target time.
-                    self.complete(touch.time)
+                    self.complete(
+                        touch.time
+                        if touch.start_time < (self.window + self.target_time).perfect.start
+                        else touch.start_time
+                    )
                 elif touch.time >= self.input_time.start:
                     # The touch has just met the flick criteria before the target time.
                     self.started = True

@@ -122,7 +122,7 @@ class Note(PreviewArchetype):
         )
         Skin.sim_line.draw(
             layout,
-            z=Layer.CONNECTOR - self.target_time / 100 + self.pos.mid / 1000,
+            z=Layer.SIM_LINE - self.target_time / 100 + self.pos.mid / 1000,
         )
 
     @property

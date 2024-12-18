@@ -25,8 +25,9 @@ class Layer:
 
     COVER = 2000
     MEASURE_LINE = 2001
-    TIME_LINE = 2002
-    BPM_CHANGE_LINE = 2003
+    SIM_LINE = 2002
+    TIME_LINE = 2003
+    BPM_CHANGE_LINE = 2004
 
     NOTE = 3000
     ARROW = 3000 + 1e-4

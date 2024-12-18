@@ -277,7 +277,7 @@ def draw_note_sim_line(
             sim_y=segment_prev_y,
         )
         Skin.sim_line.draw(
-            layout, z=Layer.CONNECTOR - y + pos.mid / 1000, a=y_to_alpha((segment_y + segment_prev_y) / 2)
+            layout, z=Layer.SIM_LINE - y + pos.mid / 1000, a=y_to_alpha((segment_y + segment_prev_y) / 2)
         )
 
 

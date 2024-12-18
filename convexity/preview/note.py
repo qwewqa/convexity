@@ -113,7 +113,7 @@ class Note(PreviewArchetype):
                 pass
 
     def draw_sim_line(self):
-        if not self.has_sim:
+        if not self.has_sim or not Options.sim_lines_enabled:
             return
         layout = sim_line_layout(
             self.pos,

@@ -39,7 +39,7 @@ class BpmChange(PreviewArchetype):
         while beat_to_starting_beat(beat) == self.beat and beat <= PreviewData.last_beat:
             Skin.measure_line.draw(
                 inner_line_layout(beat_to_time(beat)),
-                z=Layer.MEASURE_LINE + beat / 1000,
+                z=Layer.MEASURE_LINE - beat_to_time(beat) / 100,
                 a=LINE_ALPHA,
             )
             beat += self.meter

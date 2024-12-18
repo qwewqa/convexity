@@ -9,6 +9,11 @@ from sonolus.script.instruction import (
 @instructions
 class Instructions:
     tap: StandardInstruction.TAP
+    tap_flick: StandardInstruction.TAP_FLICK
+    hold: StandardInstruction.HOLD_FOLLOW
+    release: StandardInstruction.RELEASE
+    hold_flick: StandardInstruction.FLICK
+    slide: StandardInstruction.SLIDE
 
 
 @instruction_icons

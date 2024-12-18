@@ -29,8 +29,9 @@ class Layer:
     TIME_LINE = 2003
     BPM_CHANGE_LINE = 2004
 
-    NOTE = 3000
-    ARROW = 3000 + 1e-4
+    NOTE_HEAD = 3000
+    NOTE = 3001
+    ARROW = 3001 + 1e-4
 
 
 @level_data

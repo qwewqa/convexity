@@ -28,6 +28,7 @@ from convexity.common.note import (
     draw_note_arrow,
     draw_note_body,
     draw_note_connector,
+    draw_note_head,
     draw_note_sim_line,
     draw_swing_arrow,
     note_arrow_sprite,
@@ -207,13 +208,13 @@ class Note(WatchArchetype):
                 prev_pos=prev_pos,
                 prev_y=0,
             )
-            draw_note_body(
+            draw_note_head(
                 sprite=self.head_sprite,
                 pos=prev_pos,
                 y=0,
             )
         elif self.variant != NoteVariant.HOLD_END and prev.judgment != Judgment.MISS:
-            draw_note_body(
+            draw_note_head(
                 sprite=self.head_sprite,
                 pos=self.pos,
                 y=0,

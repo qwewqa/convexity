@@ -180,6 +180,17 @@ def draw_note_body(
     sprite.draw(layout, z=Layer.NOTE - y + pos.mid / 1000, a=y_to_alpha(y))
 
 
+def draw_note_head(
+    sprite: Sprite,
+    pos: LanePosition,
+    y: float,
+):
+    if not (Layout.min_safe_y <= y <= Layout.lane_length):
+        return
+    layout = note_layout(pos, y)
+    sprite.draw(layout, z=Layer.NOTE_HEAD - y + pos.mid / 1000, a=y_to_alpha(y))
+
+
 def draw_note_connector(
     sprite: Sprite,
     pos: LanePosition,

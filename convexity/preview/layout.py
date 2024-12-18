@@ -79,12 +79,12 @@ def note_layout(pos: LanePosition, time: float) -> Rect:
         r=lane_to_x(pos.right, col),
         t=y + LANE_WIDTH / 2,
         b=y - LANE_WIDTH / 2,
-    ).scale_centered(Vec2(Options.note_size, Options.note_size * Options.note_height))
+    ).scale_centered(Vec2(1, Options.note_height))
 
 
 def arrow_layout(pos: LanePosition, time: float, direction: float = 0, y_offset: float = 0) -> Quad:
     col = time_to_col(time)
-    y = time_to_y(time) + y_offset * LANE_WIDTH * Options.note_size * Options.note_height
+    y = time_to_y(time) + y_offset * LANE_WIDTH * Options.note_height
     angle = 0
     if direction < 0:
         angle = pi / 2
@@ -97,7 +97,6 @@ def arrow_layout(pos: LanePosition, time: float, direction: float = 0, y_offset:
             t=y + LANE_WIDTH / 2,
             b=y - LANE_WIDTH / 2,
         )
-        .scale_centered(Vec2(Options.note_size, Options.note_size))
         .as_quad()
         .rotate_centered(angle)
     )
@@ -111,10 +110,8 @@ def connector_layout(
     col: int,
 ) -> Quad:
     col_time = col * COLUMN_SECS
-    scaled_pos = LanePosition(lane_to_x(pos.left, col), lane_to_x(pos.right, col)).scale_centered(Options.note_size)
-    scaled_prev_pos = LanePosition(lane_to_x(prev_pos.left, col), lane_to_x(prev_pos.right, col)).scale_centered(
-        Options.note_size
-    )
+    scaled_pos = LanePosition(lane_to_x(pos.left, col), lane_to_x(pos.right, col))
+    scaled_prev_pos = LanePosition(lane_to_x(prev_pos.left, col), lane_to_x(prev_pos.right, col))
     y = lerp(
         Y_B,
         Y_T,

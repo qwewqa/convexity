@@ -1,5 +1,5 @@
 from sonolus.script.archetype import archetype_life_of
-from sonolus.script.runtime import level_life, level_score
+from sonolus.script.runtime import level_score
 
 from convexity.common.buckets import Buckets
 from convexity.common.note import NoteVariant, note_window
@@ -18,21 +18,17 @@ def init_buckets():
 def init_score():
     level_score().update(
         perfect_multiplier=1,
-        great_multiplier=0.75,
-        good_multiplier=0.5,
+        great_multiplier=0.5,
+        good_multiplier=0.25,
         consecutive_great_multiplier=0.01,
         consecutive_great_step=10,
-        consecutive_great_cap=50,
+        consecutive_great_cap=100,
     )
 
 
 def init_life(note_archetype):
-    level_life().update(
-        consecutive_perfect_increment=50,
-        consecutive_perfect_step=10,
-    )
-
     archetype_life_of(note_archetype).update(
-        perfect_increment=10,
-        miss_increment=-100,
+        perfect_increment=2,
+        great_increment=1,
+        miss_increment=-50,
     )

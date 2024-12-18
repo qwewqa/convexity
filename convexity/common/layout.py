@@ -5,6 +5,7 @@ from sonolus.script.globals import level_data
 from sonolus.script.interval import clamp, lerp, remap
 from sonolus.script.quad import Quad, QuadLike, Rect
 from sonolus.script.record import Record
+from sonolus.script.runtime import is_preview
 from sonolus.script.transform import Transform2d
 from sonolus.script.values import swap, zeros
 from sonolus.script.vec import Vec2
@@ -22,8 +23,13 @@ class Layer:
 
     CONNECTOR = 1000
 
-    NOTE = 2000
-    ARROW = 2000 + 1e-4
+    COVER = 2000
+    MEASURE_LINE = 2001
+    TIME_LINE = 2002
+    BPM_CHANGE_LINE = 2003
+
+    NOTE = 3000
+    ARROW = 3000 + 1e-4
 
 
 @level_data
@@ -128,7 +134,7 @@ class LanePosition(Record):
 
 
 def lane_to_pos(lane: float, width: float = 1) -> LanePosition:
-    lane *= 1 + Options.spread
+    lane *= 1 + (Options.spread if not is_preview() else 0)
     half_width = width / 2
     return LanePosition(left=lane - half_width, right=lane + half_width)
 

@@ -18,6 +18,9 @@ class Stage(PlayArchetype):
         return -1e8
 
     def preprocess(self):
+        if Options.mirror:
+            self.lane *= -1
+
         self.pos @= lane_to_pos(self.lane, self.width * (1 + Options.spread))
 
     def update_parallel(self):

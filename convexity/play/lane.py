@@ -7,6 +7,7 @@ from convexity.common.layout import (
     lane_hitbox,
     lane_to_pos,
 )
+from convexity.common.options import Options
 from convexity.play.input_manager import unused_touches
 
 
@@ -20,6 +21,9 @@ class Lane(PlayArchetype):
         return -1e8
 
     def preprocess(self):
+        if Options.mirror:
+            self.lane *= -1
+
         self.pos @= lane_to_pos(self.lane)
         self.hitbox @= lane_hitbox(self.pos)
 

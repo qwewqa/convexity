@@ -35,3 +35,7 @@ class Skin:
     connector: StandardSprite.GRID_GREEN
 
     sim_line: StandardSprite.SIMULTANEOUS_CONNECTION_NEUTRAL_SEAMLESS
+
+    bpm_change_line: StandardSprite.GRID_PURPLE
+    measure_line: StandardSprite.GRID_NEUTRAL
+    time_line: StandardSprite.GRID_CYAN

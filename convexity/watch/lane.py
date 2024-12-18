@@ -5,6 +5,7 @@ from convexity.common.layout import (
     LanePosition,
     lane_to_pos,
 )
+from convexity.common.options import Options
 
 
 class Lane(WatchArchetype):
@@ -19,6 +20,9 @@ class Lane(WatchArchetype):
         return 1e8
 
     def preprocess(self):
+        if Options.mirror:
+            self.lane *= -1
+
         self.pos @= lane_to_pos(self.lane)
 
     def update_parallel(self):

@@ -202,13 +202,17 @@ def draw_note_connector(
     prev_y: float,
 ):
     if Options.boxy_sliders and pos != prev_pos:
-        horizontal_height = min(0.4, abs(y - prev_y))
+        scaled_pos = pos.scale_centered(Options.note_size)
+        scaled_prev_pos = prev_pos.scale_centered(Options.note_size)
+        horizontal_height = min(0.6, abs(y - prev_y))
         vertical_direction = 1 if y > prev_y else -1
-        horizontal_pos = LanePosition(min(pos.left, prev_pos.left), max(pos.right, prev_pos.right))
-        if pos.right == horizontal_pos.right:
-            horizontal_pos.right = pos.left
-        elif pos.left == horizontal_pos.left:
-            horizontal_pos.left = pos.right
+        horizontal_pos = LanePosition(
+            min(scaled_pos.left, scaled_prev_pos.left), max(scaled_pos.right, scaled_prev_pos.right)
+        )
+        if scaled_pos.right == horizontal_pos.right:
+            horizontal_pos.right = scaled_pos.left
+        elif scaled_pos.left == horizontal_pos.left:
+            horizontal_pos.left = scaled_pos.right
         horizontal_y = prev_y + vertical_direction * horizontal_height
         _draw_horizontal_note_connector(
             sprite,

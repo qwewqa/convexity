@@ -70,6 +70,9 @@ class Note(PreviewArchetype):
         PreviewData.last_time = max(PreviewData.last_time, self.target_time)
         PreviewData.last_beat = max(PreviewData.last_beat, self.beat)
 
+        if self.has_prev and not (Options.boxy_sliders and self.variant == NoteVariant.HOLD_ANCHOR):
+            self.prev_note_ref.get().next_note_ref @= self.ref()
+
     def render(self):
         if Options.boxy_sliders and self.variant == NoteVariant.HOLD_ANCHOR:
             return
@@ -93,7 +96,7 @@ class Note(PreviewArchetype):
         own_col = time_to_col(self.target_time)
         for col in range(prev_col, own_col + 1):
             if Options.boxy_sliders:
-                horizontal_time = self.prev.target_time + min(0.02, self.target_time - self.prev.target_time)
+                horizontal_time = self.prev.target_time + min(0.03, self.target_time - self.prev.target_time)
                 horizontal_pos = LanePosition(
                     min(self.pos.left, self.prev.pos.left), max(self.pos.right, self.prev.pos.right)
                 )

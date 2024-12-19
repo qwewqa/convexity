@@ -126,7 +126,7 @@ class Note(WatchArchetype):
             if self.variant != NoteVariant.HOLD_ANCHOR:
                 schedule_watch_hit_effects(self.variant, self.target_time, self.judgment)
 
-        if self.has_prev:
+        if self.has_prev and not (Options.boxy_sliders and self.variant == NoteVariant.HOLD_ANCHOR):
             self.prev_note_ref.get().next_note_ref @= self.ref()
 
     def spawn_time(self) -> float:

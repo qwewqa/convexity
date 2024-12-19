@@ -31,7 +31,7 @@ class Layer:
 
     NOTE_HEAD = 3000
     NOTE = 3001
-    ARROW = 3001 + 1e-4
+    ARROW = 3001 + 0.01
 
 
 @level_data

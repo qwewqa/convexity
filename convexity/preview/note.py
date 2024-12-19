@@ -30,7 +30,7 @@ class Note(PreviewArchetype):
     variant: NoteVariant = imported()
     beat: float = imported()
     lane: float = imported()
-    direction: int = imported()
+    direction: float = imported()
     prev_note_ref: EntityRef[Note] = imported()
     sim_note_ref: EntityRef[Note] = imported()
 
@@ -55,6 +55,11 @@ class Note(PreviewArchetype):
                     else:
                         self.variant = NoteVariant.SINGLE
 
+        if Options.boxy_sliders and self.has_prev and self.variant != NoteVariant.HOLD_ANCHOR:
+            while self.prev.has_prev and self.prev.variant == NoteVariant.HOLD_ANCHOR:
+                self.prev_note_ref @= self.prev.prev_note_ref
+            self.prev.direction = self.lane - self.prev.lane
+
         self.pos @= lane_to_pos(self.lane)
         self.target_time = beat_to_time(self.beat)
         self.body_sprite @= note_body_sprite(self.variant, self.direction)
@@ -66,6 +71,8 @@ class Note(PreviewArchetype):
         PreviewData.last_beat = max(PreviewData.last_beat, self.beat)
 
     def render(self):
+        if Options.boxy_sliders and self.variant == NoteVariant.HOLD_ANCHOR:
+            return
         self.draw_body()
         self.draw_connector()
         self.draw_arrow()
@@ -85,15 +92,38 @@ class Note(PreviewArchetype):
         prev_col = time_to_col(self.prev.target_time)
         own_col = time_to_col(self.target_time)
         for col in range(prev_col, own_col + 1):
-            self.connector_sprite.draw(
-                connector_layout(self.pos, self.target_time, self.prev.pos, self.prev.target_time, col),
-                z=Layer.CONNECTOR - self.target_time / 100 + self.pos.mid / 1000,
-                a=Options.connector_alpha,
-            )
+            if Options.boxy_sliders:
+                horizontal_time = self.prev.target_time + min(0.02, self.target_time - self.prev.target_time)
+                horizontal_pos = LanePosition(
+                    min(self.pos.left, self.prev.pos.left), max(self.pos.right, self.prev.pos.right)
+                )
+                self.connector_sprite.draw(
+                    connector_layout(horizontal_pos, horizontal_time, horizontal_pos, self.prev.target_time, col),
+                    z=Layer.CONNECTOR - self.target_time / 100 + self.pos.mid / 1000,
+                    a=Options.connector_alpha,
+                )
+                if horizontal_time < self.target_time:
+                    self.connector_sprite.draw(
+                        connector_layout(self.pos, self.target_time, self.pos, horizontal_time, col),
+                        z=Layer.CONNECTOR - self.target_time / 100 + self.pos.mid / 1000,
+                        a=Options.connector_alpha,
+                    )
+            else:
+                self.connector_sprite.draw(
+                    connector_layout(self.pos, self.target_time, self.prev.pos, self.prev.target_time, col),
+                    z=Layer.CONNECTOR - self.target_time / 100 + self.pos.mid / 1000,
+                    a=Options.connector_alpha,
+                )
 
     def draw_arrow(self):
         match self.variant:
             case NoteVariant.FLICK | NoteVariant.SWING:
+                layout = arrow_layout(self.pos, self.target_time, self.direction, y_offset=0.9)
+                self.arrow_sprite.draw(
+                    layout,
+                    z=Layer.ARROW - self.target_time / 100 + self.pos.mid / 1000,
+                )
+            case NoteVariant.HOLD_START | NoteVariant.HOLD_TICK if Options.boxy_sliders and self.direction != 0:
                 layout = arrow_layout(self.pos, self.target_time, self.direction, y_offset=0.9)
                 self.arrow_sprite.draw(
                     layout,

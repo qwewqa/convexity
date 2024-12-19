@@ -19,6 +19,7 @@ class Skin:
     hold_start_note: StandardSprite.NOTE_HEAD_GREEN
     hold_end_note: StandardSprite.NOTE_TAIL_GREEN
     hold_tick_note: StandardSprite.NOTE_TICK_GREEN
+    hold_arrow: StandardSprite.DIRECTIONAL_MARKER_GREEN
 
     flick_note: StandardSprite.NOTE_HEAD_RED
     flick_arrow: StandardSprite.DIRECTIONAL_MARKER_RED

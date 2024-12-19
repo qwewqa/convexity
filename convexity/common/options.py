@@ -49,6 +49,12 @@ class Options:
         default=False,
         standard=True,
     )
+    boxy_sliders: bool = toggle_option(
+        name="Boxy Sliders",
+        scope=None,
+        default=False,
+        standard=True,
+    )
     no_flicks: bool = toggle_option(
         name="No Flicks",
         scope=None,

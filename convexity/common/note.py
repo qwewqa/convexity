@@ -28,6 +28,7 @@ from convexity.common.layout import (
     note_layout,
     note_particle_layout,
     sim_line_layout,
+    transform_quad,
     transform_vec,
 )
 from convexity.common.options import Options
@@ -83,7 +84,7 @@ def note_bucket(variant: NoteVariant):
     return result
 
 
-def note_body_sprite(variant: NoteVariant, direction: int):
+def note_body_sprite(variant: NoteVariant, direction: float):
     result = copy(Skin.tap_note)
     match variant:
         case NoteVariant.SINGLE:
@@ -106,7 +107,7 @@ def note_body_sprite(variant: NoteVariant, direction: int):
     return result
 
 
-def note_arrow_sprite(variant: NoteVariant, direction: int):
+def note_arrow_sprite(variant: NoteVariant, direction: float):
     result = copy(Skin.flick_arrow)
     match variant:
         case NoteVariant.FLICK:
@@ -118,6 +119,8 @@ def note_arrow_sprite(variant: NoteVariant, direction: int):
                 result @= Skin.left_flick_arrow
         case NoteVariant.SWING:
             result @= Skin.swing_arrow
+        case NoteVariant.HOLD_START | NoteVariant.HOLD_END | NoteVariant.HOLD_TICK:
+            result @= Skin.hold_arrow
     return result
 
 
@@ -129,7 +132,7 @@ def note_connector_sprite(variant: NoteVariant):
     return copy(Skin.connector)
 
 
-def note_particle(variant: NoteVariant, direction: int):
+def note_particle(variant: NoteVariant, direction: float):
     result = copy(Particles.tap_note)
     match variant:
         case NoteVariant.SINGLE:
@@ -198,6 +201,39 @@ def draw_note_connector(
     prev_pos: LanePosition,
     prev_y: float,
 ):
+    if Options.boxy_sliders and pos != prev_pos:
+        horizontal_height = min(0.4, abs(y - prev_y))
+        vertical_direction = 1 if y > prev_y else -1
+        horizontal_pos = LanePosition(min(pos.left, prev_pos.left), max(pos.right, prev_pos.right))
+        if pos.right == horizontal_pos.right:
+            horizontal_pos.right = pos.left
+        elif pos.left == horizontal_pos.left:
+            horizontal_pos.left = pos.right
+        horizontal_y = prev_y + vertical_direction * horizontal_height
+        _draw_horizontal_note_connector(
+            sprite,
+            horizontal_pos,
+            horizontal_y,
+            prev_y,
+        )
+        _draw_note_connector(
+            sprite,
+            pos,
+            y,
+            pos,
+            prev_y,
+        )
+    else:
+        _draw_note_connector(sprite, pos, y, prev_pos, prev_y)
+
+
+def _draw_note_connector(
+    sprite: Sprite,
+    pos: LanePosition,
+    y: float,
+    prev_pos: LanePosition,
+    prev_y: float,
+):
     if prev_y < Layout.min_safe_y and y < Layout.min_safe_y:
         return
     if prev_y > Layout.lane_length and y > Layout.lane_length:
@@ -240,6 +276,45 @@ def draw_note_connector(
             layout,
             z=Layer.CONNECTOR - y + pos.mid / 1000,
             a=Options.connector_alpha * y_to_alpha((segment_y + segment_prev_y) / 2),
+        )
+
+
+def _draw_horizontal_note_connector(
+    sprite: Sprite,
+    pos: LanePosition,
+    y: float,
+    prev_y: float,
+):
+    if prev_y < Layout.min_safe_y and y < Layout.min_safe_y:
+        return
+    if prev_y > Layout.lane_length and y > Layout.lane_length:
+        return
+
+    if abs(prev_y - y) < EPSILON:
+        y = prev_y - EPSILON
+
+    tl = Vec2(pos.left, y)
+    tr = Vec2(pos.right, y)
+    bl = Vec2(pos.left, prev_y)
+    br = Vec2(pos.right, prev_y)
+
+    arc_quality = Options.arc_quality
+    n_segments = floor(abs(pos.left - pos.right) * arc_quality * Options.arc) + 1
+    for i in range(n_segments):
+        segment_tl = lerp(tl, tr, i / n_segments)
+        segment_tr = lerp(tl, tr, (i + 1) / n_segments)
+        segment_bl = lerp(bl, br, i / n_segments)
+        segment_br = lerp(bl, br, (i + 1) / n_segments)
+        base = Quad(
+            bl=segment_bl,
+            br=segment_br,
+            tl=segment_tl,
+            tr=segment_tr,
+        )
+        sprite.draw(
+            transform_quad(base),
+            z=Layer.CONNECTOR - y + pos.mid / 1000,
+            a=Options.connector_alpha * y_to_alpha((segment_bl.y + segment_br.y) / 2),
         )
 
 
@@ -294,7 +369,7 @@ def draw_note_sim_line(
 
 def draw_note_arrow(
     sprite: Sprite,
-    direction: int,
+    direction: float,
     pos: LanePosition,
     y: float,
 ):
@@ -358,10 +433,13 @@ def draw_note_arrow(
 
 def draw_swing_arrow(
     sprite: Sprite,
-    direction: int,
+    direction: float,
     pos: LanePosition,
     y: float,
 ):
+    if not (Layout.min_safe_y <= y <= Layout.lane_length):
+        return
+
     y_offset = 0.4 if Options.vertical_notes or Options.stage_tilt == 0 else 0
     lane = pos.mid
     base_bl = transform_vec(Vec2(lane - 0.5 * Options.note_size, y))
@@ -384,7 +462,7 @@ def draw_swing_arrow(
     sprite.draw(layout, z=Layer.ARROW - y + lane / 1000, a=y_to_alpha(y))
 
 
-def flick_velocity_threshold(direction: int = 0):
+def flick_velocity_threshold(direction: float = 0):
     if direction == 0:
         return 6.0 * Layout.reference_length
     else:

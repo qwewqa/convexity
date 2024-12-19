@@ -62,7 +62,7 @@ class Note(PlayArchetype):
     beat: float = imported()
     lane: float = imported()
     leniency: float = imported()
-    direction: int = imported()
+    direction: float = imported()
     timescale_group_ref: EntityRef[TimescaleGroup] = imported()
     prev_note_ref: EntityRef[Note] = imported()
     sim_note_ref: EntityRef[Note] = imported()
@@ -109,6 +109,11 @@ class Note(PlayArchetype):
                         self.variant = NoteVariant.HOLD_END
                     else:
                         self.variant = NoteVariant.SINGLE
+
+        if Options.boxy_sliders and self.has_prev and self.variant != NoteVariant.HOLD_ANCHOR:
+            while self.prev.has_prev and self.prev.variant == NoteVariant.HOLD_ANCHOR:
+                self.prev_note_ref @= self.prev.prev_note_ref
+            self.prev.direction = self.lane - self.prev.lane
 
         self.pos @= lane_to_pos(self.lane)
         self.target_time = beat_to_time(self.beat)
@@ -181,6 +186,8 @@ class Note(PlayArchetype):
     def update_parallel(self):
         if self.despawn:
             return
+        if Options.boxy_sliders and self.variant == NoteVariant.HOLD_ANCHOR:
+            return
         self.draw_body()
         self.draw_connector()
         self.draw_arrow()
@@ -233,6 +240,8 @@ class Note(PlayArchetype):
             target_time = self.target_time
             progress = max(0, unlerp(prev_target_time, target_time, time()))
             prev_pos = lerp(prev.pos, self.pos, progress)
+            if Options.boxy_sliders:
+                prev_pos @= self.pos
             draw_note_connector(
                 sprite=self.connector_sprite,
                 pos=self.pos,
@@ -268,6 +277,13 @@ class Note(PlayArchetype):
                     pos=self.pos,
                     y=self.y,
                 )
+            case NoteVariant.HOLD_START | NoteVariant.HOLD_TICK if Options.boxy_sliders and self.direction != 0:
+                draw_swing_arrow(
+                    sprite=self.arrow_sprite,
+                    direction=self.direction,
+                    pos=self.pos,
+                    y=self.y,
+                )
             case _:
                 pass
 
@@ -285,6 +301,8 @@ class Note(PlayArchetype):
         )
 
     def update_particle(self):
+        if Options.boxy_sliders and self.variant == NoteVariant.HOLD_ANCHOR:
+            return
         if not self.has_prev:
             return
         prev_finished = True
@@ -312,6 +330,8 @@ class Note(PlayArchetype):
                 target_time = self.target_time
                 progress = max(0, unlerp(prev_target_time, target_time, time()))
                 prev_pos = lerp(prev.pos, self.pos, progress)
+                if Options.boxy_sliders:
+                    prev_pos @= self.pos
                 self.hold_handle.update(
                     particle=self.hold_particle,
                     pos=prev_pos,

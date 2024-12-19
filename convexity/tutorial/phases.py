@@ -632,7 +632,7 @@ def hold_flick_note_phase() -> bool:
     return True
 
 
-def directional_note_phase(lane: int, direction: int) -> bool:
+def directional_note_phase(lane: int, direction: float) -> bool:
     direction_sign = 1 if direction > 0 else -1
     body_sprite = note_body_sprite(NoteVariant.DIRECTIONAL_FLICK, direction)
     arrow_sprite = note_arrow_sprite(NoteVariant.DIRECTIONAL_FLICK, direction)

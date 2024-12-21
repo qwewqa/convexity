@@ -1,5 +1,15 @@
-from sonolus.script.options import options, slider_option, toggle_option
+from __future__ import annotations
+
+from enum import IntEnum
+
+from sonolus.script.options import options, select_option, slider_option, toggle_option
 from sonolus.script.text import StandardText
+
+
+class SoflanMode(IntEnum):
+    DEFAULT = 0
+    DISABLED = 1
+    PULSE = 2
 
 
 @options
@@ -61,11 +71,16 @@ class Options:
         default=False,
         standard=True,
     )
-    disable_soflan: bool = toggle_option(
-        name="Disable Soflan",
+    soflan_mode: SoflanMode = select_option(
+        name="Soflan Mode",
         scope=None,
-        default=False,
+        default="Default",
         standard=True,
+        values=[
+            "Default",
+            "Disabled",
+            "Pulse",
+        ],
     )
     spread: float = slider_option(
         name="Lane Spacing",

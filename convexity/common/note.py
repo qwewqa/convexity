@@ -4,14 +4,20 @@ from enum import IntEnum
 from math import floor, pi
 
 from sonolus.script.bucket import Judgment, JudgmentWindow
-from sonolus.script.easing import ease_out_cubic, ease_out_quad
+from sonolus.script.easing import (
+    ease_in_out_sine,
+    ease_out_cubic,
+    ease_out_quad,
+)
 from sonolus.script.effect import Effect
+from sonolus.script.globals import level_memory
 from sonolus.script.interval import lerp, remap, unlerp
 from sonolus.script.particle import Particle, ParticleHandle
 from sonolus.script.quad import Quad
 from sonolus.script.record import Record
-from sonolus.script.runtime import time
+from sonolus.script.runtime import is_skip, time
 from sonolus.script.sprite import Sprite
+from sonolus.script.timing import beat_to_bpm, beat_to_time
 from sonolus.script.values import copy, zeros
 from sonolus.script.vec import Vec2
 
@@ -27,6 +33,7 @@ from convexity.common.layout import (
     lane_layout,
     note_layout,
     note_particle_layout,
+    preempt_time,
     sim_line_layout,
     transform_quad,
     transform_vec,
@@ -593,3 +600,46 @@ class HoldHandle(Record):
             self.destroy()
             self.handle = other.handle
         other.handle.id = 0
+
+
+@level_memory
+class ScaledTimeState:
+    beat: float
+
+
+def pulse_note_times(beat: float) -> tuple[float, float]:
+    target_time = pulse_beat_to_time(beat)
+    return target_time - 2 * preempt_time(), target_time
+
+
+def pulse_scaled_time() -> float:
+    beat = current_beat()
+    return pulse_beat_to_time(beat)
+
+
+def pulse_beat_to_time(beat: float) -> float:
+    return beat_to_time(pulse_adjust_beat(beat))
+
+
+def pulse_adjust_beat(beat: float) -> float:
+    n = 1
+    nbeat = n * beat
+    return (float(floor(nbeat)) + pulse_ease(nbeat % 1)) / n
+
+
+def pulse_ease(n: float):
+    a = 0.4
+    return n * a + (1 - a) * ease_in_out_sine(n)
+
+
+def current_beat() -> float:
+    if is_skip():
+        ScaledTimeState.beat = 0
+    if time() <= 0:
+        return time() * beat_to_bpm(0) / 60
+    beat = ScaledTimeState.beat
+    while abs(beat_to_time(beat) - time()) > 1e-4:
+        delta = time() - beat_to_time(beat)
+        beat += delta * beat_to_bpm(beat) / 60
+    ScaledTimeState.beat = beat
+    return beat

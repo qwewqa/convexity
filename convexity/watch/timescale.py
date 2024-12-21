@@ -13,7 +13,7 @@ from sonolus.script.runtime import is_skip, time
 from sonolus.script.timing import beat_to_time
 
 from convexity.common.layout import preempt_time
-from convexity.common.options import Options
+from convexity.common.options import Options, SoflanMode
 
 
 class TimescaleGroup(WatchArchetype):
@@ -54,64 +54,70 @@ class TimescaleGroup(WatchArchetype):
 
     @callback(order=-1)
     def update_sequential(self):
-        if Options.disable_soflan:
-            self.scaled_time = time()
-            return
-        if is_skip():
-            self.offset = 1
-        while time() >= self.section().end_time:
-            self.offset += 1
-        section = self.section()
-        self.scaled_time = remap(
-            section.start_time,
-            section.end_time,
-            section.start_scaled_time,
-            section.end_scaled_time,
-            time(),
-        )
+        match Options.soflan_mode:
+            case SoflanMode.DISABLED:
+                self.scaled_time = time()
+                return
+            case _:
+                if is_skip():
+                    self.offset = 1
+                while time() >= self.section().end_time:
+                    self.offset += 1
+                section = self.section()
+                self.scaled_time = remap(
+                    section.start_time,
+                    section.end_time,
+                    section.start_scaled_time,
+                    section.end_scaled_time,
+                    time(),
+                )
 
     def section(self) -> TimescaleChange:
         return TimescaleChange.at(self.index + self.offset)
 
     def _time_to_scaled_time(self, real_time: float) -> float:
-        if Options.disable_soflan:
-            return real_time
-        i = self.last_time_to_scaled_time_i
-        while True:
-            section = TimescaleChange.at(i)
-            if section.start_time <= real_time < section.end_time:
-                self.last_time_to_scaled_time_i = i
-                return remap(
-                    section.start_time,
-                    section.end_time,
-                    section.start_scaled_time,
-                    section.end_scaled_time,
-                    real_time,
-                )
-            i += 1
-            if not TimescaleChange.is_at(i):
-                error()
+        match Options.soflan_mode:
+            case SoflanMode.DISABLED:
+                return real_time
+            case _:
+                i = self.last_time_to_scaled_time_i
+                while True:
+                    section = TimescaleChange.at(i)
+                    if section.start_time <= real_time < section.end_time:
+                        self.last_time_to_scaled_time_i = i
+                        return remap(
+                            section.start_time,
+                            section.end_time,
+                            section.start_scaled_time,
+                            section.end_scaled_time,
+                            real_time,
+                        )
+                    i += 1
+                    if not TimescaleChange.is_at(i):
+                        error()
 
     def _scaled_time_to_time(self, scaled_time: float) -> float:
-        if Options.disable_soflan:
-            return scaled_time
-        i = self.last_scaled_time_to_time_i
-        while True:
-            section = TimescaleChange.at(i)
-            if (section.start_scaled_time <= scaled_time < section.end_scaled_time) or (
-                section.start_scaled_time >= scaled_time > section.end_scaled_time
-            ):
-                self.last_scaled_time_to_time_i = i
-                return remap(
-                    section.start_scaled_time,
-                    section.end_scaled_time,
-                    section.start_time,
-                    section.end_time,
-                    scaled_time,
-                )
-            i += 1
-            if not TimescaleChange.is_at(i):
-                error()
+        match Options.soflan_mode:
+            case SoflanMode.DISABLED:
+                return scaled_time
+            case _:
+                i = self.last_scaled_time_to_time_i
+                while True:
+                    section = TimescaleChange.at(i)
+                    if (section.start_scaled_time <= scaled_time < section.end_scaled_time) or (
+                        section.start_scaled_time >= scaled_time > section.end_scaled_time
+                    ):
+                        self.last_scaled_time_to_time_i = i
+                        return remap(
+                            section.start_scaled_time,
+                            section.end_scaled_time,
+                            section.start_time,
+                            section.end_time,
+                            scaled_time,
+                        )
+                    i += 1
+                    if not TimescaleChange.is_at(i):
+                        error()
 
     def get_note_times(self, target_time: float) -> tuple[float, float]:
         if target_time < self.last_note_time:

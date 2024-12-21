@@ -40,9 +40,11 @@ from convexity.common.note import (
     note_particle,
     note_window,
     play_watch_hit_effects,
+    pulse_note_times,
+    pulse_scaled_time,
     schedule_watch_hit_effects,
 )
-from convexity.common.options import Options
+from convexity.common.options import Options, SoflanMode
 from convexity.watch.timescale import TimescaleGroup
 
 
@@ -110,7 +112,7 @@ class Note(WatchArchetype):
         self.particle @= note_particle(self.variant, self.direction)
         self.hold_particle @= note_hold_particle(self.variant)
 
-        self.start_time, self.target_scaled_time = self.timescale_group.get_note_times(self.target_time)
+        self.start_time, self.target_scaled_time = self.get_note_times()
 
         self.result.target_time = self.target_time
 
@@ -145,9 +147,9 @@ class Note(WatchArchetype):
         if self.needs_init:
             self.hold_handle.destroy()
         self.needs_init = False
-        self.y = note_y(self.timescale_group.scaled_time, self.target_scaled_time)
+        self.y = note_y(self.scaled_time, self.target_scaled_time)
         if self.has_sim and time() < self.sim_note.spawn_time():
-            self.sim_note.y = note_y(self.sim_note.timescale_group.scaled_time, self.sim_note.target_scaled_time)
+            self.sim_note.y = note_y(self.sim_note.scaled_time, self.sim_note.target_scaled_time)
         if self.has_prev and (time() >= self.prev.despawn_time()) and self.prev.judgment == Judgment.MISS:
             if self.hold_handle == self.prev.hold_handle:
                 self.hold_handle.destroy()
@@ -333,6 +335,22 @@ class Note(WatchArchetype):
     @property
     def timescale_group(self) -> TimescaleGroup:
         return self.timescale_group_ref.get()
+
+    def get_note_times(self):
+        match Options.soflan_mode:
+            case SoflanMode.PULSE:
+                start_time, target_scaled_time = pulse_note_times(self.beat)
+            case _:
+                start_time, target_scaled_time = self.timescale_group.get_note_times(self.target_time)
+        return start_time, target_scaled_time
+
+    @property
+    def scaled_time(self) -> float:
+        match Options.soflan_mode:
+            case SoflanMode.PULSE:
+                return pulse_scaled_time()
+            case _:
+                return self.timescale_group.scaled_time
 
     @property
     def prev(self) -> Note:

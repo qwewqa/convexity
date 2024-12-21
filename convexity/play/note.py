@@ -46,10 +46,12 @@ from convexity.common.note import (
     note_particle,
     note_window,
     play_hit_effects,
+    pulse_note_times,
+    pulse_scaled_time,
     schedule_auto_hit_sfx,
     swing_velocity_threshold,
 )
-from convexity.common.options import Options
+from convexity.common.options import Options, SoflanMode
 from convexity.play.config import PlayConfig
 from convexity.play.input_manager import input_note_indexes, mark_touch_id_used, mark_touch_used, taps, touch_is_used
 from convexity.play.timescale import TimescaleGroup
@@ -128,7 +130,7 @@ class Note(PlayArchetype):
         self.particle @= note_particle(self.variant, self.direction)
         self.hold_particle @= note_hold_particle(self.variant)
 
-        self.start_time, self.target_scaled_time = self.timescale_group.get_note_times(self.target_time)
+        self.start_time, self.target_scaled_time = self.get_note_times()
 
         self.base_hitbox_pos @= lane_hitbox_pos(
             self.lane,
@@ -158,9 +160,9 @@ class Note(PlayArchetype):
             self.despawn = True
             self.finished = True
             self.input_finished = True
-        self.y = note_y(self.timescale_group.scaled_time, self.target_scaled_time)
+        self.y = note_y(self.scaled_time, self.target_scaled_time)
         if self.has_sim and self.sim_note.is_waiting:
-            self.sim_note.y = note_y(self.sim_note.timescale_group.scaled_time, self.sim_note.target_scaled_time)
+            self.sim_note.y = note_y(self.sim_note.scaled_time, self.sim_note.target_scaled_time)
         if self.variant == NoteVariant.HOLD_ANCHOR:
             self.input_finished = self.prev.input_finished or self.prev.is_despawned
         if (
@@ -682,6 +684,22 @@ class Note(PlayArchetype):
     @property
     def timescale_group(self) -> TimescaleGroup:
         return self.timescale_group_ref.get()
+
+    def get_note_times(self):
+        match Options.soflan_mode:
+            case SoflanMode.PULSE:
+                start_time, target_scaled_time = pulse_note_times(self.beat)
+            case _:
+                start_time, target_scaled_time = self.timescale_group.get_note_times(self.target_time)
+        return start_time, target_scaled_time
+
+    @property
+    def scaled_time(self) -> float:
+        match Options.soflan_mode:
+            case SoflanMode.PULSE:
+                return pulse_scaled_time()
+            case _:
+                return self.timescale_group.scaled_time
 
     @property
     def prev(self) -> Note:

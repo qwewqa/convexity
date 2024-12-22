@@ -214,6 +214,11 @@ class Options:
         scope="convexity",
         default=False,
     )
+    sticky_notes: bool = toggle_option(
+        name="Sticky Notes",
+        scope="convexity",
+        default=False,
+    )
     angled_hitboxes: bool = toggle_option(
         name="Angled Hitboxes",
         scope="convexity",

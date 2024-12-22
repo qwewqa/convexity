@@ -149,9 +149,9 @@ class Note(WatchArchetype):
         if self.needs_init:
             self.hold_handle.destroy()
         self.needs_init = False
-        self.y = note_y(self.scaled_time, self.target_scaled_time)
+        self.update_y()
         if self.has_sim and time() < self.sim_note.spawn_time():
-            self.sim_note.y = note_y(self.sim_note.scaled_time, self.sim_note.target_scaled_time)
+            self.sim_note.update_y()
         if self.has_prev and (time() >= self.prev.despawn_time()) and self.prev.judgment == Judgment.MISS:
             if self.hold_handle == self.prev.hold_handle:
                 self.hold_handle.destroy()
@@ -333,6 +333,12 @@ class Note(WatchArchetype):
                 note_particle=self.particle,
                 pos=self.pos,
             )
+
+    def update_y(self):
+        if time() > self.target_time and Options.sticky_notes:
+            self.y = 0
+        else:
+            self.y = note_y(self.scaled_time, self.target_scaled_time)
 
     @property
     def timescale_group(self) -> TimescaleGroup:

@@ -162,9 +162,9 @@ class Note(PlayArchetype):
             self.despawn = True
             self.finished = True
             self.input_finished = True
-        self.y = note_y(self.scaled_time, self.target_scaled_time)
+        self.update_y()
         if self.has_sim and self.sim_note.is_waiting:
-            self.sim_note.y = note_y(self.sim_note.scaled_time, self.sim_note.target_scaled_time)
+            self.sim_note.update_y()
         if self.variant == NoteVariant.HOLD_ANCHOR:
             self.input_finished = self.prev.input_finished or self.prev.is_despawned
         if (
@@ -682,6 +682,12 @@ class Note(PlayArchetype):
         if not self.has_next or self.next.hold_handle != self.hold_handle:
             self.hold_handle.handle.destroy()
         self.finish_time = time()
+
+    def update_y(self):
+        if time() > self.target_time and Options.sticky_notes:
+            self.y = 0
+        else:
+            self.y = note_y(self.scaled_time, self.target_scaled_time)
 
     @property
     def timescale_group(self) -> TimescaleGroup:

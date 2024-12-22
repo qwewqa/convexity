@@ -33,6 +33,8 @@ class Layer:
     NOTE = 3001
     ARROW = 3001 + 0.01
 
+    TOUCH_LINE = 4000
+
 
 @level_data
 class Layout:

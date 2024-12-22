@@ -40,3 +40,5 @@ class Skin:
     bpm_change_line: StandardSprite.GRID_PURPLE
     measure_line: StandardSprite.GRID_NEUTRAL
     time_line: StandardSprite.GRID_CYAN
+
+    touch_line: StandardSprite.SIMULTANEOUS_CONNECTION_CYAN_SEAMLESS

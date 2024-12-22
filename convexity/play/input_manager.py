@@ -3,7 +3,14 @@ from collections.abc import Iterable
 from sonolus.script.archetype import PlayArchetype, callback
 from sonolus.script.containers import VarArray
 from sonolus.script.globals import level_memory
+from sonolus.script.quad import Quad
 from sonolus.script.runtime import Touch, touches
+from sonolus.script.values import copy
+from sonolus.script.vec import Vec2
+
+from convexity.common.layout import Layer, Layout
+from convexity.common.options import Options
+from convexity.common.skin import Skin
 
 input_note_indexes = level_memory(VarArray[int, 16])
 used_touch_ids = level_memory(VarArray[int, 16])
@@ -34,3 +41,32 @@ class InputManager(PlayArchetype):
     def update_sequential(self):
         input_note_indexes.clear()
         used_touch_ids.clear()
+
+    def touch(self):
+        if Options.touch_lines:
+            w = 0.02
+            for touch in touches():
+                touch_pos = copy(touch.position)
+                if (Options.arc or Options.angled_hitboxes) and Options.stage_tilt > 0:
+                    if touch_pos.y > Layout.vanishing_point.y:
+                        touch_pos += 2 * (Layout.vanishing_point - touch_pos)
+                    diff = touch_pos - Layout.vanishing_point
+                    b = Layout.vanishing_point - diff * (Layout.vanishing_point.y + 2) / diff.y
+                    t = Layout.vanishing_point - diff * (Layout.vanishing_point.y - 2) / diff.y
+                    ort = (t - b).normalize().orthogonal()
+                    layout = Quad(
+                        br=b + ort * w,
+                        tr=b - ort * w,
+                        tl=t - ort * w,
+                        bl=t + ort * w,
+                    )
+                    Skin.touch_line.draw(layout, z=Layer.TOUCH_LINE, a=0.6)
+                else:
+                    x = touch_pos.x
+                    layout = Quad(
+                        br=Vec2(x - w, -1),
+                        tr=Vec2(x + w, -1),
+                        tl=Vec2(x + w, 1),
+                        bl=Vec2(x - w, 1),
+                    )
+                    Skin.touch_line.draw(layout, z=Layer.TOUCH_LINE, a=0.6)

@@ -219,6 +219,11 @@ class Options:
         scope="convexity",
         default=False,
     )
+    touch_lines: bool = toggle_option(
+        name="Touch Lines",
+        scope="convexity",
+        default=False,
+    )
     angled_hitboxes: bool = toggle_option(
         name="Angled Hitboxes",
         scope="convexity",

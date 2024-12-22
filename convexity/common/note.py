@@ -610,7 +610,7 @@ class ScaledTimeState:
 
 def pulse_note_times(beat: float) -> tuple[float, float]:
     target_time = pulse_beat_to_time(beat)
-    return target_time - 2 * preempt_time(), target_time
+    return beat_to_time(beat) - 2 * preempt_time(), target_time
 
 
 def pulse_scaled_time() -> float:

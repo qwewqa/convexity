@@ -42,7 +42,10 @@ class TimescaleGroup(WatchArchetype):
                 change.end_time = TimescaleChange.at(i + 1).start_time
             else:
                 change.end_time = 1e8
-            change.end_scaled_time = scaled_time + change.scale * (change.end_time - change.start_time)
+            if Options.soflan_mode == SoflanMode.REVERSE:
+                change.end_scaled_time = scaled_time - change.scale * (change.end_time - change.start_time)
+            else:
+                change.end_scaled_time = scaled_time + change.scale * (change.end_time - change.start_time)
             scaled_time = change.end_scaled_time
             i += 1
 

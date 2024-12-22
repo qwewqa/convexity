@@ -50,6 +50,8 @@ from convexity.common.note import (
     pulse_scaled_time,
     schedule_auto_hit_sfx,
     swing_velocity_threshold,
+    wave_note_times,
+    wave_scaled_time,
 )
 from convexity.common.options import Options, SoflanMode
 from convexity.play.config import PlayConfig
@@ -689,6 +691,8 @@ class Note(PlayArchetype):
         match Options.soflan_mode:
             case SoflanMode.PULSE:
                 start_time, target_scaled_time = pulse_note_times(self.beat)
+            case SoflanMode.WAVE:
+                start_time, target_scaled_time = wave_note_times(self.beat)
             case _:
                 start_time, target_scaled_time = self.timescale_group.get_note_times(self.target_time)
         return start_time, target_scaled_time
@@ -698,6 +702,8 @@ class Note(PlayArchetype):
         match Options.soflan_mode:
             case SoflanMode.PULSE:
                 return pulse_scaled_time()
+            case SoflanMode.WAVE:
+                return wave_scaled_time(self.beat)
             case _:
                 return self.timescale_group.scaled_time
 

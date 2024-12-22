@@ -10,6 +10,7 @@ class SoflanMode(IntEnum):
     DEFAULT = 0
     DISABLED = 1
     PULSE = 2
+    WAVE = 3
 
 
 @options
@@ -80,6 +81,7 @@ class Options:
             "Default",
             "Disabled",
             "Pulse",
+            "Wave",
         ],
     )
     spread: float = slider_option(

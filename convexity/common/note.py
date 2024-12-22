@@ -5,6 +5,7 @@ from math import floor, pi
 
 from sonolus.script.bucket import Judgment, JudgmentWindow
 from sonolus.script.easing import (
+    ease_in_out_cubic,
     ease_in_out_sine,
     ease_out_cubic,
     ease_out_quad,
@@ -630,6 +631,29 @@ def pulse_adjust_beat(beat: float) -> float:
 def pulse_ease(n: float):
     a = 0.4
     return n * a + (1 - a) * ease_in_out_sine(n)
+
+
+def wave_note_times(beat: float) -> tuple[float, float]:
+    target_time = beat_to_time(beat)
+    return target_time - 2 * preempt_time(), target_time
+
+
+def wave_scaled_time(target_beat: float) -> float:
+    beat = current_beat()
+    diff = target_beat - beat
+    adjusted_beat = target_beat - wave_adjust_beat(diff)
+    return beat_to_time(adjusted_beat)
+
+
+def wave_adjust_beat(beat: float) -> float:
+    n = 2
+    nbeat = n * beat
+    return (float(floor(nbeat)) + wave_ease(nbeat % 1)) / n
+
+
+def wave_ease(n: float):
+    a = 0.3
+    return n * a + (1 - a) * ease_in_out_cubic(n)
 
 
 def current_beat() -> float:

@@ -28,7 +28,6 @@ def init_score():
 
 def init_life(note_archetype):
     archetype_life_of(note_archetype).update(
-        perfect_increment=2,
-        great_increment=1,
-        miss_increment=-50,
+        perfect_increment=1,
+        miss_increment=-100,
     )

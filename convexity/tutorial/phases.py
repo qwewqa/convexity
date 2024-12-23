@@ -1,7 +1,7 @@
 from math import pi
 
 from sonolus.script.bucket import Judgment
-from sonolus.script.easing import ease_in_quad
+from sonolus.script.easing import ease_in_sine
 from sonolus.script.globals import level_memory
 from sonolus.script.instruction import clear_instruction
 from sonolus.script.interval import Interval, lerp, remap_clamped
@@ -263,7 +263,7 @@ def flick_note_phase() -> bool:
                 note_center_pos(y, lane),
                 note_center_pos(y, lane) + Vec2(0, 0.7),
                 a,
-                ease_in_quad(swipe_progress),
+                ease_in_sine(swipe_progress),
             )
     elif phase_time() in hit_interval:
         pos = lane_to_pos(lane)
@@ -334,7 +334,7 @@ def hold_start_note_phase() -> bool:
         parts = 4
         part_progress = get_part_progress(progress, parts)
         if time_is(frozen_interval.start):
-            Instructions.hold.show()
+            Instructions.tap_hold.show()
         draw_note_body(
             body_sprite,
             pos=pos,
@@ -357,7 +357,7 @@ def hold_start_note_phase() -> bool:
     elif phase_time() in follow_interval:
         pos = lane_to_pos(lane)
         if time_is(follow_interval.start):
-            clear_instruction()
+            Instructions.hold_follow.show()
             hit_particle.spawn(
                 note_particle_layout(pos),
                 1,
@@ -616,7 +616,7 @@ def hold_flick_note_phase() -> bool:
                 note_center_pos(y, lane),
                 note_center_pos(y, lane) + Vec2(0, 0.7),
                 a,
-                ease_in_quad(swipe_progress),
+                ease_in_sine(swipe_progress),
             )
     elif phase_time() in hit_interval:
         pos = lane_to_pos(lane)
@@ -704,7 +704,7 @@ def directional_note_phase(lane: int, direction: float) -> bool:
                 note_center_pos(y, lane),
                 note_center_pos(y, lane) + note_side_vec(y, lane) * 0.7 * direction_sign,
                 a,
-                ease_in_quad(swipe_progress),
+                ease_in_sine(swipe_progress),
             )
     elif phase_time() in hit_interval:
         pos = lane_to_pos(lane)

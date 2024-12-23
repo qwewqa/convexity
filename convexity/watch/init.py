@@ -28,8 +28,8 @@ class Init(WatchArchetype):
 
 def init_ui():
     ui.menu.update(
-        anchor=screen().tl + Vec2(0.05, -0.05),
-        pivot=Vec2(0, 1),
+        anchor=screen().tr + Vec2(-0.05, -0.05),
+        pivot=Vec2(1, 1),
         dimensions=Vec2(0.15, 0.15) * ui_configs.menu.scale,
         rotation=0,
         alpha=ui_configs.menu.alpha,
@@ -64,8 +64,8 @@ def init_ui():
         background=False,
     )
     ui.primary_metric_bar.update(
-        anchor=screen().tr - Vec2(0.05, 0.05),
-        pivot=Vec2(1, 1),
+        anchor=screen().tl + Vec2(0.05, -0.05),
+        pivot=Vec2(0, 1),
         dimensions=Vec2(0.75, 0.15) * ui_configs.primary_metric.scale,
         rotation=0,
         alpha=ui_configs.primary_metric.alpha,
@@ -73,8 +73,8 @@ def init_ui():
         background=True,
     )
     ui.primary_metric_value.update(
-        anchor=screen().tr - Vec2(0.05, 0.05) - (Vec2(0.035, 0.035) * ui_configs.primary_metric.scale),
-        pivot=Vec2(1, 1),
+        anchor=screen().tl + Vec2(0.05, -0.05) + Vec2(0.715, -0.035) * ui_configs.primary_metric.scale,
+        pivot=Vec2(0, 1),
         dimensions=Vec2(0, 0.08) * ui_configs.primary_metric.scale,
         rotation=0,
         alpha=ui_configs.primary_metric.alpha,
@@ -82,7 +82,7 @@ def init_ui():
         background=False,
     )
     ui.secondary_metric_bar.update(
-        anchor=screen().tr - Vec2(0.05, 0.05) - (Vec2(0, 0.15) * ui_configs.primary_metric.scale) - Vec2(0, 0.05),
+        anchor=screen().tr - Vec2(0.05, 0.05) - Vec2(0.05, 0) - Vec2(0.15, 0) * ui_configs.menu.scale,
         pivot=Vec2(1, 1),
         dimensions=Vec2(0.75, 0.15) * ui_configs.secondary_metric.scale,
         rotation=0,
@@ -93,9 +93,9 @@ def init_ui():
     ui.secondary_metric_value.update(
         anchor=screen().tr
         - Vec2(0.05, 0.05)
-        - (Vec2(0, 0.15) * ui_configs.primary_metric.scale)
-        - Vec2(0, 0.05)
-        - (Vec2(0.035, 0.035) * ui_configs.secondary_metric.scale),
+        - Vec2(0.05, 0)
+        - Vec2(0.15, 0) * ui_configs.menu.scale
+        - Vec2(0.035, 0.035) * ui_configs.primary_metric.scale,
         pivot=Vec2(1, 1),
         dimensions=Vec2(0, 0.08) * ui_configs.secondary_metric.scale,
         rotation=0,

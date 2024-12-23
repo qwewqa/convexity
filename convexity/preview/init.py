@@ -36,8 +36,8 @@ class Init(PreviewArchetype):
         init_preview_layout()
 
         ui.menu.update(
-            anchor=screen().tl + Vec2(0.05, -0.05),
-            pivot=Vec2(0, 1),
+            anchor=screen().tr + Vec2(-0.05, -0.05),
+            pivot=Vec2(1, 1),
             dimensions=Vec2(0.15, 0.15) * ui_configs.menu.scale,
             rotation=0,
             alpha=ui_configs.menu.alpha,

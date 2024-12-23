@@ -21,5 +21,6 @@ def draw_stage(pos: LanePosition):
             segment_pos = LanePosition(start + i * segment_width, start + (i + 1) * segment_width)
             segment_layout = line_layout(segment_pos, 0)
             background_layout = lane_layout(segment_pos)
-            Skin.judgment_line.draw(segment_layout, z=Layer.JUDGE_LINE)
+            if not Options.slot_judge_line:
+                Skin.judgment_line.draw(segment_layout, z=Layer.JUDGE_LINE)
             Skin.stage_middle.draw(background_layout, z=Layer.STAGE)

@@ -98,7 +98,7 @@ def init_layout():
     # Below this coordinate, points are "behind" the screen so they shouldn't be displayed.
     # We add half of the note height to make this the safe note center y-coordinate.
     Layout.min_safe_y = Layout.judge_line_y - Layout.vanishing_point.y + Layout.scale * Layout.note_height / 2 + EPSILON
-    Layout.min_safe_y = max(Layout.min_safe_y, -2)  # Also don't go too far down
+    Layout.min_safe_y = max(Layout.min_safe_y, -4)  # Also don't go too far down
 
     Layout.reference_length = (transform_vec(Vec2(0.5, 0)) - transform_vec(Vec2(-0.5, 0))).magnitude
 

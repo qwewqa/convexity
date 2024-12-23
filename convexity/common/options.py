@@ -248,6 +248,11 @@ class Options:
         step=0.05,
         unit=StandardText.PERCENTAGE_UNIT,
     )
+    slot_judge_line: bool = toggle_option(
+        name="Slot Judge Line",
+        scope="convexity",
+        default=False,
+    )
     laneless: bool = toggle_option(
         name="Laneless",
         scope="convexity",

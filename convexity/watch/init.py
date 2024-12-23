@@ -37,7 +37,7 @@ def init_ui():
         background=True,
     )
     ui.judgment.update(
-        anchor=Vec2(0, -0.4),
+        anchor=Vec2(0, -0.25),
         pivot=Vec2(0.5, 0),
         dimensions=Vec2(0, 0.15) * ui_configs.judgment.scale,
         rotation=0,

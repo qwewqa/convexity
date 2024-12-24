@@ -181,7 +181,7 @@ def y_to_alpha(y: float):
         result = 1
     if Options.blink:
         beat = current_beat()
-        factor = 2 ** floor(log(300 / beat_to_bpm(beat) / log(2)))
+        factor = 2 ** floor(log(240 / beat_to_bpm(beat) / log(2)))
         blink_progress = 1 - abs(beat * factor - round(beat * factor)) * 2
         result *= ease_in_out_sine(remap(0.4, 0.8, 0, 1, blink_progress))
     return result

@@ -2,7 +2,7 @@ from math import asin, atan, cos, pi, sin, tan
 from typing import Self
 
 from sonolus.script.globals import level_data, level_memory
-from sonolus.script.interval import clamp, lerp, remap
+from sonolus.script.interval import clamp, lerp, remap, unlerp
 from sonolus.script.quad import Quad, QuadLike, Rect
 from sonolus.script.record import Record
 from sonolus.script.runtime import delta_time, is_preview, is_skip
@@ -302,13 +302,13 @@ class LayoutMemory:
 
 
 def update_backspin():
-    drain_rate = 3
-    apply_rate = 3
+    drain_rate = 15
+    apply_rate = 15
     if is_skip():
         LayoutMemory.backspin_reserve = 0
         LayoutMemory.backspin_level = 0
     backspin_level = LayoutMemory.backspin_level
-    backspin_reserve = min(0.25, LayoutMemory.backspin_reserve)
+    backspin_reserve = min(1.0, LayoutMemory.backspin_reserve)
     apply = min(backspin_reserve, delta_time() * apply_rate)
     backspin_reserve -= apply
     backspin_level += apply
@@ -319,21 +319,22 @@ def update_backspin():
 
 
 def add_backspin():
-    LayoutMemory.backspin_reserve += 0.25
+    LayoutMemory.backspin_reserve += 1
 
 
 def note_y(scaled_time: float, target_scaled_time: float) -> float:
-    scaled_time = target_scaled_time + (scaled_time - target_scaled_time) * (
-        1 + min(0.25, LayoutMemory.backspin_level) * Options.note_speed / 10
+    progress = unlerp(
+        target_scaled_time - preempt_time(),
+        target_scaled_time,
+        scaled_time,
     )
+    progress = 1 - (1 - progress) * (1 + min(1.0, LayoutMemory.backspin_level) * Options.note_speed * 0.2 / 10)
     if Layout.approach_distance:
         approach_y = (
-            remap(
-                target_scaled_time - preempt_time(),
-                target_scaled_time,
+            lerp(
                 Layout.lane_length,
                 0,
-                scaled_time,
+                progress,
             )
             + Layout.approach_distance
         )
@@ -348,22 +349,18 @@ def note_y(scaled_time: float, target_scaled_time: float) -> float:
         return min(
             Layout.inverse_transform.transform_vec(Vec2(0, screen_y)).y,
             max(
-                remap(
-                    target_scaled_time - preempt_time(),
-                    target_scaled_time,
+                lerp(
                     Layout.lane_length,
                     0,
-                    scaled_time,
+                    progress,
                 ),
                 0,
             ),
         )
-    return remap(
-        target_scaled_time - preempt_time(),
-        target_scaled_time,
+    return lerp(
         Layout.lane_length,
         0,
-        scaled_time,
+        progress,
     )
 
 

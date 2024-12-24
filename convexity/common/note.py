@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import IntEnum
-from math import floor, pi
+from math import floor, log, pi
 
 from sonolus.script.bucket import Judgment, JudgmentWindow
 from sonolus.script.easing import (
@@ -174,10 +174,17 @@ def y_to_alpha(y: float):
         y,
     )
     if Options.extend_lanes and 0.0 <= progress <= 0.2:
-        return ease_out_cubic(remap(0.0, 0.2, 0, 1, progress))
-    if Options.hidden != 0 and progress > 1 - Options.hidden - 0.1:
-        return ease_out_cubic(remap(1 - Options.hidden - 0.1, 1 - Options.hidden + 0.1, 1, 0, progress))
-    return 1
+        result = ease_out_cubic(remap(0.0, 0.2, 0, 1, progress))
+    elif Options.hidden != 0 and progress > 1 - Options.hidden - 0.1:
+        result = ease_out_cubic(remap(1 - Options.hidden - 0.1, 1 - Options.hidden + 0.1, 1, 0, progress))
+    else:
+        result = 1
+    if Options.blink:
+        beat = current_beat()
+        factor = 2 ** floor(log(300 / beat_to_bpm(beat) / log(2)))
+        blink_progress = 1 - abs(beat * factor - round(beat * factor)) * 2
+        result *= ease_in_out_sine(remap(0.4, 0.8, 0, 1, blink_progress))
+    return result
 
 
 def draw_note_body(
@@ -657,6 +664,10 @@ def wave_ease(n: float):
 
 
 def current_beat() -> float:
+    return ScaledTimeState.beat
+
+
+def update_current_beat() -> float:
     if is_skip():
         ScaledTimeState.beat = 0
     if time() <= 0:

@@ -55,6 +55,12 @@ class Options:
         unit=StandardText.PERCENTAGE_UNIT,
         standard=True,
     )
+    blink: bool = toggle_option(
+        name="Blink",
+        scope=None,
+        default=False,
+        standard=True,
+    )
     auto_release_holds: bool = toggle_option(
         name="Auto Release Holds",
         scope=None,

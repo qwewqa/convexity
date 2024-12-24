@@ -13,10 +13,17 @@ from sonolus.script.vec import Vec2
 
 from convexity.common.init import init_buckets, init_life, init_score
 from convexity.common.layout import init_layout
+from convexity.common.note import update_current_beat
 from convexity.watch.note import Note
 
 
 class Init(WatchArchetype):
+    def spawn_time(self) -> float:
+        return -1e8
+
+    def despawn_time(self) -> float:
+        return 1e8
+
     @callback(order=-1)
     def preprocess(self):
         init_buckets()
@@ -24,6 +31,9 @@ class Init(WatchArchetype):
         init_life(Note)
         init_ui()
         init_layout()
+
+    def update_sequential(self):
+        update_current_beat()
 
 
 def init_ui():

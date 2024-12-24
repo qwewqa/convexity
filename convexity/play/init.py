@@ -13,6 +13,7 @@ from sonolus.script.vec import Vec2
 
 from convexity.common.init import init_buckets, init_life, init_score
 from convexity.common.layout import init_layout
+from convexity.common.note import update_current_beat
 from convexity.common.options import Options
 from convexity.play.config import PlayConfig
 from convexity.play.input_manager import InputManager
@@ -38,9 +39,11 @@ class Init(PlayArchetype):
         else:
             PlayConfig.base_leniency = Options.leniency
 
-    def update_sequential(self):
+    def initialize(self):
         InputManager.spawn()
-        self.despawn = True
+
+    def update_sequential(self):
+        update_current_beat()
 
 
 def init_ui():

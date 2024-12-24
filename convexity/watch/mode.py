@@ -8,6 +8,7 @@ from convexity.watch.init import Init
 from convexity.watch.lane import Lane
 from convexity.watch.note import Note, UnscoredNote
 from convexity.watch.stage import Stage
+from convexity.watch.task import BackspinTask
 from convexity.watch.timescale import TimescaleChange, TimescaleGroup
 from convexity.watch.update_spawn import update_spawn
 
@@ -20,6 +21,7 @@ watch_mode = WatchMode(
         UnscoredNote,
         TimescaleGroup,
         TimescaleChange,
+        BackspinTask,
     ],
     skin=Skin,
     effects=Effects,

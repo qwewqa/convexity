@@ -47,6 +47,7 @@ from convexity.common.note import (
     wave_scaled_time,
 )
 from convexity.common.options import Options, SoflanMode
+from convexity.watch.task import BackspinTask
 from convexity.watch.timescale import TimescaleGroup
 
 
@@ -123,12 +124,20 @@ class Note(WatchArchetype):
             self.result.bucket_value = self.accuracy * 1000
             if self.variant != NoteVariant.HOLD_ANCHOR:
                 schedule_watch_hit_effects(self.variant, self.finish_time, self.judgment)
+            if Options.backspin and self.judgment != Judgment.MISS:
+                match self.variant:
+                    case NoteVariant.FLICK | NoteVariant.DIRECTIONAL_FLICK:
+                        BackspinTask.spawn(time=self.finish_time)
         else:
             self.result.bucket @= self.bucket
             self.result.bucket_value = 0
             self.judgment = Judgment.PERFECT
             if self.variant != NoteVariant.HOLD_ANCHOR:
                 schedule_watch_hit_effects(self.variant, self.target_time, self.judgment)
+            if Options.backspin and self.judgment != Judgment.MISS:
+                match self.variant:
+                    case NoteVariant.FLICK | NoteVariant.DIRECTIONAL_FLICK:
+                        BackspinTask.spawn(time=self.target_time)
 
         if self.has_prev and not (Options.boxy_sliders and self.variant == NoteVariant.HOLD_ANCHOR):
             self.prev_note_ref.get().next_note_ref @= self.ref()

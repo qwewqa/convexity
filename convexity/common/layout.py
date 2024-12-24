@@ -5,7 +5,7 @@ from sonolus.script.globals import level_data, level_memory
 from sonolus.script.interval import clamp, lerp, remap
 from sonolus.script.quad import Quad, QuadLike, Rect
 from sonolus.script.record import Record
-from sonolus.script.runtime import delta_time, is_preview
+from sonolus.script.runtime import delta_time, is_preview, is_skip
 from sonolus.script.transform import Transform2d
 from sonolus.script.values import swap, zeros
 from sonolus.script.vec import Vec2
@@ -302,8 +302,11 @@ class LayoutMemory:
 
 
 def update_backspin():
-    drain_rate = 1
+    drain_rate = 2
     apply_rate = 6
+    if is_skip():
+        LayoutMemory.backspin_reserve = 0
+        LayoutMemory.backspin_level = 0
     backspin_level = LayoutMemory.backspin_level
     backspin_reserve = min(0.25, LayoutMemory.backspin_reserve)
     apply = min(backspin_reserve, delta_time() * apply_rate)
@@ -313,6 +316,10 @@ def update_backspin():
         backspin_level = max(0.0, backspin_level - delta_time() * drain_rate)
     LayoutMemory.backspin_level = backspin_level
     LayoutMemory.backspin_reserve = backspin_reserve
+
+
+def add_backspin():
+    LayoutMemory.backspin_reserve += 0.25
 
 
 def note_y(scaled_time: float, target_scaled_time: float) -> float:

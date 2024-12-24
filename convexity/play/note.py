@@ -22,7 +22,7 @@ from sonolus.script.vec import Vec2
 
 from convexity.common.layout import (
     LanePosition,
-    LayoutMemory,
+    add_backspin,
     lane_hitbox,
     lane_hitbox_pos,
     lane_to_pos,
@@ -669,7 +669,7 @@ class Note(PlayArchetype):
         if Options.backspin:
             match self.variant:
                 case NoteVariant.FLICK | NoteVariant.DIRECTIONAL_FLICK:
-                    LayoutMemory.backspin_reserve += 0.25
+                    add_backspin()
                 case _:
                     pass
 

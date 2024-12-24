@@ -12,7 +12,7 @@ from sonolus.script.runtime import (
 from sonolus.script.vec import Vec2
 
 from convexity.common.init import init_buckets, init_life, init_score
-from convexity.common.layout import init_layout
+from convexity.common.layout import init_layout, update_backspin
 from convexity.common.note import update_current_beat
 from convexity.common.options import Options
 from convexity.play.config import PlayConfig
@@ -44,6 +44,7 @@ class Init(PlayArchetype):
 
     def update_sequential(self):
         update_current_beat()
+        update_backspin()
 
 
 def init_ui():

@@ -22,6 +22,7 @@ from sonolus.script.vec import Vec2
 
 from convexity.common.layout import (
     LanePosition,
+    LayoutMemory,
     lane_hitbox,
     lane_hitbox_pos,
     lane_to_pos,
@@ -665,6 +666,12 @@ class Note(PlayArchetype):
         self.despawn = True
         self.finished = True
         self.input_finished = True
+        if Options.backspin:
+            match self.variant:
+                case NoteVariant.FLICK | NoteVariant.DIRECTIONAL_FLICK:
+                    LayoutMemory.backspin_reserve += 0.25
+                case _:
+                    pass
 
     def fail(self, actual_time: float):
         judgment = Judgment.MISS

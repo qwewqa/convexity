@@ -1,11 +1,11 @@
 from math import asin, atan, cos, pi, sin, tan
 from typing import Self
 
-from sonolus.script.globals import level_data
+from sonolus.script.globals import level_data, level_memory
 from sonolus.script.interval import clamp, lerp, remap
 from sonolus.script.quad import Quad, QuadLike, Rect
 from sonolus.script.record import Record
-from sonolus.script.runtime import is_preview
+from sonolus.script.runtime import delta_time, is_preview
 from sonolus.script.transform import Transform2d
 from sonolus.script.values import swap, zeros
 from sonolus.script.vec import Vec2
@@ -295,7 +295,28 @@ def preempt_time() -> float:
     return 5 / Options.note_speed * (1.05 if Options.extend_lanes else 1)
 
 
+@level_memory
+class LayoutMemory:
+    backspin_level: float
+    backspin_reserve: float
+
+
+def update_backspin():
+    drain_rate = 1
+    apply_rate = 6
+    backspin_level = LayoutMemory.backspin_level
+    backspin_reserve = min(0.25, LayoutMemory.backspin_reserve)
+    apply = min(backspin_reserve, delta_time() * apply_rate)
+    backspin_reserve -= apply
+    backspin_level += apply
+    if apply == 0:
+        backspin_level = max(0.0, backspin_level - delta_time() * drain_rate)
+    LayoutMemory.backspin_level = backspin_level
+    LayoutMemory.backspin_reserve = backspin_reserve
+
+
 def note_y(scaled_time: float, target_scaled_time: float) -> float:
+    scaled_time = target_scaled_time + (scaled_time - target_scaled_time) * (1 + min(0.25, LayoutMemory.backspin_level))
     if Layout.approach_distance:
         approach_y = (
             remap(

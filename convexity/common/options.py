@@ -55,6 +55,12 @@ class Options:
         unit=StandardText.PERCENTAGE_UNIT,
         standard=True,
     )
+    backspin: bool = toggle_option(
+        name="Backspin",
+        scope=None,
+        default=False,
+        standard=True,
+    )
     blink: bool = toggle_option(
         name="Blink",
         scope=None,

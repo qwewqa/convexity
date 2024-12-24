@@ -302,8 +302,8 @@ class LayoutMemory:
 
 
 def update_backspin():
-    drain_rate = 2
-    apply_rate = 6
+    drain_rate = 3
+    apply_rate = 3
     if is_skip():
         LayoutMemory.backspin_reserve = 0
         LayoutMemory.backspin_level = 0
@@ -323,7 +323,9 @@ def add_backspin():
 
 
 def note_y(scaled_time: float, target_scaled_time: float) -> float:
-    scaled_time = target_scaled_time + (scaled_time - target_scaled_time) * (1 + min(0.25, LayoutMemory.backspin_level))
+    scaled_time = target_scaled_time + (scaled_time - target_scaled_time) * (
+        1 + min(0.25, LayoutMemory.backspin_level) * Options.note_speed / 10
+    )
     if Layout.approach_distance:
         approach_y = (
             remap(

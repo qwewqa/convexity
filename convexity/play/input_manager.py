@@ -60,7 +60,7 @@ class InputManager(PlayArchetype):
                         tl=t - ort * w,
                         bl=t + ort * w,
                     )
-                    Skin.touch_line.draw(layout, z=Layer.TOUCH_LINE, a=0.6)
+                    Skin.touch_line.draw(layout, z=Layer.TOUCH_LINE, a=0.2)
                 else:
                     x = touch_pos.x
                     layout = Quad(
@@ -69,4 +69,4 @@ class InputManager(PlayArchetype):
                         tl=Vec2(x + w, 1),
                         bl=Vec2(x - w, 1),
                     )
-                    Skin.touch_line.draw(layout, z=Layer.TOUCH_LINE, a=0.6)
+                    Skin.touch_line.draw(layout, z=Layer.TOUCH_LINE, a=0.2)

@@ -20,9 +20,6 @@ def init_score():
         perfect_multiplier=1,
         great_multiplier=0.5,
         good_multiplier=0.25,
-        consecutive_great_multiplier=0.01,
-        consecutive_great_step=10,
-        consecutive_great_cap=100,
     )
 
 

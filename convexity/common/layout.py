@@ -65,7 +65,7 @@ def init_layout():
 
     Layout.judge_line_y = lerp(-1, 1, Options.judge_line_position)
     Layout.lane_length = Options.lane_length * (1.05 if Options.extend_lanes else 1)
-    Layout.note_height = Options.note_height
+    Layout.note_height = Options.note_height * (Options.lane_width if not is_preview() else 1)
     Layout.sim_line_height = 0.3
 
     if Options.stage_tilt > 0:
@@ -138,8 +138,10 @@ class LanePosition(Record):
 
 
 def lane_to_pos(lane: float, width: float = 1) -> LanePosition:
-    lane *= 1 + (Options.spread if not is_preview() else 0)
+    lane *= 1 + (Options.lane_spacing if not is_preview() else 0)
+    lane *= Options.lane_width if not is_preview() else 1
     half_width = width / 2
+    half_width *= Options.lane_width if not is_preview() else 1
     return LanePosition(left=lane - half_width, right=lane + half_width)
 
 
@@ -279,7 +281,7 @@ def segments_intersect(a1, a2, b1, b2):
 
 
 def lane_hitbox_pos(lane: float, leniency: float = 1, direction: float = 0) -> LanePosition:
-    return lane_to_pos(lane + direction / 2, (leniency + abs(direction)) * (1 + Options.spread))
+    return lane_to_pos(lane + direction / 2, (leniency + abs(direction)) * (1 + Options.lane_spacing))
 
 
 def lane_hitbox(pos: LanePosition) -> Quad:

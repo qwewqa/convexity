@@ -21,7 +21,7 @@ class Stage(PlayArchetype):
         if Options.mirror:
             self.lane *= -1
 
-        self.pos @= lane_to_pos(self.lane, self.width * (1 + Options.spread))
+        self.pos @= lane_to_pos(self.lane, self.width * (1 + Options.lane_spacing))
 
     def update_parallel(self):
         draw_stage(self.pos)

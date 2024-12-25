@@ -98,14 +98,23 @@ class Options:
             "Reverse",
         ],
     )
-    spread: float = slider_option(
+    lane_spacing: float = slider_option(
         name="Lane Spacing",
         scope=None,
         default=0,
         min=0,
         max=1,
         step=0.05,
-        unit=None,
+        unit=StandardText.PERCENTAGE_UNIT,
+    )
+    lane_width: float = slider_option(
+        name="Lane Width",
+        scope=None,
+        default=1,
+        min=0.5,
+        max=2,
+        step=0.05,
+        unit=StandardText.PERCENTAGE_UNIT,
     )
     mirror: bool = toggle_option(
         name=StandardText.MIRROR,

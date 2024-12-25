@@ -6,7 +6,7 @@ from convexity.common.skin import Skin
 
 
 def draw_stage(pos: LanePosition):
-    if Options.spread > 0 and not Options.laneless:
+    if Options.lane_spacing > 0 and not Options.laneless:
         return
     left_border_layout = lane_layout(LanePosition(pos.left - Layout.stage_border_width, pos.left))
     right_border_layout = lane_layout(LanePosition(pos.right, pos.right + Layout.stage_border_width))

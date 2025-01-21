@@ -255,6 +255,11 @@ class Options:
         scope="convexity",
         default=True,
     )
+    alt_side_flicks: bool = toggle_option(
+        name="Alternative Side Flicks",
+        scope="convexity",
+        default=False,
+    )
     vertical_notes: bool = toggle_option(
         name="Vertical Notes",
         scope="convexity",

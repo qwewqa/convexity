@@ -398,7 +398,12 @@ def draw_note_arrow(
     period = 0.3
     count = max(abs(direction), 1)
     lane_offset = 0
-    if direction > 0:
+    if Options.alt_side_flicks:
+        if direction > 0:
+            lane_offset = -0.5
+        elif direction < 0:
+            lane_offset = 0.5
+    elif direction > 0:
         lane_offset = 0.4
     elif direction < 0:
         lane_offset = -0.4
@@ -416,8 +421,8 @@ def draw_note_arrow(
             alpha = 1
         lane = lerp(start_lane, end_lane, progress)
         layout = zeros(Quad)
-        if direction == 0:
-            y_offset = lerp(0.0, 0.5, progress)
+        if direction == 0 or Options.alt_side_flicks:
+            y_offset = lerp(0.0, 0.5, progress) if direction == 0 else 0.0
             base_bl = transform_vec(Vec2(lane - 0.5 * Options.note_size, y))
             base_br = transform_vec(Vec2(lane + 0.5 * Options.note_size, y))
             ort = (base_br - base_bl).orthogonal()
@@ -425,12 +430,28 @@ def draw_note_arrow(
             br = base_br + ort * y_offset
             tl = bl + ort
             tr = br + ort
-            layout @= Quad(
+            up_layout = Quad(
                 bl=bl,
                 br=br,
                 tl=tl,
                 tr=tr,
             )
+            if direction > 0:
+                layout @= Quad(
+                    bl=up_layout.tl,
+                    br=up_layout.bl,
+                    tl=up_layout.tr,
+                    tr=up_layout.br,
+                )
+            elif direction < 0:
+                layout @= Quad(
+                    bl=up_layout.br,
+                    br=up_layout.tr,
+                    tl=up_layout.bl,
+                    tr=up_layout.tl,
+                )
+            else:
+                layout @= up_layout
         else:
             up_layout = note_layout(LanePosition(lane - 0.5, lane + 0.5), y)
             if direction > 0:

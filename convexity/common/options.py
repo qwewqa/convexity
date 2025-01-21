@@ -28,7 +28,7 @@ class Options:
     )
     leniency: float = slider_option(
         name="Leniency Override",
-        scope=None,
+        scope="convexity",
         default=0.0,
         min=0.0,
         max=5.0,
@@ -37,7 +37,7 @@ class Options:
     )
     window_size: float = slider_option(
         name="Judgment Window Size",
-        scope=None,
+        scope="convexity",
         default=1.0,
         min=0.2,
         max=2.0,
@@ -47,7 +47,7 @@ class Options:
     )
     hidden: float = slider_option(
         name=StandardText.HIDDEN,
-        scope=None,
+        scope="convexity",
         default=0,
         min=0,
         max=0.8,
@@ -57,37 +57,37 @@ class Options:
     )
     backspin: bool = toggle_option(
         name="Backspin",
-        scope=None,
+        scope="convexity",
         default=False,
         standard=True,
     )
     blink: bool = toggle_option(
         name="Blink",
-        scope=None,
+        scope="convexity",
         default=False,
         standard=True,
     )
     auto_release_holds: bool = toggle_option(
         name="Auto Release Holds",
-        scope=None,
+        scope="convexity",
         default=False,
         standard=True,
     )
     boxy_sliders: bool = toggle_option(
         name="Boxy Sliders",
-        scope=None,
+        scope="convexity",
         default=False,
         standard=True,
     )
     no_flicks: bool = toggle_option(
         name="No Flicks",
-        scope=None,
+        scope="convexity",
         default=False,
         standard=True,
     )
     soflan_mode: SoflanMode = select_option(
         name="Soflan Mode",
-        scope=None,
+        scope="convexity",
         default="Default",
         standard=True,
         values=[
@@ -100,7 +100,7 @@ class Options:
     )
     lane_spacing: float = slider_option(
         name="Lane Spacing",
-        scope=None,
+        scope="convexity",
         default=0,
         min=0,
         max=1,
@@ -109,7 +109,7 @@ class Options:
     )
     lane_width: float = slider_option(
         name="Lane Width",
-        scope=None,
+        scope="convexity",
         default=1,
         min=0.5,
         max=2,
@@ -118,7 +118,7 @@ class Options:
     )
     mirror: bool = toggle_option(
         name=StandardText.MIRROR,
-        scope=None,
+        scope="convexity",
         default=False,
     )
     note_speed: float = slider_option(

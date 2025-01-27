@@ -1,16 +1,17 @@
 from math import asin, atan, cos, pi, sin, tan
 from typing import Self
 
+from sonolus.script.easing import ease_out_cubic
 from sonolus.script.globals import level_data, level_memory
 from sonolus.script.interval import clamp, lerp, remap, unlerp
 from sonolus.script.quad import Quad, QuadLike, Rect
 from sonolus.script.record import Record
-from sonolus.script.runtime import delta_time, is_preview, is_skip
+from sonolus.script.runtime import delta_time, is_preview, is_skip, time
 from sonolus.script.transform import Transform2d
 from sonolus.script.values import swap, zeros
 from sonolus.script.vec import Vec2
 
-from convexity.common.options import Options
+from convexity.common.options import LaneMode, Options
 
 EPSILON = 1e-3
 
@@ -143,6 +144,34 @@ def lane_to_pos(lane: float, width: float = 1) -> LanePosition:
     half_width = width / 2
     half_width *= Options.lane_width if not is_preview() else 1
     return LanePosition(left=lane - half_width, right=lane + half_width)
+
+
+def adjusted_lane_to_pos(lane: float, scaled_time: float, target_scaled_time: float, width: float = 1):
+    progress = unlerp(
+        target_scaled_time - preempt_time(),
+        target_scaled_time,
+        scaled_time,
+    )
+    result = zeros(LanePosition)
+    match Options.lane_mode:
+        case LaneMode.SPREAD:
+            alpha = 0.8
+            adjusted_progress = 1 - alpha + alpha * ease_out_cubic(progress)
+            result @= lane_to_pos(lane * adjusted_progress, width)
+        case LaneMode.WAVE:
+            intensity = 1
+            time_period = 6
+            progress_cycles = 0.5
+            adjusted_lane = lane + (1 - progress) * intensity * sin(
+                time() * 2 * pi / time_period + progress * 2 * pi * progress_cycles
+            )
+            result @= lane_to_pos(adjusted_lane, width)
+        case LaneMode.CROSSOVER:
+            adjusted_lane = lane * 2 * (progress - 0.5)
+            result @= lane_to_pos(adjusted_lane, width)
+        case _:
+            result @= lane_to_pos(lane, width)
+    return result
 
 
 def transform_quad(quad: QuadLike) -> Quad:

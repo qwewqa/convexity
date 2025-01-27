@@ -23,6 +23,7 @@ from sonolus.script.vec import Vec2
 from convexity.common.layout import (
     LanePosition,
     add_backspin,
+    adjusted_lane_to_pos,
     lane_hitbox,
     lane_hitbox_pos,
     lane_to_pos,
@@ -74,13 +75,13 @@ class Note(PlayArchetype):
 
     touch_id: int = shared_memory()
     y: float = shared_memory()
+    pos: LanePosition = shared_memory()
     input_finished: bool = shared_memory()
     finished: bool = shared_memory()
     base_hitbox_pos: LanePosition = shared_memory()
     right_vec: Vec2 = shared_memory()
     hold_handle: HoldHandle = shared_memory()
 
-    pos: LanePosition = entity_data()
     target_time: float = entity_data()
     input_target_time: float = entity_data()
     input_time: Interval = entity_data()
@@ -163,9 +164,9 @@ class Note(PlayArchetype):
             self.despawn = True
             self.finished = True
             self.input_finished = True
-        self.update_y()
+        self.update_pos()
         if self.has_sim and self.sim_note.is_waiting:
-            self.sim_note.update_y()
+            self.sim_note.update_pos()
         if self.variant == NoteVariant.HOLD_ANCHOR:
             self.input_finished = self.prev.input_finished or self.prev.is_despawned
         if (
@@ -690,11 +691,12 @@ class Note(PlayArchetype):
             self.hold_handle.handle.destroy()
         self.finish_time = time()
 
-    def update_y(self):
+    def update_pos(self):
         if time() > self.target_time and Options.sticky_notes:
             self.y = 0
         else:
             self.y = note_y(self.scaled_time, self.target_scaled_time)
+        self.pos @= adjusted_lane_to_pos(self.lane, self.scaled_time, self.target_scaled_time)
 
     @property
     def timescale_group(self) -> TimescaleGroup:

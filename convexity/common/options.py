@@ -14,6 +14,13 @@ class SoflanMode(IntEnum):
     REVERSE = 4
 
 
+class LaneMode(IntEnum):
+    DEFAULT = 0
+    SPREAD = 1
+    WAVE = 2
+    CROSSOVER = 3
+
+
 @options
 class Options:
     speed: float = slider_option(
@@ -96,6 +103,18 @@ class Options:
             "Pulse",
             "Wave",
             "Reverse",
+        ],
+    )
+    lane_mode: LaneMode = select_option(
+        name="Lane Mode",
+        scope="convexity",
+        default="Default",
+        standard=True,
+        values=[
+            "Default",
+            "Spread",
+            "Wave",
+            "Crossover",
         ],
     )
     lane_spacing: float = slider_option(

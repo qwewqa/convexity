@@ -19,6 +19,7 @@ from sonolus.script.values import copy
 
 from convexity.common.layout import (
     LanePosition,
+    adjusted_lane_to_pos,
     lane_to_pos,
     note_y,
 )
@@ -63,9 +64,9 @@ class Note(WatchArchetype):
     sim_note_ref: EntityRef[Note] = imported()
 
     y: float = shared_memory()
+    pos: LanePosition = shared_memory()
     hold_handle: HoldHandle = shared_memory()
 
-    pos: LanePosition = imported()
     target_time: float = entity_data()
     window: JudgmentWindow = entity_data()
     bucket: Bucket = entity_data()
@@ -158,9 +159,9 @@ class Note(WatchArchetype):
         if self.needs_init:
             self.hold_handle.destroy()
         self.needs_init = False
-        self.update_y()
+        self.update_pos()
         if self.has_sim and time() < self.sim_note.spawn_time():
-            self.sim_note.update_y()
+            self.sim_note.update_pos()
         if self.has_prev and (time() >= self.prev.despawn_time()) and self.prev.judgment == Judgment.MISS:
             if self.hold_handle == self.prev.hold_handle:
                 self.hold_handle.destroy()
@@ -343,11 +344,12 @@ class Note(WatchArchetype):
                 pos=self.pos,
             )
 
-    def update_y(self):
+    def update_pos(self):
         if time() > self.target_time and Options.sticky_notes:
             self.y = 0
         else:
             self.y = note_y(self.scaled_time, self.target_scaled_time)
+        self.pos @= adjusted_lane_to_pos(self.lane, self.scaled_time, self.target_scaled_time)
 
     @property
     def timescale_group(self) -> TimescaleGroup:

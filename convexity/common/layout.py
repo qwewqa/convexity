@@ -6,12 +6,12 @@ from sonolus.script.globals import level_data, level_memory
 from sonolus.script.interval import clamp, lerp, remap, unlerp
 from sonolus.script.quad import Quad, QuadLike, Rect
 from sonolus.script.record import Record
-from sonolus.script.runtime import delta_time, is_preview, is_skip
+from sonolus.script.runtime import delta_time, is_preprocessing, is_preview, is_skip, time
 from sonolus.script.transform import Transform2d
 from sonolus.script.values import swap, zeros
 from sonolus.script.vec import Vec2
 
-from convexity.common.options import LaneMode, Options
+from convexity.common.options import LaneMode, Options, ScrollMode
 
 EPSILON = 1e-3
 
@@ -323,7 +323,18 @@ def lane_hitbox(pos: LanePosition) -> Quad:
 
 
 def preempt_time() -> float:
-    return 5 / Options.note_speed * (1.05 if Options.extend_lanes else 1)
+    base = 5 / Options.note_speed * (1.05 if Options.extend_lanes else 1)
+    match Options.scroll_mode:
+        case ScrollMode.CHAOS:
+            period = 6
+            lo = 1
+            hi = 4
+            if is_preprocessing():
+                return hi * base
+            else:
+                return 1 / lerp(1 / lo, 1 / hi, (sin(time() * 2 * pi / period) + 1) / 2) * base
+        case _:
+            return base
 
 
 @level_memory

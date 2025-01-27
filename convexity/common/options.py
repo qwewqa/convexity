@@ -21,6 +21,11 @@ class LaneMode(IntEnum):
     CROSSOVER = 3
 
 
+class ScrollMode(IntEnum):
+    DEFAULT = 0
+    CHAOS = 1
+
+
 @options
 class Options:
     speed: float = slider_option(
@@ -115,6 +120,16 @@ class Options:
             "Spread",
             "Wave",
             "Crossover",
+        ],
+    )
+    scroll_mode: ScrollMode = select_option(
+        name="Scroll Mode",
+        scope="convexity",
+        default="Default",
+        standard=True,
+        values=[
+            "Default",
+            "Chaos",
         ],
     )
     lane_spacing: float = slider_option(

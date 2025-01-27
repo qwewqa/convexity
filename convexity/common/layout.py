@@ -1,12 +1,12 @@
 from math import asin, atan, cos, pi, sin, tan
 from typing import Self
 
-from sonolus.script.easing import ease_out_cubic
+from sonolus.script.easing import ease_out_cubic, ease_out_sine
 from sonolus.script.globals import level_data, level_memory
 from sonolus.script.interval import clamp, lerp, remap, unlerp
 from sonolus.script.quad import Quad, QuadLike, Rect
 from sonolus.script.record import Record
-from sonolus.script.runtime import delta_time, is_preview, is_skip, time
+from sonolus.script.runtime import delta_time, is_preview, is_skip
 from sonolus.script.transform import Transform2d
 from sonolus.script.values import swap, zeros
 from sonolus.script.vec import Vec2
@@ -160,10 +160,10 @@ def adjusted_lane_to_pos(lane: float, scaled_time: float, target_scaled_time: fl
             result @= lane_to_pos(lane * adjusted_progress, width)
         case LaneMode.WAVE:
             intensity = 1
-            time_period = 6
+            time_period = 20
             progress_cycles = 0.5
-            adjusted_lane = lane + (1 - progress) * intensity * sin(
-                time() * 2 * pi / time_period + progress * 2 * pi * progress_cycles
+            adjusted_lane = lane + (1 - ease_out_sine(progress)) * intensity * sin(
+                target_scaled_time * 2 * pi / time_period + progress * 2 * pi * progress_cycles
             )
             result @= lane_to_pos(adjusted_lane, width)
         case LaneMode.CROSSOVER:

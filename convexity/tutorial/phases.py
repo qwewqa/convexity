@@ -47,6 +47,10 @@ def phase_time():
     return time() - TutorialState.phase_start_time
 
 
+def phase_interval(before: Interval, duration: float) -> Interval:
+    return Interval(before.end, before.end + duration)
+
+
 def time_is(t: float):
     return phase_time() - delta_time() < t <= phase_time()
 
@@ -66,10 +70,10 @@ def single_note_phase() -> bool:
     hit_particle = note_particle(NoteVariant.SINGLE, 0)
     effect = note_hit_sfx(NoteVariant.SINGLE, Judgment.PERFECT)
 
-    intro_interval = Interval.zero().then(1)
-    fall_interval = intro_interval.then(2)
-    frozen_interval = fall_interval.then(1 * 4)
-    hit_interval = frozen_interval.then(1)
+    intro_interval = phase_interval(Interval.zero(), 1)
+    fall_interval = phase_interval(intro_interval, 2)
+    frozen_interval = phase_interval(fall_interval, 1 * 4)
+    hit_interval = phase_interval(frozen_interval, 1)
 
     if phase_time() in intro_interval:
         body_sprite.draw(
@@ -123,10 +127,10 @@ def swing_note_phase() -> bool:
     hit_particle = note_particle(NoteVariant.SWING, 1)
     effect = note_hit_sfx(NoteVariant.SWING, Judgment.PERFECT)
 
-    intro_interval = Interval.zero().then(1)
-    fall_interval = intro_interval.then(2)
-    frozen_interval = fall_interval.then(1 * 4)
-    hit_interval = frozen_interval.then(1)
+    intro_interval = phase_interval(Interval.zero(), 1)
+    fall_interval = phase_interval(intro_interval, 2)
+    frozen_interval = phase_interval(fall_interval, 1 * 4)
+    hit_interval = phase_interval(frozen_interval, 1)
 
     if phase_time() in intro_interval:
         body_sprite.draw(
@@ -199,10 +203,10 @@ def flick_note_phase() -> bool:
     hit_particle = note_particle(NoteVariant.FLICK, 0)
     effect = note_hit_sfx(NoteVariant.FLICK, Judgment.PERFECT)
 
-    intro_interval = Interval.zero().then(1)
-    fall_interval = intro_interval.then(2)
-    frozen_interval = fall_interval.then(1.43 * 4)
-    hit_interval = frozen_interval.then(1)
+    intro_interval = phase_interval(Interval.zero(), 1)
+    fall_interval = phase_interval(intro_interval, 2)
+    frozen_interval = phase_interval(fall_interval, 1.43 * 4)
+    hit_interval = phase_interval(frozen_interval, 1)
 
     if phase_time() in intro_interval:
         body_sprite.draw(
@@ -289,11 +293,11 @@ def hold_start_note_phase() -> bool:
     hit_particle = note_particle(NoteVariant.HOLD_START, 0)
     effect = note_hit_sfx(NoteVariant.HOLD_START, Judgment.PERFECT)
 
-    intro_interval = Interval.zero().then(1)
-    fall_interval = intro_interval.then(2)
-    frozen_interval = fall_interval.then(1 * 4)
-    follow_interval = frozen_interval.then(1)
-    end_interval = follow_interval.then(1)
+    intro_interval = phase_interval(Interval.zero(), 1)
+    fall_interval = phase_interval(intro_interval, 2)
+    frozen_interval = phase_interval(fall_interval, 1 * 4)
+    follow_interval = phase_interval(frozen_interval, 1)
+    end_interval = phase_interval(follow_interval, 1)
 
     if phase_time() in intro_interval:
         body_layout = intro_note_layout(-0.5)
@@ -436,10 +440,10 @@ def hold_end_note_phase() -> bool:
     hit_particle = note_particle(NoteVariant.HOLD_END, 0)
     effect = note_hit_sfx(NoteVariant.HOLD_END, Judgment.PERFECT)
 
-    intro_interval = Interval.zero().then(1)
-    fall_interval = intro_interval.then(2)
-    frozen_interval = fall_interval.then(1 * 4)
-    hit_interval = frozen_interval.then(1)
+    intro_interval = phase_interval(Interval.zero(), 1)
+    fall_interval = phase_interval(intro_interval, 2)
+    frozen_interval = phase_interval(fall_interval, 1 * 4)
+    hit_interval = phase_interval(frozen_interval, 1)
 
     if phase_time() in intro_interval:
         body_layout = intro_note_layout(0)
@@ -526,10 +530,10 @@ def hold_flick_note_phase() -> bool:
     hit_particle = note_particle(NoteVariant.FLICK, 0)
     effect = note_hit_sfx(NoteVariant.FLICK, Judgment.PERFECT)
 
-    intro_interval = Interval.zero().then(1)
-    fall_interval = intro_interval.then(2)
-    frozen_interval = fall_interval.then(1.43 * 4)
-    hit_interval = frozen_interval.then(1)
+    intro_interval = phase_interval(Interval.zero(), 1)
+    fall_interval = phase_interval(intro_interval, 2)
+    frozen_interval = phase_interval(fall_interval, 1.43 * 4)
+    hit_interval = phase_interval(frozen_interval, 1)
 
     if phase_time() in intro_interval:
         body_layout = intro_note_layout(-0.3)
@@ -639,10 +643,10 @@ def directional_note_phase(lane: int, direction: float) -> bool:
     hit_particle = note_particle(NoteVariant.DIRECTIONAL_FLICK, direction)
     effect = note_hit_sfx(NoteVariant.DIRECTIONAL_FLICK, Judgment.PERFECT)
 
-    intro_interval = Interval.zero().then(1)
-    fall_interval = intro_interval.then(2)
-    frozen_interval = fall_interval.then(1.43 * 4)
-    hit_interval = frozen_interval.then(1)
+    intro_interval = phase_interval(Interval.zero(), 1)
+    fall_interval = phase_interval(intro_interval, 2)
+    frozen_interval = phase_interval(fall_interval, 1.43 * 4)
+    hit_interval = phase_interval(frozen_interval, 1)
 
     if phase_time() in intro_interval:
         body_sprite.draw(

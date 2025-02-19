@@ -44,8 +44,10 @@ from convexity.common.note import (
     note_bucket,
     note_connector_sprite,
     note_head_sprite,
-    note_hold_particle,
-    note_particle,
+    note_hold_particle_circular,
+    note_hold_particle_linear,
+    note_particle_circular,
+    note_particle_linear,
     note_window,
     play_hit_effects,
     pulse_note_times,
@@ -91,8 +93,10 @@ class Note(PlayArchetype):
     arrow_sprite: Sprite = entity_data()
     head_sprite: Sprite = entity_data()
     connector_sprite: Sprite = entity_data()
-    particle: Particle = entity_data()
-    hold_particle: Particle = entity_data()
+    particle_linear: Particle = entity_data()
+    particle_circular: Particle = entity_data()
+    hold_particle_linear: Particle = entity_data()
+    hold_particle_circular: Particle = entity_data()
     start_time: float = entity_data()
     target_scaled_time: float = entity_data()
     next_note_ref: EntityRef[Note] = entity_data()
@@ -131,8 +135,10 @@ class Note(PlayArchetype):
         self.arrow_sprite @= note_arrow_sprite(self.variant, self.direction)
         self.head_sprite @= note_head_sprite(self.variant)
         self.connector_sprite @= note_connector_sprite(self.variant)
-        self.particle @= note_particle(self.variant, self.direction)
-        self.hold_particle @= note_hold_particle(self.variant)
+        self.particle_linear @= note_particle_linear(self.variant, self.direction)
+        self.particle_circular @= note_particle_circular(self.variant, self.direction)
+        self.hold_particle_linear @= note_hold_particle_linear(self.variant)
+        self.hold_particle_circular @= note_hold_particle_circular(self.variant)
 
         self.start_time, self.target_scaled_time = self.get_note_times()
 
@@ -339,12 +345,14 @@ class Note(PlayArchetype):
                 if Options.boxy_sliders:
                     prev_pos @= self.pos
                 self.hold_handle.update(
-                    particle=self.hold_particle,
+                    particle_linear=self.hold_particle_linear,
+                    particle_circular=self.hold_particle_circular,
                     pos=prev_pos,
                 )
         elif self.variant != NoteVariant.HOLD_END and self.prev.touch_id != 0:
             self.hold_handle.update(
-                particle=self.hold_particle,
+                particle_linear=self.hold_particle_linear,
+                particle_circular=self.hold_particle_circular,
                 pos=self.pos,
             )
         else:
@@ -660,7 +668,8 @@ class Note(PlayArchetype):
         if self.variant != NoteVariant.HOLD_ANCHOR:
             play_hit_effects(
                 variant=self.variant,
-                note_particle=self.particle,
+                note_particle_linear=self.particle_linear,
+                note_particle_circular=self.particle_circular,
                 pos=self.pos,
                 judgment=judgment,
             )
@@ -688,7 +697,7 @@ class Note(PlayArchetype):
 
     def terminate(self):
         if not self.has_next or self.next.hold_handle != self.hold_handle:
-            self.hold_handle.handle.destroy()
+            self.hold_handle.destroy_silent()
         self.finish_time = time()
 
     def update_pos(self):

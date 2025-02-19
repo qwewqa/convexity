@@ -9,7 +9,7 @@ from sonolus.script.quad import Quad
 from sonolus.script.runtime import delta_time, time
 from sonolus.script.vec import Vec2
 
-from convexity.common.layout import Layer, lane_to_pos, note_particle_layout
+from convexity.common.layout import Layer, lane_to_pos, note_particle_circular_layout, note_particle_linear_layout
 from convexity.common.note import (
     NoteVariant,
     draw_note_arrow,
@@ -22,7 +22,8 @@ from convexity.common.note import (
     note_connector_sprite,
     note_head_sprite,
     note_hit_sfx,
-    note_particle,
+    note_particle_circular,
+    note_particle_linear,
 )
 from convexity.common.options import Options
 from convexity.tutorial.instructions import Instructions
@@ -67,7 +68,8 @@ def get_part_progress(progress: float, parts: int) -> float:
 def single_note_phase() -> bool:
     lane = 0
     body_sprite = note_body_sprite(NoteVariant.SINGLE, 0)
-    hit_particle = note_particle(NoteVariant.SINGLE, 0)
+    hit_particle_linear = note_particle_linear(NoteVariant.SINGLE, 0)
+    hit_particle_circular = note_particle_circular(NoteVariant.SINGLE, 0)
     effect = note_hit_sfx(NoteVariant.SINGLE, Judgment.PERFECT)
 
     intro_interval = phase_interval(Interval.zero(), 1)
@@ -110,8 +112,12 @@ def single_note_phase() -> bool:
     elif phase_time() in hit_interval:
         if time_is(hit_interval.start):
             clear_instruction()
-            hit_particle.spawn(
-                note_particle_layout(lane_to_pos(lane)),
+            hit_particle_linear.spawn(
+                note_particle_linear_layout(lane_to_pos(lane)),
+                1,
+            )
+            hit_particle_circular.spawn(
+                note_particle_circular_layout(lane_to_pos(lane)),
                 1,
             )
             effect.play()
@@ -124,7 +130,8 @@ def swing_note_phase() -> bool:
     lane = 0
     body_sprite = note_body_sprite(NoteVariant.SWING, 1)
     arrow_sprite = note_arrow_sprite(NoteVariant.SWING, 1)
-    hit_particle = note_particle(NoteVariant.SWING, 1)
+    hit_particle_linear = note_particle_linear(NoteVariant.SWING, 1)
+    hit_particle_circular = note_particle_circular(NoteVariant.SWING, 1)
     effect = note_hit_sfx(NoteVariant.SWING, Judgment.PERFECT)
 
     intro_interval = phase_interval(Interval.zero(), 1)
@@ -186,8 +193,12 @@ def swing_note_phase() -> bool:
         pos = lane_to_pos(lane)
         if time_is(hit_interval.start):
             clear_instruction()
-            hit_particle.spawn(
-                note_particle_layout(pos),
+            hit_particle_linear.spawn(
+                note_particle_linear_layout(pos),
+                1,
+            )
+            hit_particle_circular.spawn(
+                note_particle_circular_layout(pos),
                 1,
             )
             effect.play()
@@ -200,7 +211,8 @@ def flick_note_phase() -> bool:
     lane = 0
     body_sprite = note_body_sprite(NoteVariant.FLICK, 0)
     arrow_sprite = note_arrow_sprite(NoteVariant.FLICK, 0)
-    hit_particle = note_particle(NoteVariant.FLICK, 0)
+    hit_particle_linear = note_particle_linear(NoteVariant.FLICK, 0)
+    hit_particle_circular = note_particle_circular(NoteVariant.FLICK, 0)
     effect = note_hit_sfx(NoteVariant.FLICK, Judgment.PERFECT)
 
     intro_interval = phase_interval(Interval.zero(), 1)
@@ -273,8 +285,12 @@ def flick_note_phase() -> bool:
         pos = lane_to_pos(lane)
         if time_is(hit_interval.start):
             clear_instruction()
-            hit_particle.spawn(
-                note_particle_layout(pos),
+            hit_particle_linear.spawn(
+                note_particle_linear_layout(pos),
+                1,
+            )
+            hit_particle_circular.spawn(
+                note_particle_circular_layout(pos),
                 1,
             )
             effect.play()
@@ -290,7 +306,8 @@ def hold_start_note_phase() -> bool:
     head_sprite = note_head_sprite(NoteVariant.HOLD_START)
     body_sprite = note_body_sprite(NoteVariant.HOLD_START, 0)
     connector_sprite = note_connector_sprite(NoteVariant.HOLD_START)
-    hit_particle = note_particle(NoteVariant.HOLD_START, 0)
+    hit_particle_linear = note_particle_linear(NoteVariant.HOLD_START, 0)
+    hit_particle_circular = note_particle_circular(NoteVariant.HOLD_START, 0)
     effect = note_hit_sfx(NoteVariant.HOLD_START, Judgment.PERFECT)
 
     intro_interval = phase_interval(Interval.zero(), 1)
@@ -362,8 +379,12 @@ def hold_start_note_phase() -> bool:
         pos = lane_to_pos(lane)
         if time_is(follow_interval.start):
             Instructions.hold_follow.show()
-            hit_particle.spawn(
-                note_particle_layout(pos),
+            hit_particle_linear.spawn(
+                note_particle_linear_layout(pos),
+                1,
+            )
+            hit_particle_circular.spawn(
+                note_particle_circular_layout(pos),
                 1,
             )
             effect.play()
@@ -405,8 +426,12 @@ def hold_start_note_phase() -> bool:
         pos = lane_to_pos(tick_lane)
         if time_is(end_interval.start):
             clear_instruction()
-            hit_particle.spawn(
-                note_particle_layout(pos),
+            hit_particle_linear.spawn(
+                note_particle_linear_layout(pos),
+                1,
+            )
+            hit_particle_circular.spawn(
+                note_particle_circular_layout(pos),
                 1,
             )
             effect.play()
@@ -437,7 +462,8 @@ def hold_end_note_phase() -> bool:
     body_sprite = note_body_sprite(NoteVariant.HOLD_END, 0)
     connector_sprite = note_connector_sprite(NoteVariant.HOLD_END)
     head_sprite = note_head_sprite(NoteVariant.HOLD_END)
-    hit_particle = note_particle(NoteVariant.HOLD_END, 0)
+    hit_particle_linear = note_particle_linear(NoteVariant.HOLD_END, 0)
+    hit_particle_circular = note_particle_circular(NoteVariant.HOLD_END, 0)
     effect = note_hit_sfx(NoteVariant.HOLD_END, Judgment.PERFECT)
 
     intro_interval = phase_interval(Interval.zero(), 1)
@@ -511,8 +537,12 @@ def hold_end_note_phase() -> bool:
         pos = lane_to_pos(lane)
         if time_is(hit_interval.start):
             clear_instruction()
-            hit_particle.spawn(
-                note_particle_layout(pos),
+            hit_particle_linear.spawn(
+                note_particle_linear_layout(pos),
+                1,
+            )
+            hit_particle_circular.spawn(
+                note_particle_circular_layout(pos),
                 1,
             )
             effect.play()
@@ -527,7 +557,8 @@ def hold_flick_note_phase() -> bool:
     arrow_sprite = note_arrow_sprite(NoteVariant.FLICK, 0)
     connector_sprite = note_connector_sprite(NoteVariant.FLICK)
     head_sprite = note_head_sprite(NoteVariant.FLICK)
-    hit_particle = note_particle(NoteVariant.FLICK, 0)
+    hit_particle_linear = note_particle_linear(NoteVariant.FLICK, 0)
+    hit_particle_circular = note_particle_circular(NoteVariant.FLICK, 0)
     effect = note_hit_sfx(NoteVariant.FLICK, Judgment.PERFECT)
 
     intro_interval = phase_interval(Interval.zero(), 1)
@@ -626,8 +657,12 @@ def hold_flick_note_phase() -> bool:
         pos = lane_to_pos(lane)
         if time_is(hit_interval.start):
             clear_instruction()
-            hit_particle.spawn(
-                note_particle_layout(pos),
+            hit_particle_linear.spawn(
+                note_particle_linear_layout(pos),
+                1,
+            )
+            hit_particle_circular.spawn(
+                note_particle_circular_layout(pos),
                 1,
             )
             effect.play()
@@ -640,7 +675,8 @@ def directional_note_phase(lane: int, direction: float) -> bool:
     direction_sign = 1 if direction > 0 else -1
     body_sprite = note_body_sprite(NoteVariant.DIRECTIONAL_FLICK, direction)
     arrow_sprite = note_arrow_sprite(NoteVariant.DIRECTIONAL_FLICK, direction)
-    hit_particle = note_particle(NoteVariant.DIRECTIONAL_FLICK, direction)
+    hit_particle_linear = note_particle_linear(NoteVariant.DIRECTIONAL_FLICK, direction)
+    hit_particle_circular = note_particle_circular(NoteVariant.DIRECTIONAL_FLICK, direction)
     effect = note_hit_sfx(NoteVariant.DIRECTIONAL_FLICK, Judgment.PERFECT)
 
     intro_interval = phase_interval(Interval.zero(), 1)
@@ -714,8 +750,12 @@ def directional_note_phase(lane: int, direction: float) -> bool:
         pos = lane_to_pos(lane)
         if time_is(hit_interval.start):
             clear_instruction()
-            hit_particle.spawn(
-                note_particle_layout(pos),
+            hit_particle_linear.spawn(
+                note_particle_linear_layout(pos),
+                1,
+            )
+            hit_particle_circular.spawn(
+                note_particle_circular_layout(pos),
                 1,
             )
             effect.play()

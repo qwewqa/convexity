@@ -33,7 +33,8 @@ from convexity.common.layout import (
     connector_layout,
     lane_layout,
     note_layout,
-    note_particle_layout,
+    note_particle_circular_layout,
+    note_particle_linear_layout,
     preempt_time,
     sim_line_layout,
     transform_quad,
@@ -140,31 +141,58 @@ def note_connector_sprite(variant: NoteVariant):
     return copy(Skin.connector)
 
 
-def note_particle(variant: NoteVariant, direction: float):
-    result = copy(Particles.tap_note)
+def note_particle_linear(variant: NoteVariant, direction: float):
+    result = copy(Particles.tap_linear)
     match variant:
         case NoteVariant.SINGLE:
-            result @= Particles.tap_note
+            result @= Particles.tap_linear
         case NoteVariant.HOLD_START:
-            result @= Particles.hold_note
+            result @= Particles.hold_linear
         case NoteVariant.HOLD_END:
-            result @= Particles.hold_note
+            result @= Particles.hold_linear
         case NoteVariant.HOLD_TICK:
-            result @= Particles.hold_note
+            result @= Particles.hold_linear
         case NoteVariant.FLICK:
-            result @= Particles.flick_note
+            result @= Particles.flick_linear
         case NoteVariant.DIRECTIONAL_FLICK:
             if direction > 0:
-                result @= Particles.right_flick_note
+                result @= Particles.right_flick_linear
             else:
-                result @= Particles.left_flick_note
+                result @= Particles.left_flick_linear
         case NoteVariant.SWING:
-            result @= Particles.swing_note
+            result @= Particles.swing_linear
     return result
 
 
-def note_hold_particle(variant: NoteVariant):
-    return copy(Particles.hold)
+def note_hold_particle_linear(variant: NoteVariant):
+    return copy(Particles.hold_active_linear)
+
+
+def note_particle_circular(variant: NoteVariant, direction: float):
+    result = copy(Particles.tap_circular)
+    match variant:
+        case NoteVariant.SINGLE:
+            result @= Particles.tap_circular
+        case NoteVariant.HOLD_START:
+            result @= Particles.hold_circular
+        case NoteVariant.HOLD_END:
+            result @= Particles.hold_circular
+        case NoteVariant.HOLD_TICK:
+            result @= Particles.hold_circular
+        case NoteVariant.FLICK:
+            result @= Particles.flick_circular
+        case NoteVariant.DIRECTIONAL_FLICK:
+            if direction > 0:
+                result @= Particles.right_flick_circular
+            else:
+                result @= Particles.left_flick_circular
+        case NoteVariant.SWING:
+            result @= Particles.swing_circular
+    return result
+
+
+def note_hold_particle_circular(variant: NoteVariant):
+    return copy(Particles.hold_active_circular)
 
 
 def y_to_alpha(y: float):
@@ -537,19 +565,21 @@ def note_hit_sfx(variant: NoteVariant, judgment: Judgment):
 
 def play_hit_effects(
     variant: NoteVariant,
-    note_particle: Particle,
+    note_particle_linear: Particle,
+    note_particle_circular: Particle,
     pos: LanePosition,
     judgment: Judgment,
 ):
     play_hit_sfx(variant, judgment)
-    play_hit_particle(note_particle, pos)
+    play_hit_particle(note_particle_linear, note_particle_circular, pos)
 
 
 def play_watch_hit_effects(
-    note_particle: Particle,
+    note_particle_linear: Particle,
+    note_particle_circular: Particle,
     pos: LanePosition,
 ):
-    play_hit_particle(note_particle, pos)
+    play_hit_particle(note_particle_linear, note_particle_circular, pos)
 
 
 def schedule_watch_hit_effects(
@@ -585,12 +615,17 @@ def schedule_hit_sfx(variant: NoteVariant, judgment: Judgment, target_time: floa
 
 
 def play_hit_particle(
-    note_particle: Particle,
+    note_particle_linear: Particle,
+    note_particle_circular: Particle,
     pos: LanePosition,
 ):
     if Options.note_effect_enabled:
-        note_particle.spawn(
-            note_particle_layout(pos),
+        note_particle_linear.spawn(
+            note_particle_linear_layout(pos),
+            duration=0.5,
+        )
+        note_particle_circular.spawn(
+            note_particle_circular_layout(pos),
             duration=0.5,
         )
     if Options.lane_effect_enabled:
@@ -601,34 +636,49 @@ def play_hit_particle(
 
 
 class HoldHandle(Record):
-    handle: ParticleHandle
+    handle_linear: ParticleHandle
+    handle_circular: ParticleHandle
 
     @property
     def is_active(self):
-        return self.handle.id != 0
+        return self.handle_linear.id != 0
 
-    def update(self, particle: Particle, pos: LanePosition):
+    def update(self, particle_linear: Particle, particle_circular: Particle, pos: LanePosition):
         if not Options.note_effect_enabled:
             return
-        if self.handle.id == 0:
-            self.handle @= particle.spawn(
-                note_particle_layout(pos),
+        if self.handle_linear.id == 0:
+            self.handle_linear @= particle_linear.spawn(
+                note_particle_linear_layout(pos),
+                duration=1.0,
+                loop=True,
+            )
+            self.handle_circular @= particle_circular.spawn(
+                note_particle_linear_layout(pos),
                 duration=1.0,
                 loop=True,
             )
         else:
-            self.handle.move(note_particle_layout(pos))
+            self.handle_linear.move(note_particle_linear_layout(pos))
+            self.handle_circular.move(note_particle_circular_layout(pos))
 
     def destroy(self):
-        if self.handle.id != 0:
-            self.handle.destroy()
-            self.handle.id = 0
+        if self.handle_linear.id != 0:
+            self.handle_linear.destroy()
+            self.handle_linear.id = 0
+            self.handle_circular.destroy()
+            self.handle_circular.id = 0
+
+    def destroy_silent(self):
+        self.handle_linear.destroy()
+        self.handle_circular.destroy()
 
     def take(self, other: HoldHandle):
         if self != other:
             self.destroy()
-            self.handle = other.handle
-        other.handle.id = 0
+            self.handle_linear = other.handle_linear
+            self.handle_circular = other.handle_circular
+        other.handle_linear.id = 0
+        other.handle_circular.id = 0
 
 
 @level_memory

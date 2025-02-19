@@ -249,7 +249,7 @@ def line_layout(pos: LanePosition, y: float) -> Quad:
     return transform_quad(base)
 
 
-def note_particle_layout(pos: LanePosition) -> Quad:
+def note_particle_linear_layout(pos: LanePosition) -> Quad:
     bl = transform_vec(Vec2(pos.left, 0))
     br = transform_vec(Vec2(pos.right, 0))
     h = (br - bl).rotate(pi / 2) * Options.note_effect_size
@@ -258,6 +258,23 @@ def note_particle_layout(pos: LanePosition) -> Quad:
         br=br,
         tl=bl + h,
         tr=br + h,
+    )
+
+
+def note_particle_circular_layout(pos: LanePosition) -> Quad:
+    scale = 1.8
+    base_layout = note_layout(pos, 0)
+    ml = (base_layout.bl + base_layout.tl) / 2
+    mr = (base_layout.br + base_layout.tr) / 2
+    c = (ml + mr) / 2
+    ml @= c + (ml - c) * scale
+    mr @= c + (mr - c) * scale
+    ort = (mr - ml).orthogonal() / 2
+    return Quad(
+        bl=ml - ort,
+        br=mr - ort,
+        tl=ml + ort,
+        tr=mr + ort,
     )
 
 

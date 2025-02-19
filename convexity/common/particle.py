@@ -5,13 +5,24 @@ from sonolus.script.particle import StandardParticle, particles
 class Particles:
     lane: StandardParticle.LANE_LINEAR
 
-    tap_note: StandardParticle.NOTE_LINEAR_TAP_CYAN
-    hold_note: StandardParticle.NOTE_LINEAR_TAP_GREEN
+    tap_linear: StandardParticle.NOTE_LINEAR_TAP_CYAN
+    hold_linear: StandardParticle.NOTE_LINEAR_TAP_GREEN
 
-    flick_note: StandardParticle.NOTE_LINEAR_ALTERNATIVE_RED
-    right_flick_note: StandardParticle.NOTE_LINEAR_ALTERNATIVE_YELLOW
-    left_flick_note: StandardParticle.NOTE_LINEAR_ALTERNATIVE_PURPLE
+    flick_linear: StandardParticle.NOTE_LINEAR_ALTERNATIVE_RED
+    right_flick_linear: StandardParticle.NOTE_LINEAR_ALTERNATIVE_YELLOW
+    left_flick_linear: StandardParticle.NOTE_LINEAR_ALTERNATIVE_PURPLE
 
-    swing_note: StandardParticle.NOTE_LINEAR_TAP_CYAN
+    swing_linear: StandardParticle.NOTE_LINEAR_TAP_CYAN
 
-    hold: StandardParticle.NOTE_LINEAR_HOLD_GREEN
+    hold_active_linear: StandardParticle.NOTE_LINEAR_HOLD_GREEN
+
+    tap_circular: StandardParticle.NOTE_CIRCULAR_TAP_CYAN
+    hold_circular: StandardParticle.NOTE_CIRCULAR_TAP_GREEN
+
+    flick_circular: StandardParticle.NOTE_CIRCULAR_ALTERNATIVE_RED
+    right_flick_circular: StandardParticle.NOTE_CIRCULAR_ALTERNATIVE_YELLOW
+    left_flick_circular: StandardParticle.NOTE_CIRCULAR_ALTERNATIVE_PURPLE
+
+    swing_circular: StandardParticle.NOTE_CIRCULAR_TAP_CYAN
+
+    hold_active_circular: StandardParticle.NOTE_CIRCULAR_HOLD_GREEN

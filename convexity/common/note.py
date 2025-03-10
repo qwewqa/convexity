@@ -619,11 +619,12 @@ def play_hit_particle(
     note_particle_circular: Particle,
     pos: LanePosition,
 ):
-    if Options.note_effect_enabled:
+    if Options.note_effect_linear_enabled:
         note_particle_linear.spawn(
             note_particle_linear_layout(pos),
             duration=0.5,
         )
+    if Options.note_effect_circular_enabled:
         note_particle_circular.spawn(
             note_particle_circular_layout(pos),
             duration=0.5,
@@ -644,8 +645,6 @@ class HoldHandle(Record):
         return self.handle_linear.id != 0
 
     def update(self, particle_linear: Particle, particle_circular: Particle, pos: LanePosition):
-        if not Options.note_effect_enabled:
-            return
         if self.handle_linear.id == 0:
             self.handle_linear @= particle_linear.spawn(
                 note_particle_linear_layout(pos),

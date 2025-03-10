@@ -67,7 +67,7 @@ def init_layout():
     Layout.judge_line_y = lerp(-1, 1, Options.judge_line_position)
     Layout.lane_length = Options.lane_length * (1.05 if Options.extend_lanes else 1)
     Layout.note_height = Options.note_height * (Options.lane_width if not is_preview() else 1)
-    Layout.sim_line_height = 0.3
+    Layout.sim_line_height = 1.0
 
     if Options.stage_tilt > 0:
         max_tilt_angle = atan(1.8)
@@ -243,39 +243,49 @@ def line_layout(pos: LanePosition, y: float) -> Quad:
     base = Rect(
         l=pos.left,
         r=pos.right,
-        b=y - Layout.note_height / 2 / 5,
-        t=y + Layout.note_height / 2 / 5,
+        b=y - Layout.note_height / 2,
+        t=y + Layout.note_height / 2,
     )
     return transform_quad(base)
 
 
 def note_particle_linear_layout(pos: LanePosition) -> Quad:
-    bl = transform_vec(Vec2(pos.left, 0))
-    br = transform_vec(Vec2(pos.right, 0))
-    h = (br - bl).rotate(pi / 2) * Options.note_effect_size
-    return Quad(
-        bl=bl,
-        br=br,
-        tl=bl + h,
-        tr=br + h,
-    )
+    result = zeros(Quad)
+    if Options.note_effect_linear_enabled:
+        bl = transform_vec(Vec2(pos.left, 0))
+        br = transform_vec(Vec2(pos.right, 0))
+        h = (br - bl).rotate(pi / 2) * Options.note_effect_size
+        result @= Quad(
+            bl=bl,
+            br=br,
+            tl=bl + h,
+            tr=br + h,
+        )
+    else:
+        result @= Rect(-9, 9, -9, 9).as_quad()
+    return result
 
 
 def note_particle_circular_layout(pos: LanePosition) -> Quad:
-    scale = 1.8
-    base_layout = note_layout(pos, 0)
-    ml = (base_layout.bl + base_layout.tl) / 2
-    mr = (base_layout.br + base_layout.tr) / 2
-    c = (ml + mr) / 2
-    ml @= c + (ml - c) * scale
-    mr @= c + (mr - c) * scale
-    ort = (mr - ml).orthogonal() / 2
-    return Quad(
-        bl=ml - ort,
-        br=mr - ort,
-        tl=ml + ort,
-        tr=mr + ort,
-    )
+    result = zeros(Quad)
+    if Options.note_effect_circular_enabled:
+        scale = 1.8
+        base_layout = note_layout(pos, 0)
+        ml = (base_layout.bl + base_layout.tl) / 2
+        mr = (base_layout.br + base_layout.tr) / 2
+        c = (ml + mr) / 2
+        ml @= c + (ml - c) * scale
+        mr @= c + (mr - c) * scale
+        ort = (mr - ml).orthogonal() / 2
+        result @= Quad(
+            bl=ml - ort,
+            br=mr - ort,
+            tl=ml + ort,
+            tr=mr + ort,
+        )
+    else:
+        result @= Rect(-9, 9, -9, 9).as_quad()
+    return result
 
 
 def connector_layout(

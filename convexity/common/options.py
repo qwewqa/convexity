@@ -182,8 +182,13 @@ class Options:
         step=0.05,
         unit=StandardText.PERCENTAGE_UNIT,
     )
-    note_effect_enabled: bool = toggle_option(
-        name=StandardText.NOTE_EFFECT,
+    note_effect_linear_enabled: bool = toggle_option(
+        name="Linear Note Effects Enabled",
+        scope="convexity",
+        default=True,
+    )
+    note_effect_circular_enabled: bool = toggle_option(
+        name="Circular Note Effects Enabled",
         scope="convexity",
         default=True,
     )
@@ -212,6 +217,7 @@ class Options:
     )
     arc_quality: int = slider_option(
         name="Connector Quality",
+        description="Enable curved stage.",
         scope="convexity",
         default=5,
         min=1,
@@ -315,11 +321,13 @@ class Options:
     )
     laneless: bool = toggle_option(
         name="Laneless",
+        description="Hide lane dividers.",
         scope="convexity",
         default=False,
     )
     extend_lanes: bool = toggle_option(
         name="Extend Lanes",
+        description="Extend lanes beyond where notes spawn.",
         scope="convexity",
         default=False,
     )

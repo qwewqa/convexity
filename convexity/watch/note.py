@@ -14,8 +14,9 @@ from sonolus.script.interval import lerp, unlerp
 from sonolus.script.particle import Particle
 from sonolus.script.runtime import is_replay, is_skip, time
 from sonolus.script.sprite import Sprite
+from sonolus.script.stream import Stream
 from sonolus.script.timing import beat_to_time
-from sonolus.script.values import copy
+from sonolus.script.values import copy, zeros
 
 from convexity.common.layout import (
     LanePosition,
@@ -50,6 +51,7 @@ from convexity.common.note import (
     wave_scaled_time,
 )
 from convexity.common.options import Options, SoflanMode
+from convexity.common.streams import Streams
 from convexity.watch.task import BackspinTask
 from convexity.watch.timescale import TimescaleGroup
 
@@ -224,12 +226,16 @@ class Note(WatchArchetype):
         elif time() < self.target_time:
             if prev.judgment == Judgment.MISS:
                 return
-            prev_target_time = prev.target_time
-            target_time = self.target_time
-            progress = max(0, unlerp(prev_target_time, target_time, time()))
-            prev_pos = lerp(prev.pos, self.pos, progress)
-            if Options.boxy_sliders:
+            prev_pos = zeros(LanePosition)
+            if Options.tracking_sliders and self.is_tracking and is_replay():
+                prev_pos @= lane_to_pos(self.tracking_lane)
+            elif Options.boxy_sliders:
                 prev_pos @= self.pos
+            else:
+                prev_target_time = prev.target_time
+                target_time = self.target_time
+                progress = max(0, unlerp(prev_target_time, target_time, time()))
+                prev_pos @= lerp(prev.pos, self.pos, progress)
             draw_note_connector(
                 sprite=self.connector_sprite,
                 pos=self.pos,
@@ -317,9 +323,13 @@ class Note(WatchArchetype):
                 prev_target_time = prev.target_time
                 target_time = self.target_time
                 progress = max(0, unlerp(prev_target_time, target_time, time()))
-                prev_pos = lerp(prev.pos, self.pos, progress)
-                if Options.boxy_sliders:
+                prev_pos = zeros(LanePosition)
+                if Options.tracking_sliders and self.is_tracking and is_replay():
+                    prev_pos @= lane_to_pos(self.tracking_lane)
+                elif Options.boxy_sliders:
                     prev_pos @= self.pos
+                else:
+                    prev_pos @= lerp(prev.pos, self.pos, progress)
                 self.hold_handle.update(
                     particle_linear=self.hold_particle_linear,
                     particle_circular=self.hold_particle_circular,
@@ -419,6 +429,18 @@ class Note(WatchArchetype):
     @property
     def next(self) -> Note:
         return self.next_note_ref.get()
+
+    @property
+    def tracking_lane(self) -> float:
+        return self.tracking_stream[time()]
+
+    @property
+    def is_tracking(self) -> bool:
+        return self.tracking_stream.has_previous_key(time())
+
+    @property
+    def tracking_stream(self) -> Stream[float]:
+        return Streams.note_touch_tracking[self.index]
 
 
 class UnscoredNote(Note):

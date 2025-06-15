@@ -85,6 +85,12 @@ class Options:
         default=False,
         standard=True,
     )
+    tracking_sliders: bool = toggle_option(
+        name="Tracking Sliders",
+        scope="convexity",
+        default=True,
+        standard=True,
+    )
     boxy_sliders: bool = toggle_option(
         name="Boxy Sliders",
         scope="convexity",

@@ -1,4 +1,4 @@
-from math import asin, atan, cos, pi, sin, tan
+from math import asin, atan, atan2, cos, pi, sin, tan
 from typing import Self
 
 from sonolus.script.easing import ease_out_cubic, ease_out_sine
@@ -174,6 +174,18 @@ def adjusted_lane_to_pos(lane: float, scaled_time: float, target_scaled_time: fl
     return result
 
 
+def touch_pos_to_lane(pos: Vec2) -> float:
+    inverted_pos = zeros(Vec2)
+    if not Options.angled_hitboxes and not Options.arc:
+        inverted_pos @= inverse_transform_vec(Vec2(pos.x, Layout.judge_line_y))
+    else:
+        inverted_pos @= inverse_transform_vec(pos)
+    lane = inverted_pos.x
+    lane /= Options.lane_width
+    lane /= 1 + Options.lane_spacing
+    return lane
+
+
 def transform_quad(quad: QuadLike) -> Quad:
     return Quad(
         bl=transform_vec(quad.bl),
@@ -193,6 +205,26 @@ def transform_vec(vec: Vec2) -> Vec2:
         result @= Layout.vanishing_point + Vec2(h * sin(angle), -h * cos(angle))
     else:
         result @= Layout.transform.transform_vec(vec)
+    return result
+
+
+def inverse_transform_vec(vec: Vec2) -> Vec2:
+    result = zeros(Vec2)
+    if Options.arc and Options.stage_tilt > 0:
+        vanishing_point_h = Layout.vanishing_point.y - Layout.judge_line_y
+        relative_vec = vec - Layout.vanishing_point
+
+        h = relative_vec.magnitude
+        if h < EPSILON:
+            result @= Layout.vanishing_point + Vec2(0, -EPSILON)
+        else:
+            angle = atan2(relative_vec.x, -relative_vec.y)
+
+            original_x = angle * vanishing_point_h / Layout.scale
+            original_y = Layout.inverse_transform.transform_vec(Vec2(0, Layout.vanishing_point.y - h)).y
+            result @= Vec2(original_x, original_y)
+    else:
+        result @= Layout.inverse_transform.transform_vec(vec)
     return result
 
 

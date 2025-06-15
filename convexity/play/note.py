@@ -16,8 +16,9 @@ from sonolus.script.interval import Interval, lerp, unlerp
 from sonolus.script.particle import Particle
 from sonolus.script.runtime import input_offset, time, touches
 from sonolus.script.sprite import Sprite
+from sonolus.script.stream import Stream
 from sonolus.script.timing import beat_to_time
-from sonolus.script.values import copy
+from sonolus.script.values import copy, zeros
 from sonolus.script.vec import Vec2
 
 from convexity.common.layout import (
@@ -28,6 +29,7 @@ from convexity.common.layout import (
     lane_hitbox_pos,
     lane_to_pos,
     note_y,
+    touch_pos_to_lane,
 )
 from convexity.common.note import (
     HoldHandle,
@@ -58,6 +60,7 @@ from convexity.common.note import (
     wave_scaled_time,
 )
 from convexity.common.options import Options, SoflanMode
+from convexity.common.streams import Streams
 from convexity.play.config import PlayConfig
 from convexity.play.input_manager import input_note_indexes, mark_touch_id_used, mark_touch_used, taps, touch_is_used
 from convexity.play.timescale import TimescaleGroup
@@ -102,6 +105,8 @@ class Note(PlayArchetype):
     next_note_ref: EntityRef[Note] = entity_data()
 
     started: bool = entity_memory()
+    tracking_lane: float = entity_memory()
+    is_tracking: bool = entity_memory()
 
     finish_time: float = exported()
     judgment: Judgment = exported()
@@ -155,6 +160,9 @@ class Note(PlayArchetype):
 
         if self.has_prev and not (Options.boxy_sliders and self.variant == NoteVariant.HOLD_ANCHOR):
             self.prev_note_ref.get().next_note_ref @= self.ref()
+
+        self.tracking_lane = 0
+        self.is_tracking = False
 
     def spawn_time(self) -> float:
         return min(self.start_time, self.prev_start_time, self.sim_start_time)
@@ -248,12 +256,16 @@ class Note(PlayArchetype):
         elif time() < self.target_time:
             if prev.touch_id == 0:
                 return
-            prev_target_time = prev.target_time
-            target_time = self.target_time
-            progress = max(0, unlerp(prev_target_time, target_time, time()))
-            prev_pos = lerp(prev.pos, self.pos, progress)
-            if Options.boxy_sliders:
+            prev_pos = zeros(LanePosition)
+            if Options.tracking_sliders and self.is_tracking:
+                prev_pos @= lane_to_pos(self.tracking_lane)
+            elif Options.boxy_sliders:
                 prev_pos @= self.pos
+            else:
+                prev_target_time = prev.target_time
+                target_time = self.target_time
+                progress = max(0, unlerp(prev_target_time, target_time, time()))
+                prev_pos @= lerp(prev.pos, self.pos, progress)
             draw_note_connector(
                 sprite=self.connector_sprite,
                 pos=self.pos,
@@ -341,9 +353,13 @@ class Note(PlayArchetype):
                 prev_target_time = prev.target_time
                 target_time = self.target_time
                 progress = max(0, unlerp(prev_target_time, target_time, time()))
-                prev_pos = lerp(prev.pos, self.pos, progress)
-                if Options.boxy_sliders:
+                prev_pos = zeros(LanePosition)
+                if Options.tracking_sliders and self.is_tracking:
+                    prev_pos @= lane_to_pos(self.tracking_lane)
+                elif Options.boxy_sliders:
                     prev_pos @= self.pos
+                else:
+                    prev_pos @= lerp(prev.pos, self.pos, progress)
                 self.hold_handle.update(
                     particle_linear=self.hold_particle_linear,
                     particle_circular=self.hold_particle_circular,
@@ -381,6 +397,13 @@ class Note(PlayArchetype):
                 self.handle_flick_input()
             case NoteVariant.SWING:
                 self.handle_swing_input()
+        if self.touch_id != 0:
+            for touch in touches():
+                if touch.id == self.touch_id:
+                    self.tracking_lane = touch_pos_to_lane(touch.position)
+                    self.tracking_stream[time()] = self.tracking_lane
+                    self.is_tracking = True
+                    break
 
     def handle_tap_input(self):
         if time() not in self.input_time:
@@ -766,6 +789,10 @@ class Note(PlayArchetype):
     @property
     def next(self) -> Note:
         return self.next_note_ref.get()
+
+    @property
+    def tracking_stream(self) -> Stream[float]:
+        return Streams.note_touch_tracking[self.index]
 
 
 class UnscoredNote(Note):

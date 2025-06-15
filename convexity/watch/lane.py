@@ -33,6 +33,5 @@ class Lane(WatchArchetype):
         for effect_time, lanes in Streams.empty_touch_lanes.iter_items_from(start_key):
             if effect_time > time():
                 break
-            if self.lane in lanes:
+            if self.index in lanes:
                 play_lane_particle(self.pos)
-                break

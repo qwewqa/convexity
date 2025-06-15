@@ -30,8 +30,8 @@ def mark_touch_id_used(touch_id: int):
     used_touch_ids.set_add(touch_id)
 
 
-def add_empty_touch_lane(lane: float):
-    empty_touch_lanes.append(lane)
+def add_empty_touch_lane(index: float):
+    empty_touch_lanes.append(index)
 
 
 def unused_touches() -> Iterable[Touch]:

@@ -37,4 +37,4 @@ class Lane(PlayArchetype):
                 continue
             if self.hitbox.contains_point(touch.position):
                 play_lane_effects(self.pos)
-                add_empty_touch_lane(self.lane)
+                add_empty_touch_lane(self.index)

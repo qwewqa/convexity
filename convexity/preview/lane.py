@@ -7,7 +7,7 @@ from convexity.preview.layout import PreviewData, PreviewLayout, lane_layout
 
 
 class Lane(PreviewArchetype):
-    lane: int = imported()
+    lane: float = imported()
 
     pos: LanePosition = entity_data()
 

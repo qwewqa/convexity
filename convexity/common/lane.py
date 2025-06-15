@@ -24,6 +24,11 @@ def play_lane_sfx():
         Effects.stage.play(SFX_DISTANCE)
 
 
+def schedule_lane_sfx(time: float):
+    if Options.sfx_enabled:
+        Effects.stage.schedule(time, SFX_DISTANCE)
+
+
 def play_lane_particle(pos: LanePosition):
     if Options.lane_effect_enabled:
         Particles.lane.spawn(

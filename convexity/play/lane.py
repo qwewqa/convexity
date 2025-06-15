@@ -8,11 +8,11 @@ from convexity.common.layout import (
     lane_to_pos,
 )
 from convexity.common.options import Options
-from convexity.play.input_manager import unused_touches
+from convexity.play.input_manager import add_empty_touch_lane, unused_touches
 
 
 class Lane(PlayArchetype):
-    lane: int = imported()
+    lane: float = imported()
 
     pos: LanePosition = entity_memory()
     hitbox: Quad = entity_memory()
@@ -37,3 +37,4 @@ class Lane(PlayArchetype):
                 continue
             if self.hitbox.contains_point(touch.position):
                 play_lane_effects(self.pos)
+                add_empty_touch_lane(self.lane)

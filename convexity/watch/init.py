@@ -12,8 +12,10 @@ from sonolus.script.runtime import (
 from sonolus.script.vec import Vec2
 
 from convexity.common.init import init_buckets, init_life, init_score
+from convexity.common.lane import schedule_lane_sfx
 from convexity.common.layout import init_layout, update_backspin
 from convexity.common.note import update_current_beat
+from convexity.common.streams import Streams
 from convexity.watch.note import Note
 
 
@@ -31,6 +33,9 @@ class Init(WatchArchetype):
         init_life(Note)
         init_ui()
         init_layout()
+
+        for time in Streams.empty_touch_lanes.iter_keys_from(-10):
+            schedule_lane_sfx(time)
 
     def update_sequential(self):
         update_current_beat()

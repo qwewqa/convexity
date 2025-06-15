@@ -16,7 +16,7 @@ from convexity.common.layout import init_layout, update_backspin
 from convexity.common.note import update_current_beat
 from convexity.common.options import Options
 from convexity.play.config import PlayConfig
-from convexity.play.input_manager import InputManager
+from convexity.play.input_manager import InputFinalizer, InputManager
 from convexity.play.note import Note
 
 
@@ -41,6 +41,7 @@ class Init(PlayArchetype):
 
     def initialize(self):
         InputManager.spawn()
+        InputFinalizer.spawn()
 
     def update_sequential(self):
         update_current_beat()

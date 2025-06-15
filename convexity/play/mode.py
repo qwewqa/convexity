@@ -5,7 +5,7 @@ from convexity.common.effect import Effects
 from convexity.common.particle import Particles
 from convexity.common.skin import Skin
 from convexity.play.init import Init
-from convexity.play.input_manager import InputManager
+from convexity.play.input_manager import InputFinalizer, InputManager
 from convexity.play.lane import Lane
 from convexity.play.note import Note, UnscoredNote
 from convexity.play.stage import Stage
@@ -16,6 +16,7 @@ play_mode = PlayMode(
         Init,
         Stage,
         InputManager,
+        InputFinalizer,
         Lane,
         Note,
         UnscoredNote,

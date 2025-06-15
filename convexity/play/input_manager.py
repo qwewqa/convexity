@@ -4,16 +4,18 @@ from sonolus.script.archetype import PlayArchetype, callback
 from sonolus.script.containers import VarArray
 from sonolus.script.globals import level_memory
 from sonolus.script.quad import Quad
-from sonolus.script.runtime import Touch, touches
+from sonolus.script.runtime import Touch, time, touches
 from sonolus.script.values import copy
 from sonolus.script.vec import Vec2
 
 from convexity.common.layout import Layer, Layout
 from convexity.common.options import Options
 from convexity.common.skin import Skin
+from convexity.common.streams import Streams
 
 input_note_indexes = level_memory(VarArray[int, 16])
 used_touch_ids = level_memory(VarArray[int, 16])
+empty_touch_lanes = level_memory(VarArray[float, 16])
 
 
 def touch_is_used(touch: Touch) -> bool:
@@ -26,6 +28,10 @@ def mark_touch_used(touch: Touch):
 
 def mark_touch_id_used(touch_id: int):
     used_touch_ids.set_add(touch_id)
+
+
+def add_empty_touch_lane(lane: float):
+    empty_touch_lanes.append(lane)
 
 
 def unused_touches() -> Iterable[Touch]:
@@ -41,6 +47,7 @@ class InputManager(PlayArchetype):
     def update_sequential(self):
         input_note_indexes.clear()
         used_touch_ids.clear()
+        empty_touch_lanes.clear()
 
     def touch(self):
         if Options.touch_lines:
@@ -70,3 +77,10 @@ class InputManager(PlayArchetype):
                         bl=Vec2(x - w, 1),
                     )
                     Skin.touch_line.draw(layout, z=Layer.TOUCH_LINE, a=0.2)
+
+
+class InputFinalizer(PlayArchetype):
+    @callback(order=999)
+    def touch(self):
+        if len(empty_touch_lanes) > 0:
+            Streams.empty_touch_lanes[time()] = empty_touch_lanes

@@ -63,7 +63,7 @@ def paint_slide_motion(
 
 def intro_note_layout(
     y: float,
-    lane: int = 0,
+    lane: float = 0,
 ):
     size = 0.6
     base_y = 0.2

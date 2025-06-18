@@ -88,7 +88,7 @@ class Options:
     tracking_sliders: bool = toggle_option(
         name="Tracking Sliders",
         scope="convexity",
-        default=True,
+        default=False,
         standard=True,
     )
     boxy_sliders: bool = toggle_option(
@@ -212,11 +212,29 @@ class Options:
         scope="convexity",
         default=True,
     )
+    sim_line_alpha: float = slider_option(
+        name=StandardText.SIMLINE_ALPHA,
+        scope="convexity",
+        default=0.6,
+        min=0,
+        max=1,
+        step=0.05,
+        unit=StandardText.PERCENTAGE_UNIT,
+    )
     connector_alpha: float = slider_option(
         name=StandardText.CONNECTOR_ALPHA,
         scope="convexity",
         default=0.5,
         min=0,
+        max=1,
+        step=0.05,
+        unit=StandardText.PERCENTAGE_UNIT,
+    )
+    connector_width: float = slider_option(
+        name=StandardText.CONNECTOR_SIZE,
+        scope="convexity",
+        default=0.4,
+        min=0.1,
         max=1,
         step=0.05,
         unit=StandardText.PERCENTAGE_UNIT,

@@ -289,6 +289,9 @@ def _draw_note_connector(
     if abs(prev_y - y) < EPSILON:
         y = prev_y - EPSILON
 
+    pos = pos.scale_centered(Options.connector_width)
+    prev_pos = prev_pos.scale_centered(Options.connector_width)
+
     clamped_prev_y = clamp_y_to_stage(prev_y)
     clamped_y = clamp_y_to_stage(y)
     clamped_prev_pos = lerp(
@@ -410,7 +413,9 @@ def draw_note_sim_line(
             sim_y=segment_prev_y,
         )
         Skin.sim_line.draw(
-            layout, z=Layer.SIM_LINE - y + pos.mid / 1000, a=y_to_alpha((segment_y + segment_prev_y) / 2)
+            layout,
+            z=Layer.SIM_LINE - y + pos.mid / 1000,
+            a=y_to_alpha((segment_y + segment_prev_y) / 2) * Options.sim_line_alpha,
         )
 
 

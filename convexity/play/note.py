@@ -164,6 +164,13 @@ class Note(PlayArchetype):
         self.tracking_lane = 0
         self.is_tracking = False
 
+        if not Options.tick_sim_lines:
+            if self.variant == NoteVariant.HOLD_TICK:
+                self.sim_note_ref.index = 0
+            else:
+                while self.sim_note_ref.index != 0 and self.sim_note_ref.get().variant == NoteVariant.HOLD_TICK:
+                    self.sim_note_ref @= self.sim_note_ref.get().sim_note_ref
+
     def spawn_time(self) -> float:
         return min(self.start_time, self.prev_start_time, self.sim_start_time)
 

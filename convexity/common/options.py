@@ -212,6 +212,11 @@ class Options:
         scope="convexity",
         default=True,
     )
+    tick_sim_lines: bool = toggle_option(
+        name="Tick Simultaneous Line",
+        scope="convexity",
+        default=False,
+    )
     sim_line_alpha: float = slider_option(
         name=StandardText.SIMLINE_ALPHA,
         scope="convexity",

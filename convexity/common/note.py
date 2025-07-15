@@ -486,7 +486,7 @@ def draw_note_arrow(
             else:
                 layout @= up_layout
         else:
-            up_layout = note_layout(LanePosition(lane - 0.5, lane + 0.5), y)
+            up_layout = note_layout(LanePosition(lane - 0.5, lane + 0.5), y, scale=1.4)
             if direction > 0:
                 layout @= Quad(
                     bl=up_layout.tl,

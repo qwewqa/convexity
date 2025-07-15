@@ -145,6 +145,8 @@ class Note(PlayArchetype):
         self.hold_particle_linear @= note_hold_particle_linear(self.variant)
         self.hold_particle_circular @= note_hold_particle_circular(self.variant)
 
+        self.result.accuracy = 1.0
+
         self.start_time, self.target_scaled_time = self.get_note_times()
 
         self.base_hitbox_pos @= lane_hitbox_pos(
@@ -717,7 +719,7 @@ class Note(PlayArchetype):
         judgment = Judgment.MISS
         self.judgment = judgment
         self.result.judgment = judgment
-        self.result.accuracy = actual_time - self.target_time
+        self.result.accuracy = 1.0
         self.result.bucket @= self.bucket
         self.result.bucket_value = self.result.accuracy * 1000
         self.touch_id = 0

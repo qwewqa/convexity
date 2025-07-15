@@ -246,10 +246,10 @@ def lane_hitbox_layout(pos: LanePosition) -> Quad:
     return hitbox
 
 
-def note_layout(pos: LanePosition, y: float) -> Quad:
+def note_layout(pos: LanePosition, y: float, scale: float = 1.0) -> Quad:
     result = zeros(Quad)
     if Options.vertical_notes:
-        scaled_pos = pos.scale_centered(Options.note_size)
+        scaled_pos = pos.scale_centered(Options.note_size * scale)
         ml = transform_vec(Vec2(scaled_pos.left, y))
         mr = transform_vec(Vec2(scaled_pos.right, y))
         ort = (mr - ml).orthogonal()
@@ -266,7 +266,7 @@ def note_layout(pos: LanePosition, y: float) -> Quad:
             r=pos.right,
             b=y - Layout.note_height / 2,
             t=y + Layout.note_height / 2,
-        ).scale_centered(Vec2(Options.note_size, Options.note_size))
+        ).scale_centered(Vec2(Options.note_size * scale, Options.note_size * scale))
         result @= transform_quad(base)
     return result
 

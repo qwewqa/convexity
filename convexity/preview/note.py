@@ -183,5 +183,4 @@ class Note(PreviewArchetype):
         return self.next_note_ref.get()
 
 
-class UnscoredNote(Note):
-    is_scored = False
+UnscoredNote = Note.derive("UnscoredNote", is_scored=False)

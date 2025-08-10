@@ -348,8 +348,6 @@ class Note(WatchArchetype):
                 particle_circular=self.hold_particle_circular,
                 pos=self.pos,
             )
-        else:
-            pass
 
     def terminate(self):
         if not self.has_next:
@@ -450,8 +448,4 @@ class Note(WatchArchetype):
         return Streams.note_touch_tracking[self.index]
 
 
-class UnscoredNote(Note):
-    is_scored = False
-
-
-UnscoredNote(variant=1)
+UnscoredNote = Note.derive("UnscoredNote", is_scored=False)

@@ -174,8 +174,8 @@ def convert_osu(data: str, assets: Path) -> Level | None:
             a.sim_note_ref @= b.ref()
 
     return Level(
-        name=f"convexity_{metadata["BeatmapSetID"]}_{metadata["BeatmapID"]}",
-        title=f"{metadata["TitleUnicode"]} - {metadata["Version"]}",
+        name=f"convexity_{metadata['BeatmapSetID']}_{metadata['BeatmapID']}",
+        title=f"{metadata['TitleUnicode']} - {metadata['Version']}",
         rating=0,
         artists=metadata["ArtistUnicode"],
         author=metadata["Creator"],

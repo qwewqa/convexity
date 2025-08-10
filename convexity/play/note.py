@@ -380,8 +380,6 @@ class Note(PlayArchetype):
                 particle_circular=self.hold_particle_circular,
                 pos=self.pos,
             )
-        else:
-            pass
 
     def touch(self):
         if self.has_prev and not (self.prev.is_despawned or self.prev.input_finished):
@@ -679,8 +677,6 @@ class Note(PlayArchetype):
                         hitbox_pos.left,
                         (self.base_hitbox_pos.left + other.base_hitbox_pos.right) / 2,
                     )
-                else:
-                    pass
         # Splitting up the hitbox to prevent issues with it wrapping around with arc and high tilt
         left_hitbox = lane_hitbox(LanePosition(left=hitbox_pos.left, right=hitbox_pos.mid + 1e-3))
         right_hitbox = lane_hitbox(LanePosition(left=hitbox_pos.mid, right=hitbox_pos.right))
@@ -804,5 +800,4 @@ class Note(PlayArchetype):
         return Streams.note_touch_tracking[self.index]
 
 
-class UnscoredNote(Note):
-    is_scored = False
+UnscoredNote = Note.derive("UnscoredNote", is_scored=False)

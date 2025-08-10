@@ -93,14 +93,14 @@ def get_playlist_items(base_url: str) -> list[dict]:
 
 def write_playlist_items(path: PathLike, tag: str | None, items: list[dict]):
     for item in items:
-        pl_path = Path(path) / f"convexity-{item["name"]}"
+        pl_path = Path(path) / f"convexity-{item['name']}"
         pl_path.mkdir(parents=True, exist_ok=True)
         item = {
             "version": item["version"],
             "title": {"en": item["title"]},
             "subtitle": {"en": item["subtitle"]},
             "author": {"en": item["author"]},
-            "levels": [f"convexity-{level_item["name"]}" for level_item in item["levels"]],
+            "levels": [f"convexity-{level_item['name']}" for level_item in item["levels"]],
             "tags": [Tag(title=tag["title"], icon=tag.get("icon")).as_dict() for tag in item["tags"]],
         }
         if tag:
@@ -113,7 +113,7 @@ def convert_sonolus_level_item(item: dict, base_url: str, tag: str | None, data_
     if tag:
         tags.append(Tag(title=tag))
     return Level(
-        name=f"convexity-{item["name"]}",
+        name=f"convexity-{item['name']}",
         rating=item["rating"],
         title=item["title"],
         artists=item["artists"],

@@ -1,9 +1,11 @@
+from pathlib import Path
+
 from sonolus.script.engine import Engine, EngineData
 from sonolus.script.project import Project
 
 from convexity.common.options import Options
 from convexity.common.ui import ui_config
-from convexity.level import levels
+from convexity.level import load_levels
 from convexity.play.mode import play_mode
 from convexity.preview.mode import preview_mode
 from convexity.tutorial.mode import tutorial_mode
@@ -12,6 +14,7 @@ from convexity.watch.mode import watch_mode
 engine = Engine(
     name="convexity",
     title="Convexity",
+    thumbnail=Path("resources/convexity.jpg"),
     subtitle="An experimental vsrg engine.",
     author="qwewqa",
     skin="pixel",
@@ -30,5 +33,5 @@ engine = Engine(
 
 project = Project(
     engine=engine,
-    levels=levels,
+    levels=load_levels,
 )

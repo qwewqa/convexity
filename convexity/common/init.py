@@ -1,4 +1,3 @@
-from sonolus.script.archetype import archetype_life_of
 from sonolus.script.runtime import level_score
 
 from convexity.common.buckets import Buckets
@@ -24,7 +23,7 @@ def init_score():
 
 
 def init_life(note_archetype):
-    archetype_life_of(note_archetype).update(
+    note_archetype.life.update(
         perfect_increment=1,
         miss_increment=-100,
     )
